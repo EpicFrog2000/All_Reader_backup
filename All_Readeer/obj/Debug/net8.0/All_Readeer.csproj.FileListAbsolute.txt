@@ -1,0 +1,124 @@
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\All_Readeer.exe
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\All_Readeer.deps.json
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\All_Readeer.runtimeconfig.json
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\All_Readeer.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\All_Readeer.pdb
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\Azure.Core.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\Azure.Identity.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\ClosedXML.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\DocumentFormat.OpenXml.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\ExcelNumberFormat.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\Irony.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\Microsoft.Bcl.AsyncInterfaces.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\Microsoft.Data.SqlClient.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\Microsoft.Identity.Client.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\Microsoft.Identity.Client.Extensions.Msal.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\Microsoft.IdentityModel.Abstractions.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\Microsoft.IdentityModel.JsonWebTokens.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\Microsoft.IdentityModel.Logging.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\Microsoft.SqlServer.Server.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\SixLabors.Fonts.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\System.ClientModel.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\System.Configuration.ConfigurationManager.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\System.Diagnostics.EventLog.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\System.IO.Packaging.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\System.Memory.Data.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\System.Runtime.Caching.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\System.Security.Cryptography.ProtectedData.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\XLParser.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\de\Microsoft.Data.SqlClient.resources.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\es\Microsoft.Data.SqlClient.resources.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\fr\Microsoft.Data.SqlClient.resources.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\it\Microsoft.Data.SqlClient.resources.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\ja\Microsoft.Data.SqlClient.resources.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\ko\Microsoft.Data.SqlClient.resources.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\pt-BR\Microsoft.Data.SqlClient.resources.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\ru\Microsoft.Data.SqlClient.resources.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\zh-Hans\Microsoft.Data.SqlClient.resources.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\zh-Hant\Microsoft.Data.SqlClient.resources.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\runtimes\unix\lib\net8.0\Microsoft.Data.SqlClient.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\runtimes\win\lib\net8.0\Microsoft.Data.SqlClient.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\runtimes\win-arm\native\Microsoft.Data.SqlClient.SNI.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\runtimes\win-arm64\native\Microsoft.Data.SqlClient.SNI.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.Messages.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\bin\Debug\net8.0\runtimes\win\lib\net8.0\System.Runtime.Caching.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\obj\Debug\net8.0\All_Readeer.csproj.AssemblyReference.cache
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\obj\Debug\net8.0\All_Readeer.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\obj\Debug\net8.0\All_Readeer.AssemblyInfoInputs.cache
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\obj\Debug\net8.0\All_Readeer.AssemblyInfo.cs
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\obj\Debug\net8.0\All_Readeer.csproj.CoreCompileInputs.cache
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\obj\Debug\net8.0\All_Read.2EBF4DD8.Up2Date
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\obj\Debug\net8.0\All_Readeer.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\obj\Debug\net8.0\refint\All_Readeer.dll
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\obj\Debug\net8.0\All_Readeer.pdb
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\obj\Debug\net8.0\All_Readeer.genruntimeconfig.cache
+C:\Users\norbert.tasarz\Desktop\database tables new\All_Reader\All_Readeer\obj\Debug\net8.0\ref\All_Readeer.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\All_Readeer.exe
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\All_Readeer.deps.json
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\All_Readeer.runtimeconfig.json
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\All_Readeer.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\All_Readeer.pdb
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\Azure.Core.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\Azure.Identity.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\ClosedXML.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\DocumentFormat.OpenXml.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\ExcelNumberFormat.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\Irony.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\Microsoft.Bcl.AsyncInterfaces.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\Microsoft.Data.SqlClient.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\Microsoft.Identity.Client.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\Microsoft.Identity.Client.Extensions.Msal.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\Microsoft.IdentityModel.Abstractions.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\Microsoft.IdentityModel.JsonWebTokens.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\Microsoft.IdentityModel.Logging.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\Microsoft.SqlServer.Server.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\SixLabors.Fonts.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\System.ClientModel.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\System.Configuration.ConfigurationManager.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\System.Diagnostics.EventLog.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\System.IO.Packaging.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\System.Memory.Data.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\System.Runtime.Caching.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\System.Security.Cryptography.ProtectedData.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\XLParser.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\de\Microsoft.Data.SqlClient.resources.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\es\Microsoft.Data.SqlClient.resources.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\fr\Microsoft.Data.SqlClient.resources.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\it\Microsoft.Data.SqlClient.resources.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\ja\Microsoft.Data.SqlClient.resources.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\ko\Microsoft.Data.SqlClient.resources.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\pt-BR\Microsoft.Data.SqlClient.resources.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\ru\Microsoft.Data.SqlClient.resources.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\zh-Hans\Microsoft.Data.SqlClient.resources.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\zh-Hant\Microsoft.Data.SqlClient.resources.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\runtimes\unix\lib\net8.0\Microsoft.Data.SqlClient.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\runtimes\win\lib\net8.0\Microsoft.Data.SqlClient.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\runtimes\win-arm\native\Microsoft.Data.SqlClient.SNI.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\runtimes\win-arm64\native\Microsoft.Data.SqlClient.SNI.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.Messages.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\runtimes\win\lib\net8.0\System.Runtime.Caching.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\obj\Debug\net8.0\All_Readeer.csproj.AssemblyReference.cache
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\obj\Debug\net8.0\All_Readeer.GeneratedMSBuildEditorConfig.editorconfig
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\obj\Debug\net8.0\All_Readeer.AssemblyInfoInputs.cache
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\obj\Debug\net8.0\All_Readeer.AssemblyInfo.cs
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\obj\Debug\net8.0\All_Readeer.csproj.CoreCompileInputs.cache
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\obj\Debug\net8.0\All_Read.2EBF4DD8.Up2Date
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\obj\Debug\net8.0\All_Readeer.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\obj\Debug\net8.0\refint\All_Readeer.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\obj\Debug\net8.0\All_Readeer.pdb
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\obj\Debug\net8.0\All_Readeer.genruntimeconfig.cache
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\obj\Debug\net8.0\ref\All_Readeer.dll
