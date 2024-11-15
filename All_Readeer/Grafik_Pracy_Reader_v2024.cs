@@ -100,9 +100,6 @@ namespace All_Readeer
             public int row { get; set; } = 1;
             public int col { get; set; } = 1;
         }
-        private string File_Path = "";
-        private string Last_Mod_Osoba = "";
-        private DateTime Last_Mod_Time = DateTime.Now;
         private string Optima_Connection_String = "";
         public void Process_Zakladka_For_Optima(IXLWorksheet worksheet, string last_Mod_Osoba, DateTime last_Mod_Time)
         {
@@ -124,8 +121,9 @@ namespace All_Readeer
             {
                 Wpierdol_Plan_do_Optimy(grafik);
             }
-            catch
+            catch(Exception ex)
             {
+                Console.WriteLine(ex.Message);
                 throw;
             }
         }
@@ -133,8 +131,9 @@ namespace All_Readeer
         {
             if (string.IsNullOrEmpty(NewConnectionString))
             {
-                Console.WriteLine("error: Empty Connection string");
-                return;
+                Program.error_logger.New_Custom_Error("Error: Empty Connection string in gv2024");
+                Console.WriteLine("Error: Empty Connection string in gv2024");
+                throw new Exception("Error: Empty Connection string in gv2024");
             }
             Optima_Connection_String = NewConnectionString;
         }
@@ -152,7 +151,6 @@ namespace All_Readeer
                 if (grafik.miesiac == 0)
                 {
                     Program.error_logger.New_Error(dane, "Miesiac", 1, 1, "Źle wpisany miesiąc");
-                    Console.WriteLine(Program.error_logger.Get_Error_String());
                     throw new Exception(Program.error_logger.Get_Error_String());
                 }
                 if (int.TryParse(dane.Split(' ')[5].Trim(), out int parsedYear))
@@ -190,7 +188,7 @@ namespace All_Readeer
                 }
                 catch (Exception ex)
                 {
-                    Program.error_logger.New_Error(nazwiskoimie, "Nazwisko i Imie", poz.col, poz.row, ex.Message);
+                    Program.error_logger.New_Error(nazwiskoimie, "Nazwisko Imie", poz.col, poz.row, "Źle wpisane nazwisko i imie " + ex.Message);
                     throw new Exception(Program.error_logger.Get_Error_String());
                 }
 
@@ -225,14 +223,12 @@ namespace All_Readeer
                         else
                         {
                             Program.error_logger.New_Error(dziennr, "dzien", poz.col, 5, "Błędny nr dnia");
-                            Console.WriteLine(Program.error_logger.Get_Error_String());
                             throw new Exception(Program.error_logger.Get_Error_String());
                         }
                         if (dane_dnia.dzien > 31 || dane_dnia.dzien == 0)
                         {
                             break;
                         }
-
                         // get godziny pracy dnia
                         for (int k = 1; k <= height; k++)
                         {
@@ -278,8 +274,8 @@ namespace All_Readeer
                                         }
                                         else
                                         {
-                                            Program.error_logger.New_Error(godzr, "Godz_Rozpoczecia_Pracy", poz.col + 1 + j, 3 + k);
-                                            Console.WriteLine(Program.error_logger.Get_Error_String() + " Nieprawidłowy format godziny rozpoczęcia pracy");
+                                            Program.error_logger.New_Error(godzr, "Godz_Rozpoczecia_Pracy", poz.col + 1 + j, 3 + k, " Nieprawidłowy format godziny rozpoczęcia pracy");
+                                            Console.WriteLine(Program.error_logger.Get_Error_String());
                                             throw new Exception(Program.error_logger.Get_Error_String());
                                         }
                                     }
@@ -325,8 +321,8 @@ namespace All_Readeer
                                         }
                                         else
                                         {
-                                            Program.error_logger.New_Error(godzz, "Godz_Zakonczenia_Pracy", poz.col + 1 + j + 1, 3 + k);
-                                            Console.WriteLine(Program.error_logger.Get_Error_String() + " Nieprawidłowy format godziny zakończenia pracy");
+                                            Program.error_logger.New_Error(godzz, "Godz_Zakonczenia_Pracy", poz.col + 1 + j + 1, 3 + k, " Nieprawidłowy format godziny zakończenia pracy");
+                                            Console.WriteLine(Program.error_logger.Get_Error_String());
                                             throw new Exception(Program.error_logger.Get_Error_String());
                                         }
                                     }
@@ -347,153 +343,6 @@ namespace All_Readeer
         }
         private void Wpierdol_Plan_do_Optimy(Grafik grafik)
         {
-            var sqlQuery = $@"
-DECLARE @id int;
-
-
-IF((select DISTINCT COUNT(PRI_PraId) from cdn.Pracidx WHERE PRI_Imie1 = @PracownikImieInsert and PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Typ = 1) > 1)
-BEGIN
-	DECLARE @ErrorMessageC NVARCHAR(500) = 'Jest 2 pracowników o takim samym imieniu i nazwisku: ' +@PracownikImieInsert + ' ' +  @PracownikNazwiskoInsert;
-	THROW 50001, @ErrorMessageC, 1;
-END
-DECLARE @PRI_PraId INT = (select DISTINCT PRI_PraId from cdn.Pracidx WHERE PRI_Imie1 = @PracownikImieInsert and PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Typ = 1);
-IF @PRI_PraId IS NULL
-BEGIN
-	SET @PRI_PraId = (select DISTINCT PRI_PraId from cdn.Pracidx WHERE PRI_Imie1 = @PracownikNazwiskoInsert  and PRI_Nazwisko = @PracownikImieInsert and PRI_Typ = 1);
-	IF @PRI_PraId IS NULL
-	BEGIN
-		DECLARE @ErrorMessage NVARCHAR(500) = 'Brak takiego pracownika w bazie: ' +@PracownikImieInsert + ' ' +  @PracownikNazwiskoInsert;
-		THROW 50000, @ErrorMessage, 1;
-	END
-END
-DECLARE @EXISTSPRACTEST INT = (SELECT CDN.PracKod.PRA_PraId FROM CDN.PracKod where PRA_Kod = @PRI_PraId)
-
-IF @EXISTSPRACTEST IS NULL
-BEGIN
-INSERT INTO [CDN].[PracKod]
-    ([PRA_Kod]
-    ,[PRA_Archiwalny]
-    ,[PRA_Nadrzedny]
-    ,[PRA_EPEmail]
-    ,[PRA_EPTelefon]
-    ,[PRA_EPNrPokoju]
-    ,[PRA_EPDostep]
-    ,[PRA_HasloDoWydrukow])
-VALUES
-    (@PRI_PraId
-    ,0
-    ,0
-    ,''
-    ,''
-    ,''
-    ,0
-    ,'')
-END
-
-DECLARE @PRA_PraId INT = (SELECT cdn.PracKod.PRA_PraId FROM CDN.PracKod where PRA_Kod = @PRI_PraId);
-
-DECLARE @EXISTSDZIEN INT = (SELECT COUNT([CDN].[PracPlanDni].[PPL_Data]) FROM cdn.PracPlanDni WHERE cdn.PracPlanDni.PPL_PraId = @PRA_PraId and [CDN].[PracPlanDni].[PPL_Data] = @DataInsert)
-IF @EXISTSDZIEN = 0
-BEGIN
-BEGIN TRY
-INSERT INTO [CDN].[PracPlanDni]
-        ([PPL_PraId]
-        ,[PPL_Data]
-        ,[PPL_TS_Zal]
-        ,[PPL_TS_Mod]
-        ,[PPL_OpeModKod]
-        ,[PPL_OpeModNazwisko]
-        ,[PPL_OpeZalKod]
-        ,[PPL_OpeZalNazwisko]
-        ,[PPL_Zrodlo]
-        ,[PPL_TypDnia])
-VALUES
-        (@PRI_PraId
-        ,@DataInsert
-        ,GETDATE()
-        ,GETDATE()
-        ,'ADMIN'
-        ,'Administrator'
-        ,'ADMIN'
-        ,'Administrator'
-        ,0
-        ,3)
-END TRY
-BEGIN CATCH
-END CATCH
-END
-
-SET @id = (select [cdn].[PracPlanDni].[PPL_PplId] from [cdn].[PracPlanDni] where [cdn].[PracPlanDni].[PPL_Data] = @DataInsert and [cdn].[PracPlanDni].[PPL_PraId] = @PRI_PraId);
-
--- DODANIE GODZIN W NORMIE
-INSERT INTO CDN.PracPlanDniGodz
-(PGL_PplId,
-PGL_Lp,
-PGL_OdGodziny,
-PGL_DoGodziny,
-PGL_Strefa,
-PGL_DzlId,
-PGL_PrjId,
-PGL_UwagiPlanu)
-VALUES
-(@id,
-1,
-DATEADD(MINUTE, 0, @GodzOdDate),
-DATEADD(MINUTE, -60 * (@CzasPrzepracowanyInsert - @PracaWgGrafikuInsert), @GodzDoDate),
-2,
-1,
-1,
-'');
-
--- DODANIE NADGODZIN
-IF(@CzasPrzepracowanyInsert > @PracaWgGrafikuInsert)
-BEGIN
-
-IF(@Godz_dod_50 > 0)
-BEGIN
-INSERT INTO CDN.PracPlanDniGodz
-	        (PGL_PplId,
-	        PGL_Lp,
-	        PGL_OdGodziny,
-	        PGL_DoGodziny,
-	        PGL_Strefa,
-	        PGL_DzlId,
-	        PGL_PrjId,
-	        PGL_UwagiPlanu)
-        VALUES
-	        (@id,
-	        1,
-	        DATEADD(MINUTE, -60 * (@CzasPrzepracowanyInsert - @PracaWgGrafikuInsert), @GodzDoDate),
-	        DATEADD(MINUTE, 60 * @Godz_dod_50, DATEADD(MINUTE, -60 * (@CzasPrzepracowanyInsert - @PracaWgGrafikuInsert), @GodzDoDate)),
-	        4,
-	        1,
-	        1,
-	        '');
-SET @CzasPrzepracowanyInsert = @CzasPrzepracowanyInsert - @Godz_dod_50;
-END
-
-IF(@CzasPrzepracowanyInsert > @PracaWgGrafikuInsert)
-BEGIN
-INSERT INTO CDN.PracPlanDniGodz
-	        (PGL_PplId,
-	        PGL_Lp,
-	        PGL_OdGodziny,
-	        PGL_DoGodziny,
-	        PGL_Strefa,
-	        PGL_DzlId,
-	        PGL_PrjId,
-	        PGL_UwagiPlanu)
-        VALUES
-	        (@id,
-	        1,
-	        DATEADD(MINUTE, -60 * (@CzasPrzepracowanyInsert - @PracaWgGrafikuInsert), @GodzDoDate),
-	        @GodzDoDate,
-	        4,
-	        1,
-	        1,
-	        '');
-END
-END";
             using (SqlConnection connection = new SqlConnection(Optima_Connection_String))
             {
                 connection.Open();
@@ -510,7 +359,7 @@ END";
                                 if (godziny.Godz_Zakonczenia_Pracy < godziny.Godz_Rozpoczecia_Pracy)
                                 {
                                     // insert godziny przed północą
-                                    using (SqlCommand insertCmd = new SqlCommand(sqlQuery, connection, tran))
+                                    using (SqlCommand insertCmd = new SqlCommand(Program.sqlQueryInsertPlanDoOptimy, connection, tran))
                                     {
                                         insertCmd.Parameters.AddWithValue("@DataInsert", DateTime.ParseExact($"{grafik.rok}-{grafik.miesiac:D2}-{dzien.dzien:D2}", "yyyy-MM-dd", CultureInfo.InvariantCulture));
                                         DateTime baseDate = new DateTime(1899, 12, 30);
@@ -528,7 +377,7 @@ END";
                                         insertCmd.ExecuteScalar();
                                     }
                                     // insert po północy
-                                    using (SqlCommand insertCmd = new SqlCommand(sqlQuery, connection, tran))
+                                    using (SqlCommand insertCmd = new SqlCommand(Program.sqlQueryInsertPlanDoOptimy, connection, tran))
                                     {
                                         var data = new DateTime(grafik.rok, grafik.miesiac, dzien.dzien).AddDays(1);
                                         insertCmd.Parameters.AddWithValue("@DataInsert", DateTime.ParseExact($"{data:yyyy-MM-dd}", "yyyy-MM-dd", CultureInfo.InvariantCulture));
@@ -549,7 +398,7 @@ END";
                                 }
                                 else
                                 {
-                                    using (SqlCommand insertCmd = new SqlCommand(sqlQuery, connection, tran))
+                                    using (SqlCommand insertCmd = new SqlCommand(Program.sqlQueryInsertPlanDoOptimy, connection, tran))
                                     {
                                         insertCmd.Parameters.AddWithValue("@DataInsert", DateTime.ParseExact($"{grafik.rok}-{grafik.miesiac:D2}-{dzien.dzien:D2}", "yyyy-MM-dd", CultureInfo.InvariantCulture));
                                         insertCmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = ("1899-12-30 " + godziny.Godz_Rozpoczecia_Pracy.ToString());
@@ -567,29 +416,22 @@ END";
                         }
                         catch (SqlException ex)
                         {
-                            Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
-                            if (ex.Number == 50000)
-                            {
-                                Console.ForegroundColor = ConsoleColor.Yellow;
-                            }
-                            if (ex.Number == 50001)
-                            {
-                                Console.ForegroundColor = ConsoleColor.Red;
-                            }
-                            Console.WriteLine(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
-                            Console.ForegroundColor = ConsoleColor.White;
                             tran.Rollback();
-                            var e = new Exception(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
-                            e.Data["zakladka"] = Program.error_logger.Nr_Zakladki;
-                            throw e;
+                            Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
+                            throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
+                        }
+                        catch (Exception ex)
+                        {
+                            tran.Rollback();
+                            Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
+                            throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
                         }
                     }
                 }
+                tran.Commit();
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine($"Poprawnie dodawno plan z pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
                 Console.ForegroundColor = ConsoleColor.White;
-                tran.Commit();
-                connection.Close();
             }
         }
     }

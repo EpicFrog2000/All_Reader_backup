@@ -30,20 +30,16 @@
         private DateTime Data_Czas_Wykrycia_Bledu;
 
         /// <summary>
-        /// Wkłada wartości z parametrów do pól klasy i dodaje błąd do pliku z errorami.
+        /// Tworzy wiadomość z podanych parametrów i dodaje wiadomość o błędzie do pliku z errorami.
         /// </summary>
-        /// <param name="optionalmsg">Jeśli jest podany to dopisze na końcu wiadomosci błędu w pliku.</param>
-        public void New_Error(string wartoscPola, string nazwaPola, int kolumna, int rzad, string? optionalmsg = null)
+        public void New_Error(string? wartoscPola = "", string? nazwaPola = "", int kolumna = -1, int rzad = -1, string? optionalmsg = "")
         {
-            Poprawna_Wartosc_Pola = nazwaPola;
-            Wartosc_Pola = wartoscPola;
+            Poprawna_Wartosc_Pola = nazwaPola!;
+            Wartosc_Pola = wartoscPola!;
             Kolumna = kolumna;
             Rzad = rzad;
             Data_Czas_Wykrycia_Bledu = DateTime.Now;
-            if (!string.IsNullOrEmpty(optionalmsg))
-            {
-                OptionalMsg += $" Dodatkowa informacja: {optionalmsg}";
-            }
+            OptionalMsg = optionalmsg!;
             Append_Error_To_File();
         }
         /// <summary>
@@ -52,19 +48,31 @@
         /// <returns>Zwraca wiadomość jaką wpisało by do pliku z errorami.</returns>
         public string Get_Error_String()
         {
-            string Wiadomosc = @$"
--------------------------------------------------------------------------------
-Wystąpił błąd w pliku: {Nazwa_Pliku}
-Zakładka nr: {Nr_Zakladki}
-Kolumna nr: {Kolumna}
-Rząd nr: {Rzad}
-Powinna znaleźć się wartość: {Poprawna_Wartosc_Pola}, a jest: {Wartosc_Pola}
-Data_czas wykrycia: {Data_Czas_Wykrycia_Bledu}
-";
+            string Wiadomosc = "-------------------------------------------------------------------------------";
+            if (!string.IsNullOrEmpty(Nazwa_Pliku))
+            {
+                Wiadomosc += Environment.NewLine + "Plik: " + System.IO.Path.GetFileName(Nazwa_Pliku);
+            }
+            if (Nr_Zakladki != 0)
+            {
+                Wiadomosc += Environment.NewLine + "Nr Zakladki: " + Nr_Zakladki;
+            }
+            if (Kolumna != -1)
+            {
+                Wiadomosc += Environment.NewLine + "Kolumna: " + Kolumna;
+            }
+            if (Rzad != -1)
+            {
+                Wiadomosc += Environment.NewLine + "Rzad: " + Rzad;
+            }
+            Wiadomosc += Environment.NewLine + "Wartość w komórce: '" + Wartosc_Pola + "'";
+            if (!string.IsNullOrEmpty(Poprawna_Wartosc_Pola))
+            {
+                Wiadomosc += Environment.NewLine + "Poprawna wartość jaka powinna być: " + Poprawna_Wartosc_Pola;
+            }
             if (!string.IsNullOrEmpty(OptionalMsg))
             {
-                Wiadomosc += OptionalMsg;
-                OptionalMsg = string.Empty;
+                Wiadomosc += Environment.NewLine + "Dodatkowa wiadomość: " + OptionalMsg;
             }
             Wiadomosc += Environment.NewLine + "-------------------------------------------------------------------------------" + Environment.NewLine;
             return Wiadomosc;

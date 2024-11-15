@@ -2,18 +2,403 @@
 using ClosedXML.Excel;
 class Program
 {
-    private static string Files_Folder = "G:\\ITEGER\\staż\\obecności\\All_Reader\\Wszystkie Pliki";
+    private static string Files_Folder = "G:\\ITEGER\\staż\\obecności\\All_Reader\\Wszystkie Pliki\\";
     private static string Errors_File_Folder = "G:\\ITEGER\\staż\\obecności\\All_Reader\\Errors\\";
     private static string Bad_Files_Folder = "G:\\ITEGER\\staż\\obecności\\All_Reader\\Bad Files\\";
     private static string Optima_Conection_String = "Server=ITEGER-NT;Database=CDN_Wars_Test_3_;User Id=sa;Password=cdn;Encrypt=True;TrustServerCertificate=True;";
     public static Error_Logger error_logger = new();
+    public static string sqlQueryInsertObecnościDoOptimy = $@"
+                DECLARE @id int;
+
+                -- dodawaina pracownika do pracx i init pracpracdni
+IF((select DISTINCT COUNT(PRI_PraId) from cdn.Pracidx WHERE PRI_Imie1 = @PracownikImieInsert and PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Typ = 1) > 1)
+BEGIN
+	DECLARE @ErrorMessageC NVARCHAR(500) = 'Jest 2 pracowników w bazie o takim samym imieniu i nazwisku: ' +@PracownikImieInsert + ' ' +  @PracownikNazwiskoInsert;
+	THROW 50001, @ErrorMessageC, 1;
+END
+DECLARE @PRI_PraId INT = (select DISTINCT PRI_PraId from cdn.Pracidx WHERE PRI_Imie1 = @PracownikImieInsert and PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Typ = 1);
+IF @PRI_PraId IS NULL
+BEGIN
+	SET @PRI_PraId = (select DISTINCT PRI_PraId from cdn.Pracidx WHERE PRI_Imie1 = @PracownikNazwiskoInsert  and PRI_Nazwisko = @PracownikImieInsert and PRI_Typ = 1);
+	IF @PRI_PraId IS NULL
+	BEGIN
+		DECLARE @ErrorMessage NVARCHAR(500) = 'Brak takiego pracownika w bazie o imieniu i nazwisku: ' +@PracownikImieInsert + ' ' +  @PracownikNazwiskoInsert;
+		THROW 50000, @ErrorMessage, 1;
+	END
+END
+
+                DECLARE @EXISTSPRACTEST INT = (SELECT PracKod.PRA_PraId FROM CDN.PracKod where PRA_Kod = @PRI_PraId)
+
+                IF @EXISTSPRACTEST IS NULL
+                BEGIN
+                    INSERT INTO [CDN].[PracKod]
+                            ([PRA_Kod]
+                            ,[PRA_Archiwalny]
+                            ,[PRA_Nadrzedny]
+                            ,[PRA_EPEmail]
+                            ,[PRA_EPTelefon]
+                            ,[PRA_EPNrPokoju]
+                            ,[PRA_EPDostep]
+                            ,[PRA_HasloDoWydrukow])
+                        VALUES
+                            (@PRI_PraId
+                            ,0
+                            ,0
+                            ,''
+                            ,''
+                            ,''
+                            ,0
+                            ,'')
+                END
+
+                DECLARE @PRA_PraId INT = (SELECT PracKod.PRA_PraId FROM CDN.PracKod where PRA_Kod = @PRI_PraId);
+
+                DECLARE @EXISTSDZIEN DATETIME = (SELECT PracPracaDni.PPR_Data FROM cdn.PracPracaDni WHERE PPR_PraId = @PRA_PraId and PPR_Data = @DataInsert)
+                IF @EXISTSDZIEN is null
+                BEGIN
+                    BEGIN TRY
+                        INSERT INTO [CDN].[PracPracaDni]
+                                    ([PPR_PraId]
+                                    ,[PPR_Data]
+                                    ,[PPR_TS_Zal]
+                                    ,[PPR_TS_Mod]
+                                    ,[PPR_OpeModKod]
+                                    ,[PPR_OpeModNazwisko]
+                                    ,[PPR_OpeZalKod]
+                                    ,[PPR_OpeZalNazwisko]
+                                    ,[PPR_Zrodlo])
+                                VALUES
+                                    (@PRI_PraId
+                                    ,@DataInsert
+                                    ,GETDATE()
+                                    ,GETDATE()
+                                    ,'ADMIN'
+                                    ,'Administrator'
+                                    ,'ADMIN'
+                                    ,'Administrator'
+                                    ,0)
+                    END TRY
+                    BEGIN CATCH
+                    END CATCH
+                END
+
+                SET @id = (select PPR_PprId from cdn.PracPracaDni where CAST(PPR_Data as datetime) = @DataInsert and PPR_PraId = @PRI_PraId);
+
+                -- DODANIE GODZIN W NORMIE
+                INSERT INTO CDN.PracPracaDniGodz
+		                (PGR_PprId,
+		                PGR_Lp,
+		                PGR_OdGodziny,
+		                PGR_DoGodziny,
+		                PGR_Strefa,
+		                PGR_DzlId,
+		                PGR_PrjId,
+		                PGR_Uwagi,
+		                PGR_OdbNadg)
+	                VALUES
+		                (@id,
+		                1,
+		                DATEADD(MINUTE, 0, @GodzOdDate),
+		                DATEADD(MINUTE, -60 * (@CzasPrzepracowanyInsert - @PracaWgGrafikuInsert), @GodzDoDate),
+		                2,
+		                1,
+		                1,
+		                '',
+		                1);
+
+                -- DODANIE NADGODZIN
+                IF(@CzasPrzepracowanyInsert > @PracaWgGrafikuInsert)
+	                BEGIN
+
+	                IF(@Godz_dod_50 > 0)
+	                BEGIN
+		                INSERT INTO CDN.PracPracaDniGodz
+				                    (PGR_PprId,
+				                    PGR_Lp,
+				                    PGR_OdGodziny,
+				                    PGR_DoGodziny,
+				                    PGR_Strefa,
+				                    PGR_DzlId,
+				                    PGR_PrjId,
+				                    PGR_Uwagi,
+				                    PGR_OdbNadg)
+			                    VALUES
+				                    (@id,
+				                    1,
+				                    DATEADD(MINUTE, -60 * (@CzasPrzepracowanyInsert - @PracaWgGrafikuInsert), @GodzDoDate),
+				                    DATEADD(MINUTE, 60 * @Godz_dod_50, DATEADD(MINUTE, -60 * (@CzasPrzepracowanyInsert - @PracaWgGrafikuInsert), @GodzDoDate)),
+				                    4,
+				                    1,
+				                    1,
+				                    '',
+				                    4);
+		                SET @CzasPrzepracowanyInsert = @CzasPrzepracowanyInsert - @Godz_dod_50;
+	                END
+
+	                IF(@CzasPrzepracowanyInsert > @PracaWgGrafikuInsert)
+	                BEGIN
+		                INSERT INTO CDN.PracPracaDniGodz
+				                    (PGR_PprId,
+				                    PGR_Lp,
+				                    PGR_OdGodziny,
+				                    PGR_DoGodziny,
+				                    PGR_Strefa,
+				                    PGR_DzlId,
+				                    PGR_PrjId,
+				                    PGR_Uwagi,
+				                    PGR_OdbNadg)
+			                    VALUES
+				                    (@id,
+				                    1,
+				                    DATEADD(MINUTE, -60 * (@CzasPrzepracowanyInsert - @PracaWgGrafikuInsert), @GodzDoDate),
+				                    @GodzDoDate,
+				                    4,
+				                    1,
+				                    1,
+				                    '',
+				                    4);
+	                END
+                END";
+    public static string sqlQueryInsertNieObecnoŚciDoOptimy = @$"
+IF((select DISTINCT COUNT(PRI_PraId) from cdn.Pracidx WHERE PRI_Imie1 = @PracownikImieInsert and PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Typ = 1) > 1)
+BEGIN
+	DECLARE @ErrorMessageC NVARCHAR(500) = 'Jest 2 pracowników w bazie o takim samym imieniu i nazwisku: ' +@PracownikImieInsert + ' ' +  @PracownikNazwiskoInsert;
+	THROW 50001, @ErrorMessageC, 1;
+END
+DECLARE @PRACID INT = (select DISTINCT PRI_PraId from cdn.Pracidx WHERE PRI_Imie1 = @PracownikImieInsert and PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Typ = 1);
+IF @PRACID IS NULL
+BEGIN
+	SET @PRACID = (select DISTINCT PRI_PraId from cdn.Pracidx WHERE PRI_Imie1 = @PracownikNazwiskoInsert  and PRI_Nazwisko = @PracownikImieInsert and PRI_Typ = 1);
+	IF @PRACID IS NULL
+	BEGIN
+		DECLARE @ErrorMessage NVARCHAR(500) = 'Brak takiego pracownika w bazie o imieniu i nazwisku: ' +@PracownikImieInsert + ' ' +  @PracownikNazwiskoInsert;
+		THROW 50000, @ErrorMessage, 1;
+	END
+END
+
+DECLARE @TNBID INT = (select TNB_TnbId from cdn.TypNieobec WHERE TNB_Nazwa = @NazwaNieobecnosci)
+
+INSERT INTO [CDN].[PracNieobec]
+           ([PNB_PraId]
+           ,[PNB_TnbId]
+           ,[PNB_TyuId]
+           ,[PNB_NaPodstPoprzNB]
+           ,[PNB_OkresOd]
+           ,[PNB_Seria]
+           ,[PNB_Numer]
+           ,[PNB_OkresDo]
+           ,[PNB_Opis]
+           ,[PNB_Rozliczona]
+           ,[PNB_RozliczData]
+           ,[PNB_ZwolFPFGSP]
+           ,[PNB_UrlopNaZadanie]
+           ,[PNB_Przyczyna]
+           ,[PNB_DniPracy]
+           ,[PNB_DniKalend]
+           ,[PNB_Calodzienna]
+           ,[PNB_ZlecZasilekPIT]
+           ,[PNB_PracaRodzic]
+           ,[PNB_Dziecko]
+           ,[PNB_OpeZalId]
+           ,[PNB_StaZalId]
+           ,[PNB_TS_Zal]
+           ,[PNB_TS_Mod]
+           ,[PNB_OpeModKod]
+           ,[PNB_OpeModNazwisko]
+           ,[PNB_OpeZalKod]
+           ,[PNB_OpeZalNazwisko]
+           ,[PNB_Zrodlo])
+     VALUES
+           (@PRACID
+           ,@TNBID
+           ,99999
+           ,0
+           ,@DataOd
+           ,''
+           ,''
+           ,@DataDo
+           ,''
+           ,0
+           ,@BaseDate
+           ,0
+           ,0
+           ,@Przyczyna
+           ,@DniPracy
+           ,@DniKalendarzowe
+           ,1
+           ,0
+           ,0
+           ,''
+           ,1
+           ,1
+           ,@DataMod
+           ,@DataMod
+           ,@ImieMod
+           ,@NazwiskoMod
+           ,@ImieMod
+           ,@NazwiskoMod
+           ,0);";
+    public static string sqlQueryInsertPlanDoOptimy = $@"
+DECLARE @id int;
+IF((select DISTINCT COUNT(PRI_PraId) from cdn.Pracidx WHERE PRI_Imie1 = @PracownikImieInsert and PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Typ = 1) > 1)
+BEGIN
+	DECLARE @ErrorMessageC NVARCHAR(500) = 'Jest 2 pracowników w bazie o takim samym imieniu i nazwisku: ' +@PracownikImieInsert + ' ' +  @PracownikNazwiskoInsert;
+	THROW 50001, @ErrorMessageC, 1;
+END
+DECLARE @PRI_PraId INT = (select DISTINCT PRI_PraId from cdn.Pracidx WHERE PRI_Imie1 = @PracownikImieInsert and PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Typ = 1);
+IF @PRI_PraId IS NULL
+BEGIN
+	SET @PRI_PraId = (select DISTINCT PRI_PraId from cdn.Pracidx WHERE PRI_Imie1 = @PracownikNazwiskoInsert  and PRI_Nazwisko = @PracownikImieInsert and PRI_Typ = 1);
+	IF @PRI_PraId IS NULL
+	BEGIN
+		DECLARE @ErrorMessage NVARCHAR(500) = 'Brak takiego pracownika w bazie o imieniu i nazwisku: ' +@PracownikImieInsert + ' ' +  @PracownikNazwiskoInsert;
+		THROW 50000, @ErrorMessage, 1;
+	END
+END
+DECLARE @EXISTSPRACTEST INT = (SELECT CDN.PracKod.PRA_PraId FROM CDN.PracKod where PRA_Kod = @PRI_PraId)
+
+IF @EXISTSPRACTEST IS NULL
+BEGIN
+INSERT INTO [CDN].[PracKod]
+    ([PRA_Kod]
+    ,[PRA_Archiwalny]
+    ,[PRA_Nadrzedny]
+    ,[PRA_EPEmail]
+    ,[PRA_EPTelefon]
+    ,[PRA_EPNrPokoju]
+    ,[PRA_EPDostep]
+    ,[PRA_HasloDoWydrukow])
+VALUES
+    (@PRI_PraId
+    ,0
+    ,0
+    ,''
+    ,''
+    ,''
+    ,0
+    ,'')
+END
+
+DECLARE @PRA_PraId INT = (SELECT cdn.PracKod.PRA_PraId FROM CDN.PracKod where PRA_Kod = @PRI_PraId);
+
+DECLARE @EXISTSDZIEN INT = (SELECT COUNT([CDN].[PracPlanDni].[PPL_Data]) FROM cdn.PracPlanDni WHERE cdn.PracPlanDni.PPL_PraId = @PRA_PraId and [CDN].[PracPlanDni].[PPL_Data] = @DataInsert)
+IF @EXISTSDZIEN = 0
+BEGIN
+BEGIN TRY
+INSERT INTO [CDN].[PracPlanDni]
+        ([PPL_PraId]
+        ,[PPL_Data]
+        ,[PPL_TS_Zal]
+        ,[PPL_TS_Mod]
+        ,[PPL_OpeModKod]
+        ,[PPL_OpeModNazwisko]
+        ,[PPL_OpeZalKod]
+        ,[PPL_OpeZalNazwisko]
+        ,[PPL_Zrodlo]
+        ,[PPL_TypDnia])
+VALUES
+        (@PRI_PraId
+        ,@DataInsert
+        ,GETDATE()
+        ,GETDATE()
+        ,'ADMIN'
+        ,'Administrator'
+        ,'ADMIN'
+        ,'Administrator'
+        ,0
+        ,3)
+END TRY
+BEGIN CATCH
+END CATCH
+END
+
+SET @id = (select [cdn].[PracPlanDni].[PPL_PplId] from [cdn].[PracPlanDni] where [cdn].[PracPlanDni].[PPL_Data] = @DataInsert and [cdn].[PracPlanDni].[PPL_PraId] = @PRI_PraId);
+
+-- DODANIE GODZIN W NORMIE
+INSERT INTO CDN.PracPlanDniGodz
+(PGL_PplId,
+PGL_Lp,
+PGL_OdGodziny,
+PGL_DoGodziny,
+PGL_Strefa,
+PGL_DzlId,
+PGL_PrjId,
+PGL_UwagiPlanu)
+VALUES
+(@id,
+1,
+DATEADD(MINUTE, 0, @GodzOdDate),
+DATEADD(MINUTE, -60 * (@CzasPrzepracowanyInsert - @PracaWgGrafikuInsert), @GodzDoDate),
+2,
+1,
+1,
+'');
+
+-- DODANIE NADGODZIN
+IF(@CzasPrzepracowanyInsert > @PracaWgGrafikuInsert)
+BEGIN
+
+IF(@Godz_dod_50 > 0)
+BEGIN
+INSERT INTO CDN.PracPlanDniGodz
+	        (PGL_PplId,
+	        PGL_Lp,
+	        PGL_OdGodziny,
+	        PGL_DoGodziny,
+	        PGL_Strefa,
+	        PGL_DzlId,
+	        PGL_PrjId,
+	        PGL_UwagiPlanu)
+        VALUES
+	        (@id,
+	        1,
+	        DATEADD(MINUTE, -60 * (@CzasPrzepracowanyInsert - @PracaWgGrafikuInsert), @GodzDoDate),
+	        DATEADD(MINUTE, 60 * @Godz_dod_50, DATEADD(MINUTE, -60 * (@CzasPrzepracowanyInsert - @PracaWgGrafikuInsert), @GodzDoDate)),
+	        4,
+	        1,
+	        1,
+	        '');
+SET @CzasPrzepracowanyInsert = @CzasPrzepracowanyInsert - @Godz_dod_50;
+END
+
+IF(@CzasPrzepracowanyInsert > @PracaWgGrafikuInsert)
+BEGIN
+INSERT INTO CDN.PracPlanDniGodz
+	        (PGL_PplId,
+	        PGL_Lp,
+	        PGL_OdGodziny,
+	        PGL_DoGodziny,
+	        PGL_Strefa,
+	        PGL_DzlId,
+	        PGL_PrjId,
+	        PGL_UwagiPlanu)
+        VALUES
+	        (@id,
+	        1,
+	        DATEADD(MINUTE, -60 * (@CzasPrzepracowanyInsert - @PracaWgGrafikuInsert), @GodzDoDate),
+	        @GodzDoDate,
+	        4,
+	        1,
+	        1,
+	        '');
+END
+END";
+
     public static void Main()
     {
         Check_Foldery();
         //Wpierdol do while(true){} jeśli to tyle
         ZrobToWieszCoNoWieszOCoMiChodzi();
     }
-
+    // TODO Upgradee dodawania zwolnien/urlopów/nieobecnosci
+    // TODO MOZE NIE JUPII dodać support dla Zachód - zespół utrzymania czystości - Szczecin - karty pracy.xlsx bo obok siebie i pod są karty xdd
+    // grafik v2024 SPRAWDZ KILKA GRAFIKOW POD SOBĄ
+    // co znaczy ob. w grafikach pracy v2 -> dałem nieobecnosc
+    // TODO Nieobecności w grafik v2024 jeśli takie będą
+    // 2 prac o tej samej nazwie
+    // prac ktorych nie ma w bazie
+    // Wyszyścic ten zjebany pierdolony śmierdzący gówno kurwa kod żygać mi się chce
+    // konwersja plikow z xls/xlsb/inne do xlsx
     public static void ZrobToWieszCoNoWieszOCoMiChodzi()
     {
         string[] filePaths = Directory.GetFiles(Files_Folder);
@@ -112,20 +497,9 @@ class Program
                             continue;
                         }
                     }
-                    // TODO Upgradee dodawania zwolnien/urlopów/nieobecnosci
-                    // TODO MOZE NIE JUPII dodać support dla Zachód - zespół utrzymania czystości - Szczecin - karty pracy.xlsx bo obok siebie i pod są karty xdd
-                    // grafik v2024 SPRAWDZ KILKA GRAFIKOW POD SOBĄ
-                    // co znaczy ob. w grafikach pracy v2 -> dałem nieobecnosc
-                    // TODO Nieobecności w grafik v2024 jeśli takie będą
-                    // 2 prac o tej samej nazwie
-                    // prac ktorych nie ma w bazie
-                    // Wyszyścic ten zjebany pierdolony śmierdzący gówno kurwa kod żygać mi się chce
-
                 }
             }
-            //Console.ReadLine();
         }
-
     }
     public static int Kurwa_tego_no_wez_zobacz_ktory_rodzaj_zakladki_to_jest_mordzia_co(IXLWorksheet workshit)
     {

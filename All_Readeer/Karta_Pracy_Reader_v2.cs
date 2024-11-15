@@ -176,7 +176,6 @@ namespace All_Readeer
             public int dzien = 0;
             public RodzajNieobecnosci rodzaj_absencji = 0;
         }
-        private string File_Path = "";
         private string Last_Mod_Osoba = "";
         private DateTime Last_Mod_Time = DateTime.Now;
         private string Optima_Connection_String = "";
@@ -203,18 +202,22 @@ namespace All_Readeer
 
                 Get_Dane_Dni(pozycja, worksheet, ref karta_pracy);
                 karty_pracy.Add(karta_pracy);
-                foreach (var karta in karty_pracy)
+                if(karty_pracy.Count > 0)
                 {
-                    try
+                    foreach (var karta in karty_pracy)
                     {
-                        Dodaj_Dane_Do_Optimy(karta);
-                    }
-                    catch
-                    {
-                        throw;
+                        try
+                        {
+                            Dodaj_Dane_Do_Optimy(karta);
+                        }
+                        catch
+                        {
+                            throw;
+                        }
                     }
                 }
-            }catch{
+            }catch(Exception ex){
+                Console.WriteLine(ex.Message);
                 throw;
             }
         }
@@ -598,166 +601,16 @@ namespace All_Readeer
                         }
                     }
                 }
-                karta_pracy.dane_dni.Add(dzien);
+                if(dzien.godz_rozp_pracy != TimeSpan.Zero && dzien.godz_zakoncz_pracy != TimeSpan.Zero)
+                {
+                    karta_pracy.dane_dni.Add(dzien);
+                }
                 StartKarty.row++;
                 NrDnia = worksheet.Cell(StartKarty.row, StartKarty.col).GetValue<string>().Trim();
             }
         }
         private void Wpierdol_Obecnosci_do_Optimy(Karta_Pracy karta, SqlTransaction tran, SqlConnection connection)
         {
-            var sqlQuery = $@"
-DECLARE @id int;
-
--- dodawaina pracownika do pracx i init pracpracdni
-IF((select DISTINCT COUNT(PRI_PraId) from cdn.Pracidx WHERE PRI_Imie1 = @PracownikImieInsert and PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Typ = 1) > 1)
-BEGIN
-	DECLARE @ErrorMessageC NVARCHAR(500) = 'Jest 2 pracowników o takim samym imieniu i nazwisku: ' +@PracownikImieInsert + ' ' +  @PracownikNazwiskoInsert;
-	THROW 50001, @ErrorMessageC, 1;
-END
-DECLARE @PRI_PraId INT = (select DISTINCT PRI_PraId from cdn.Pracidx WHERE PRI_Imie1 = @PracownikImieInsert and PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Typ = 1);
-IF @PRI_PraId IS NULL
-BEGIN
-	SET @PRI_PraId = (select DISTINCT PRI_PraId from cdn.Pracidx WHERE PRI_Imie1 = @PracownikNazwiskoInsert  and PRI_Nazwisko = @PracownikImieInsert and PRI_Typ = 1);
-	IF @PRI_PraId IS NULL
-	BEGIN
-		DECLARE @ErrorMessage NVARCHAR(500) = 'Brak takiego pracownika w bazie: ' +@PracownikImieInsert + ' ' +  @PracownikNazwiskoInsert;
-		THROW 50000, @ErrorMessage, 1;
-	END
-END
-
-
-DECLARE @EXISTSPRACTEST INT = (SELECT PracKod.PRA_PraId FROM CDN.PracKod where PRA_Kod = @PRI_PraId)
-
-IF @EXISTSPRACTEST IS NULL
-BEGIN
-INSERT INTO [CDN].[PracKod]
-        ([PRA_Kod]
-        ,[PRA_Archiwalny]
-        ,[PRA_Nadrzedny]
-        ,[PRA_EPEmail]
-        ,[PRA_EPTelefon]
-        ,[PRA_EPNrPokoju]
-        ,[PRA_EPDostep]
-        ,[PRA_HasloDoWydrukow])
-    VALUES
-        (@PRI_PraId
-        ,0
-        ,0
-        ,''
-        ,''
-        ,''
-        ,0
-        ,'')
-END
-
-DECLARE @PRA_PraId INT = (SELECT PracKod.PRA_PraId FROM CDN.PracKod where PRA_Kod = @PRI_PraId);
-
-DECLARE @EXISTSDZIEN DATETIME = (SELECT PracPracaDni.PPR_Data FROM cdn.PracPracaDni WHERE PPR_PraId = @PRA_PraId and PPR_Data = @DataInsert)
-IF @EXISTSDZIEN is null
-BEGIN
-BEGIN TRY
-    INSERT INTO [CDN].[PracPracaDni]
-                ([PPR_PraId]
-                ,[PPR_Data]
-                ,[PPR_TS_Zal]
-                ,[PPR_TS_Mod]
-                ,[PPR_OpeModKod]
-                ,[PPR_OpeModNazwisko]
-                ,[PPR_OpeZalKod]
-                ,[PPR_OpeZalNazwisko]
-                ,[PPR_Zrodlo])
-            VALUES
-                (@PRI_PraId
-                ,@DataInsert
-                ,GETDATE()
-                ,GETDATE()
-                ,'ADMIN'
-                ,'Administrator'
-                ,'ADMIN'
-                ,'Administrator'
-                ,0)
-END TRY
-BEGIN CATCH
-END CATCH
-END
-
-SET @id = (select PPR_PprId from cdn.PracPracaDni where CAST(PPR_Data as datetime) = @DataInsert and PPR_PraId = @PRI_PraId);
-
--- DODANIE GODZIN W NORMIE
-INSERT INTO CDN.PracPracaDniGodz
-	(PGR_PprId,
-	PGR_Lp,
-	PGR_OdGodziny,
-	PGR_DoGodziny,
-	PGR_Strefa,
-	PGR_DzlId,
-	PGR_PrjId,
-	PGR_Uwagi,
-	PGR_OdbNadg)
-VALUES
-	(@id,
-	1,
-	DATEADD(MINUTE, 0, @GodzOdDate),
-	DATEADD(MINUTE, -60 * (@CzasPrzepracowanyInsert - @PracaWgGrafikuInsert), @GodzDoDate),
-	2,
-	1,
-	1,
-	'',
-	1);
-
--- DODANIE NADGODZIN
-IF(@CzasPrzepracowanyInsert > @PracaWgGrafikuInsert)
-BEGIN
-
-IF(@Godz_dod_50 > 0)
-BEGIN
-	INSERT INTO CDN.PracPracaDniGodz
-				(PGR_PprId,
-				PGR_Lp,
-				PGR_OdGodziny,
-				PGR_DoGodziny,
-				PGR_Strefa,
-				PGR_DzlId,
-				PGR_PrjId,
-				PGR_Uwagi,
-				PGR_OdbNadg)
-			VALUES
-				(@id,
-				1,
-				DATEADD(MINUTE, -60 * (@CzasPrzepracowanyInsert - @PracaWgGrafikuInsert), @GodzDoDate),
-				DATEADD(MINUTE, 60 * @Godz_dod_50, DATEADD(MINUTE, -60 * (@CzasPrzepracowanyInsert - @PracaWgGrafikuInsert), @GodzDoDate)),
-				4,
-				1,
-				1,
-				'',
-				4);
-	SET @CzasPrzepracowanyInsert = @CzasPrzepracowanyInsert - @Godz_dod_50;
-END
-
-IF(@CzasPrzepracowanyInsert > @PracaWgGrafikuInsert)
-BEGIN
-	INSERT INTO CDN.PracPracaDniGodz
-				(PGR_PprId,
-				PGR_Lp,
-				PGR_OdGodziny,
-				PGR_DoGodziny,
-				PGR_Strefa,
-				PGR_DzlId,
-				PGR_PrjId,
-				PGR_Uwagi,
-				PGR_OdbNadg)
-			VALUES
-				(@id,
-				1,
-				DATEADD(MINUTE, -60 * (@CzasPrzepracowanyInsert - @PracaWgGrafikuInsert), @GodzDoDate),
-				@GodzDoDate,
-				4,
-				1,
-				1,
-				'',
-				4);
-END
-END";
             foreach (var dane_Dni in karta.dane_dni)
             {
                 try
@@ -766,7 +619,7 @@ END";
                     if (dane_Dni.godz_zakoncz_pracy < dane_Dni.godz_rozp_pracy)
                     {
                         // insert godziny przed północą
-                        using (SqlCommand insertCmd = new SqlCommand(sqlQuery, connection, tran))
+                        using (SqlCommand insertCmd = new SqlCommand(Program.sqlQueryInsertObecnościDoOptimy, connection, tran))
                         {
                             insertCmd.Parameters.AddWithValue("@DataInsert", DateTime.ParseExact($"{karta.rok}-{karta.miesiac:D2}-{dane_Dni.dzien:D2}", "yyyy-MM-dd", CultureInfo.InvariantCulture));
                             DateTime baseDate = new DateTime(1899, 12, 30);
@@ -784,7 +637,7 @@ END";
                             insertCmd.ExecuteScalar();
                         }
                         // insert po północy
-                        using (SqlCommand insertCmd = new SqlCommand(sqlQuery, connection, tran))
+                        using (SqlCommand insertCmd = new SqlCommand(Program.sqlQueryInsertObecnościDoOptimy, connection, tran))
                         {
                             var data = new DateTime(karta.rok, karta.miesiac, dane_Dni.dzien).AddDays(1);
                             insertCmd.Parameters.AddWithValue("@DataInsert", DateTime.ParseExact($"{data:yyyy-MM-dd}", "yyyy-MM-dd", CultureInfo.InvariantCulture));
@@ -805,7 +658,7 @@ END";
                     }
                     else
                     {
-                        using (SqlCommand insertCmd = new SqlCommand(sqlQuery, connection, tran))
+                        using (SqlCommand insertCmd = new SqlCommand(Program.sqlQueryInsertObecnościDoOptimy, connection, tran))
                         {
                             insertCmd.Parameters.AddWithValue("@DataInsert", DateTime.ParseExact($"{karta.rok}-{karta.miesiac:D2}-{dane_Dni.dzien:D2}", "yyyy-MM-dd", CultureInfo.InvariantCulture));
 
@@ -826,105 +679,20 @@ END";
                 }
                 catch (SqlException ex)
                 {
-                    Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
-                    if (ex.Number == 50000)
-                    {
-                        Console.ForegroundColor = ConsoleColor.Yellow;
-                    }
-                    if (ex.Number == 50001)
-                    {
-                        Console.ForegroundColor = ConsoleColor.Red;
-                    }
-                    Console.WriteLine(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
-                    Console.ForegroundColor = ConsoleColor.White;
                     tran.Rollback();
-                    var e = new Exception(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
-                    e.Data["zakladka"] = Program.error_logger.Nr_Zakladki;
-                    throw e;
+                    Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
+                    throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
+                }
+                catch (Exception ex)
+                {
+                    tran.Rollback();
+                    Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
+                    throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
                 }
             }
         }
         private void Wjeb_Nieobecnosci_do_Optimy(List<Nieobecnosc> ListaNieobecności, SqlTransaction tran, SqlConnection connection)
         {
-            var sqlQuery = @$"
-IF((select DISTINCT COUNT(PRI_PraId) from cdn.Pracidx WHERE PRI_Imie1 = @PracownikImieInsert and PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Typ = 1) > 1)
-BEGIN
-	DECLARE @ErrorMessageC NVARCHAR(500) = 'Jest 2 pracowników o takim samym imieniu i nazwisku: ' +@PracownikImieInsert + ' ' +  @PracownikNazwiskoInsert;
-	THROW 50001, @ErrorMessageC, 1;
-END
-DECLARE @PRACID INT = (select DISTINCT PRI_PraId from cdn.Pracidx WHERE PRI_Imie1 = @PracownikImieInsert and PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Typ = 1);
-IF @PRACID IS NULL
-BEGIN
-	SET @PRACID = (select DISTINCT PRI_PraId from cdn.Pracidx WHERE PRI_Imie1 = @PracownikNazwiskoInsert  and PRI_Nazwisko = @PracownikImieInsert and PRI_Typ = 1);
-	IF @PRACID IS NULL
-	BEGIN
-		DECLARE @ErrorMessage NVARCHAR(500) = 'Brak takiego pracownika w bazie: ' +@PracownikImieInsert + ' ' +  @PracownikNazwiskoInsert;
-		THROW 50000, @ErrorMessage, 1;
-	END
-END
-
-DECLARE @TNBID INT = (select TNB_TnbId from cdn.TypNieobec WHERE TNB_Nazwa = @NazwaNieobecnosci)
-
-INSERT INTO [CDN].[PracNieobec]
-           ([PNB_PraId]
-           ,[PNB_TnbId]
-           ,[PNB_TyuId]
-           ,[PNB_NaPodstPoprzNB]
-           ,[PNB_OkresOd]
-           ,[PNB_Seria]
-           ,[PNB_Numer]
-           ,[PNB_OkresDo]
-           ,[PNB_Opis]
-           ,[PNB_Rozliczona]
-           ,[PNB_RozliczData]
-           ,[PNB_ZwolFPFGSP]
-           ,[PNB_UrlopNaZadanie]
-           ,[PNB_Przyczyna]
-           ,[PNB_DniPracy]
-           ,[PNB_DniKalend]
-           ,[PNB_Calodzienna]
-           ,[PNB_ZlecZasilekPIT]
-           ,[PNB_PracaRodzic]
-           ,[PNB_Dziecko]
-           ,[PNB_OpeZalId]
-           ,[PNB_StaZalId]
-           ,[PNB_TS_Zal]
-           ,[PNB_TS_Mod]
-           ,[PNB_OpeModKod]
-           ,[PNB_OpeModNazwisko]
-           ,[PNB_OpeZalKod]
-           ,[PNB_OpeZalNazwisko]
-           ,[PNB_Zrodlo])
-     VALUES
-           (@PRACID
-           ,@TNBID
-           ,99999
-           ,0
-           ,@DataOd
-           ,''
-           ,''
-           ,@DataDo
-           ,''
-           ,0
-           ,@BaseDate
-           ,0
-           ,0
-           ,@Przyczyna
-           ,@DniPracy
-           ,@DniKalendarzowe
-           ,1
-           ,0
-           ,0
-           ,''
-           ,1
-           ,1
-           ,@DataMod
-           ,@DataMod
-           ,@ImieMod
-           ,@NazwiskoMod
-           ,@ImieMod
-           ,@NazwiskoMod
-           ,0);";
             List<List<Nieobecnosc>> Nieobecnosci = Podziel_Niobecnosci_Na_Osobne(ListaNieobecności);
             foreach (var ListaNieo in Nieobecnosci)
                 {
@@ -933,16 +701,15 @@ INSERT INTO [CDN].[PracNieobec]
 
                 try
                 {
-                    using (SqlCommand insertCmd = new SqlCommand(sqlQuery, connection, tran))
+                    using (SqlCommand insertCmd = new SqlCommand(Program.sqlQueryInsertNieObecnoŚciDoOptimy, connection, tran))
                     {
                         DateTime dataBazowa = new DateTime(1899, 12, 30);
                         var nazwa_nieobecnosci = Dopasuj_Nieobecnosc(ListaNieo[0].rodzaj_absencji);
                         if (string.IsNullOrEmpty(nazwa_nieobecnosci))
                         {
                             Program.error_logger.New_Custom_Error($"W programie brak dopasowanego kodu nieobecnosci: {ListaNieo[0].rodzaj_absencji} w dniu {new DateTime(ListaNieo[0].rok, ListaNieo[0].miesiac, ListaNieo[0].dzien)} dla pracownika {ListaNieo[0].pracownik.Nazwisko} {ListaNieo[0].pracownik.Imie} z pliku: {Program.error_logger.Nazwa_Pliku} z zakladki: {Program.error_logger.Nr_Zakladki}. Nieobecnosc nie dodana.");
-                            Console.WriteLine($"W programie brak dopasowanego kodu nieobecnosci: {ListaNieo[0].rodzaj_absencji} w dniu {new DateTime(ListaNieo[0].rok, ListaNieo[0].miesiac, ListaNieo[0].dzien)} dla pracownika {ListaNieo[0].pracownik.Nazwisko} {ListaNieo[0].pracownik.Imie} z pliku: {Program.error_logger.Nazwa_Pliku} z zakladki: {Program.error_logger.Nr_Zakladki}. Nieobecnosc nie dodana.");
                             var e = new Exception($"W programie brak dopasowanego kodu nieobecnosci: {ListaNieo[0].rodzaj_absencji} w dniu {new DateTime(ListaNieo[0].rok, ListaNieo[0].miesiac, ListaNieo[0].dzien)} dla pracownika {ListaNieo[0].pracownik.Nazwisko} {ListaNieo[0].pracownik.Imie} z pliku: {Program.error_logger.Nazwa_Pliku} z zakladki: {Program.error_logger.Nr_Zakladki}. Nieobecnosc nie dodana.");
-                            e.Data["zakladka"] = Program.error_logger.Nr_Zakladki;
+                            e.Data["Kod"] = 42069;
                             throw e;
                         }
                         DateTime dataniobecnoscistart = new DateTime(ListaNieo[0].rok, ListaNieo[0].miesiac, ListaNieo[0].dzien);
@@ -979,20 +746,19 @@ INSERT INTO [CDN].[PracNieobec]
                 }
                 catch (SqlException ex)
                 {
+                    tran.Rollback();
                     Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
-                    if (ex.Number == 50000)
+                    throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
+                }
+                catch (Exception ex)
+                {
+                    tran.Rollback();
+                    if (ex.Data.Contains("kod") && ex.Data["kod"] is int kod && kod == 42069)
                     {
-                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        throw;
                     }
-                    if (ex.Number == 50001)
-                    {
-                        Console.ForegroundColor = ConsoleColor.Red;
-                    }
-                    Console.WriteLine(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
-                    Console.ForegroundColor = ConsoleColor.White; tran.Rollback();
-                    var e = new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
-                    e.Data["zakladka"] = Program.error_logger.Nr_Zakladki;
-                    throw e;
+                    Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
+                    throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
                 }
             }
 
@@ -1093,6 +859,7 @@ INSERT INTO [CDN].[PracNieobec]
                     Console.WriteLine($"Poprawnie dodawno nieobecnosci z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
                     Console.WriteLine($"Poprawnie dodawno obecnosci z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
                     Console.ForegroundColor = ConsoleColor.White;
+                    connection.Close();
                 }
             }
             catch
