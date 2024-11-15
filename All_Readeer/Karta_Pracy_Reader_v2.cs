@@ -1,8 +1,8 @@
 ﻿using ClosedXML.Excel;
 using Microsoft.Data.SqlClient;
-using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace All_Readeer
 {
@@ -38,6 +38,65 @@ namespace All_Readeer
             }
             public List<Dane_Dnia> dane_dni { get; set; } = [];
             public List<Nieobecnosc> ListaNieobecnosci { get; set; } = [];
+            public void Set_Miesiac(string nazwa)
+            {
+                if (!string.IsNullOrEmpty(nazwa))
+                {
+                    if (nazwa.ToLower() == "styczeń")
+                    {
+                        miesiac = 1;
+                    }
+                    else if (nazwa.ToLower() == "luty")
+                    {
+                        miesiac = 2;
+                    }
+                    else if (nazwa.ToLower() == "marzec")
+                    {
+                        miesiac = 3;
+                    }
+                    else if (nazwa.ToLower() == "kwiecień")
+                    {
+                        miesiac = 4;
+                    }
+                    else if (nazwa.ToLower() == "maj")
+                    {
+                        miesiac = 5;
+                    }
+                    else if (nazwa.ToLower() == "czerwiec")
+                    {
+                        miesiac = 6;
+                    }
+                    else if (nazwa.ToLower() == "lipiec")
+                    {
+                        miesiac = 7;
+                    }
+                    else if (nazwa.ToLower() == "sierpień")
+                    {
+                        miesiac = 8;
+                    }
+                    else if (nazwa.ToLower() == "wrzesień")
+                    {
+                        miesiac = 9;
+                    }
+                    else if (nazwa.ToLower() == "październik")
+                    {
+                        miesiac = 10;
+                    }
+                    else if (nazwa.ToLower() == "listopad")
+                    {
+                        miesiac = 11;
+                    }
+                    else if (nazwa.ToLower() == "grudzień")
+                    {
+                        miesiac = 12;
+                    }
+                    else
+                    {
+                        miesiac = 0;
+                    }
+                }
+            }
+
 
         }
         private class Dane_Dnia
@@ -120,126 +179,44 @@ namespace All_Readeer
         private string File_Path = "";
         private string Last_Mod_Osoba = "";
         private DateTime Last_Mod_Time = DateTime.Now;
-        private string Connection_String = "";
         private string Optima_Connection_String = "";
-        private (string, DateTime) Get_File_Meta_Info()
-        {
-            try
-            {
-                using (var workbook = new XLWorkbook(File_Path))
-                {
-                    string lastModifiedBy = workbook.Properties.LastModifiedBy!;
-                    DateTime lastWriteTime = File.GetLastWriteTime(File_Path);
-                    return (lastModifiedBy, lastWriteTime);
-                }
-            }
-            catch (Exception ex)
-            {
-                Program.error_logger.New_Custom_Error(ex.Message);
-                Console.WriteLine($"Error: {ex.Message}");
-                return ("Error", DateTime.Now);
-            }
-        }
-        public void Set_File_Path(string New_File_Path)
-        {
-            if (string.IsNullOrEmpty(New_File_Path))
-            {
-                Console.WriteLine("error: Empty File Path");
-                return;
-            }
-            File_Path = New_File_Path;
-        }
         public void Set_Optima_ConnectionString(string NewConnectionString)
         {
             Optima_Connection_String = NewConnectionString;
         }
-        public void Process()
+        public void Process_Zakladka_For_Optima(IXLWorksheet worksheet, string last_Mod_Osoba, DateTime last_Mod_Time)
         {
-            List<Karta_Pracy> karty_pracy = ReadXlsx();
-            // wpierdol dane do bazy danych
-            List<Pracownik> pracownicy = karty_pracy.Select(k => k.pracownik).Distinct().ToList();
             try
             {
-                //Insert_Pracownicy_To_Db(pracownicy);
+                Last_Mod_Osoba = last_Mod_Osoba;
+                Last_Mod_Time = last_Mod_Time;
+                List<Karta_Pracy> karty_pracy = [];
+                CurrentPosition pozycja = new();
+                Find_Karta(ref pozycja, worksheet);
+                Karta_Pracy karta_pracy = new();
+                karta_pracy.nazwa_pliku = Program.error_logger.Nazwa_Pliku;
+                karta_pracy.nr_zakladki = Program.error_logger.Nr_Zakladki;
+                Nieobecnosc nieobecnosc = new();
+                nieobecnosc.nazwa_pliku = Program.error_logger.Nazwa_Pliku;
+                nieobecnosc.nr_zakladki = Program.error_logger.Nr_Zakladki;
+                Get_Header_Karta_Info(pozycja, worksheet, ref karta_pracy);
+
+                Get_Dane_Dni(pozycja, worksheet, ref karta_pracy);
+                karty_pracy.Add(karta_pracy);
                 foreach (var karta in karty_pracy)
                 {
                     try
                     {
-                        //int id = Insert_Karta_To_Db(karta);
-                        //Insert_Dni_To_Db(id, karta.dane_dni);
                         Dodaj_Dane_Do_Optimy(karta);
                     }
-                    catch (Exception ex) {
-                        Console.WriteLine(ex.Message);
-                    }
-                }
-            } catch (Exception ex) {
-                Console.WriteLine(ex.Message);
-            }
-        }
-        public void Process_Zakladka_For_Optima(IXLWorksheet worksheet, string last_Mod_Osoba, DateTime last_Mod_Time)
-        {
-            Last_Mod_Osoba = last_Mod_Osoba;
-            Last_Mod_Time = last_Mod_Time;
-            List<Karta_Pracy> karty_pracy = [];
-            CurrentPosition pozycja = new();
-            Find_Karta(ref pozycja, worksheet);
-            Karta_Pracy karta_pracy = new();
-            karta_pracy.nazwa_pliku = Program.error_logger.Nazwa_Pliku;
-            karta_pracy.nr_zakladki = Program.error_logger.Nr_Zakladki;
-            Nieobecnosc nieobecnosc = new();
-            nieobecnosc.nazwa_pliku = Program.error_logger.Nazwa_Pliku;
-            nieobecnosc.nr_zakladki = Program.error_logger.Nr_Zakladki;
-            Get_Header_Karta_Info(pozycja, worksheet, ref karta_pracy);
-            Get_Dane_Dni(pozycja, worksheet, ref karta_pracy);
-            karty_pracy.Add(karta_pracy);
-            foreach (var karta in karty_pracy)
-            {
-                try
-                {
-                    Dodaj_Dane_Do_Optimy(karta);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                    throw new Exception(ex.Message);
-                }
-            }
-        }
-        private List<Karta_Pracy> ReadXlsx()
-        {
-            (Last_Mod_Osoba, Last_Mod_Time) = Get_File_Meta_Info();
-            Program.error_logger.Nazwa_Pliku = File_Path;
-            if (Last_Mod_Osoba == "Error") { throw new Exception("Error reading file"); }
-            List<Karta_Pracy> karty_pracy = [];
-            karty_pracy.Clear();
-            using (var workbook = new XLWorkbook(File_Path))
-            {
-                CurrentPosition pozycja = new();
-                for (int i = 1; i <= workbook.Worksheets.Count; i++)
-                {
-                    try
+                    catch
                     {
-                        Program.error_logger.Nr_Zakladki = i;
-                        var worksheet = workbook.Worksheet(i);
-                        Find_Karta(ref pozycja, worksheet);
-                        Karta_Pracy karta_pracy = new();
-                        karta_pracy.nazwa_pliku = File_Path;
-                        karta_pracy.nr_zakladki = i;
-                        Nieobecnosc nieobecnosc = new();
-                        nieobecnosc.nazwa_pliku = File_Path;
-                        nieobecnosc.nr_zakladki = i;
-                        Get_Header_Karta_Info(pozycja, worksheet, ref karta_pracy);
-                        Get_Dane_Dni(pozycja, worksheet, ref karta_pracy);
-                        karty_pracy.Add(karta_pracy);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ex.Message);
+                        throw;
                     }
                 }
+            }catch{
+                throw;
             }
-            return karty_pracy;
         }
         private void Find_Karta(ref CurrentPosition pozycja, IXLWorksheet worksheet)
         {
@@ -271,15 +248,48 @@ namespace All_Readeer
         {
             //wczytaj date
             var dane = worksheet.Cell(StartKarty.row - 3, StartKarty.col + 12).GetValue<string>().Trim();
+            if (dane.EndsWith("r"))
+            {
+                dane = dane.Substring(0, dane.Length - 1).Trim();
+            }
             if (string.IsNullOrEmpty(dane))
             {
                 Program.error_logger.New_Error(dane, "data", StartKarty.col + 12, StartKarty.row - 3, "Brak daty w pliku");
+                Console.WriteLine(Program.error_logger.Get_Error_String());
                 throw new Exception(Program.error_logger.Get_Error_String());
             }
 
             if (karta_pracy.Set_Data(dane) == 1) {
-                Program.error_logger.New_Error(dane, "data", StartKarty.col + 12, StartKarty.row - 3, "Zły format daty w pliku");
-                throw new Exception(Program.error_logger.Get_Error_String());
+                if (dane.Split(" ").Length == 2)
+                {
+                    var ndata = dane.Split(" ");
+                    if (ndata[0].ToLower() == "pażdziernik")
+                    {
+                        ndata[0] = "październik";
+                    }
+                    try
+                    {
+                        karta_pracy.Set_Miesiac(ndata[0]);
+                        karta_pracy.rok = int.Parse(Regex.Replace(ndata[1], @"\D", ""));
+                    }
+                    catch
+                    {
+                        karta_pracy.Set_Miesiac("Zle dane");
+                        karta_pracy.rok = int.Parse(Regex.Replace(ndata[1], @"\D", ""));
+                    }
+                    if (karta_pracy.miesiac == 0)
+                    {
+                        Program.error_logger.New_Error(dane, "data", StartKarty.col + 12, StartKarty.row - 3, "Zły format daty w pliku");
+                        Console.WriteLine(Program.error_logger.Get_Error_String());
+                        throw new Exception(Program.error_logger.Get_Error_String());
+                    }
+                }
+                else
+                {
+                    Program.error_logger.New_Error(dane, "data", StartKarty.col + 12, StartKarty.row - 3, "Zły format daty w pliku");
+                    Console.WriteLine(Program.error_logger.Get_Error_String());
+                    throw new Exception(Program.error_logger.Get_Error_String());
+                }
             }
 
             //wczytaj nazwisko i imie
@@ -287,13 +297,46 @@ namespace All_Readeer
             if (string.IsNullOrEmpty(dane))
             {
                 Program.error_logger.New_Error(dane, "nazwisko i imie", StartKarty.col, StartKarty.row - 2, "Nie wykryto nazwiska i imienia w pliku");
+                Console.WriteLine(Program.error_logger.Get_Error_String());
                 throw new Exception(Program.error_logger.Get_Error_String());
             }
-            karta_pracy.pracownik.Nazwisko = dane.Split(':')[1].Trim().Split(' ')[0];
-            karta_pracy.pracownik.Imie = dane.Split(':')[1].Trim().Split(' ')[1];
+            if(dane.Contains("KARTA PRACY:"))
+            {
+                dane = dane.Replace("KARTA PRACY:", "").Trim();
+            }
+            if (string.IsNullOrEmpty(dane))
+            {
+                dane = worksheet.Cell(StartKarty.row - 2, StartKarty.col + 1).GetValue<string>().Trim().Replace("  ", " ");
+                if (string.IsNullOrEmpty(dane))
+                {
+                    dane = worksheet.Cell(StartKarty.row - 2, StartKarty.col + 2).GetValue<string>().Trim().Replace("  ", " ");
+                    if (string.IsNullOrEmpty(dane))
+                    {
+                        Program.error_logger.New_Error(dane, "nazwisko i imie", StartKarty.col - 2, StartKarty.row, "Zły format pola nazwisko i imie");
+                        Console.WriteLine(Program.error_logger.Get_Error_String());
+                        throw new Exception(Program.error_logger.Get_Error_String());
+                    }
+                    else
+                    {
+                        karta_pracy.pracownik.Nazwisko = dane.Trim().Split(' ')[0];
+                        karta_pracy.pracownik.Imie = dane.Trim().Split(' ')[1];
+                    }
+                }
+                else
+                {
+                    karta_pracy.pracownik.Nazwisko = dane.Trim().Split(' ')[0];
+                    karta_pracy.pracownik.Imie = dane.Trim().Split(' ')[1];
+                }
+            }
+            else
+            {
+                karta_pracy.pracownik.Nazwisko = dane.Trim().Split(' ')[0];
+                karta_pracy.pracownik.Imie = dane.Trim().Split(' ')[1];
+            }
             if (karta_pracy.pracownik.Nazwisko == null || karta_pracy.pracownik.Imie == null)
             {
-                Program.error_logger.New_Error(dane, "nazwisko i imie", StartKarty.col, StartKarty.row - 2, "Zły format pola nazwisko i imie");
+                Program.error_logger.New_Error(dane, "nazwisko i imie", StartKarty.col - 2, StartKarty.row, "Zły format pola nazwisko i imie");
+                Console.WriteLine(Program.error_logger.Get_Error_String());
                 throw new Exception(Program.error_logger.Get_Error_String());
             }
         }
@@ -308,10 +351,13 @@ namespace All_Readeer
                 if (int.TryParse(NrDnia, out int parsedDzien))
                 {
                     dzien.dzien = parsedDzien;
-                }
-                else
+                }else if (DateTime.TryParse(NrDnia, out DateTime Data))
+                {
+                    dzien.dzien = Data.Day;
+                }else
                 {
                     Program.error_logger.New_Error(NrDnia, "dzien", StartKarty.col, StartKarty.row, "Błędny nr dnia");
+                    Console.WriteLine(Program.error_logger.Get_Error_String());
                     throw new Exception(Program.error_logger.Get_Error_String());
                 }
 
@@ -319,10 +365,10 @@ namespace All_Readeer
                 try
                 {
                     var danei = worksheet.Cell(StartKarty.row, StartKarty.col + 3).GetValue<string>();
-                    if (!string.IsNullOrEmpty(danei))
+                    if (!string.IsNullOrEmpty(danei.Trim()))
                     {
                         Nieobecnosc nieobecnosc = new();
-                        if (Enum.TryParse(danei, out RodzajNieobecnosci Rnieobecnosc))
+                        if (RodzajNieobecnosci.TryParse(danei.ToUpper(), out RodzajNieobecnosci Rnieobecnosc))
                         {
                             nieobecnosc.rodzaj_absencji = Rnieobecnosc;
                             nieobecnosc.pracownik = karta_pracy.pracownik;
@@ -332,8 +378,7 @@ namespace All_Readeer
                         }
                         else
                         {
-                            Program.error_logger.New_Error(danei, "kod nieobecnosci", StartKarty.col + 3, StartKarty.row, "Nieprawidłowy kod nieobecności");
-                            Console.WriteLine($"Nieprawidłowy kod nieobecności: {danei}");
+                            Console.WriteLine($"Nieprawidłowy kod nieobecności: {danei} w pliku {Program.error_logger.Nazwa_Pliku} w zakladce {Program.error_logger.Nr_Zakladki}");
                             throw new Exception(Program.error_logger.Get_Error_String());
                         }
                         karta_pracy.ListaNieobecnosci.Add(nieobecnosc);
@@ -344,11 +389,9 @@ namespace All_Readeer
                 }
                 catch (Exception ex)
                 {
+                    Console.WriteLine(ex.Message);
                     throw new Exception(ex.Message);
                 }
-
-
-
                 // godz rozpoczecia
                 try
                 {
@@ -368,8 +411,36 @@ namespace All_Readeer
                     }
                     else
                     {
-                        Program.error_logger.New_Error(danei, "godziny pozpoczęcia pracy", StartKarty.col + 1, StartKarty.row, "Nieprawidłowy format czasu pracy");
-                        throw new Exception(Program.error_logger.Get_Error_String());
+                        //here try to solve times like 07:59:60 xdd
+                        if (danei.Split(':').Count() == 3)
+                        {
+                            var parts = danei.Split(':');
+
+                            if (int.TryParse(parts[0], out int hours) &&
+                                int.TryParse(parts[1], out int minutes) &&
+                                int.TryParse(parts[2], out int seconds))
+                            {
+                                if (seconds >= 60)
+                                {
+                                    seconds -= 60;
+                                    minutes += 1;
+                                }
+                                if (minutes >= 60)
+                                {
+                                    minutes -= 60;
+                                    hours += 1;
+                                }
+                                hours %= 24;
+                                dzien.godz_rozp_pracy = new TimeSpan(hours, minutes, seconds);
+                            }
+
+                        }
+                        else
+                        {
+                            Program.error_logger.New_Error(danei, "godz_rozp_pracy", StartKarty.col + 1, StartKarty.row);
+                            Console.WriteLine(Program.error_logger.Get_Error_String() + " (Zły foramt czasu)");
+                            throw new Exception(Program.error_logger.Get_Error_String());
+                        }
                     }
                 }
                 catch
@@ -390,11 +461,38 @@ namespace All_Readeer
                     }
                     else
                     {
-                        Program.error_logger.New_Error(danei, "godziny pozpoczęcia pracy", StartKarty.col + 1, StartKarty.row, "Nieprawidłowy format czasu pracy");
-                        throw new Exception(Program.error_logger.Get_Error_String());
+                        //here try to solve times like 07:59:60 xdd
+                        if (danei.Split(':').Count() == 3)
+                        {
+                            var parts = danei.Split(':');
+
+                            if (int.TryParse(parts[0], out int hours) &&
+                                int.TryParse(parts[1], out int minutes) &&
+                                int.TryParse(parts[2], out int seconds))
+                            {
+                                if (seconds >= 60)
+                                {
+                                    seconds -= 60;
+                                    minutes += 1;
+                                }
+                                if (minutes >= 60)
+                                {
+                                    minutes -= 60;
+                                    hours += 1;
+                                }
+                                hours %= 24;
+                                dzien.godz_rozp_pracy = new TimeSpan(hours, minutes, seconds);
+                            }
+
+                        }
+                        else
+                        {
+                            Program.error_logger.New_Error(danei, "godz_rozp_pracy", StartKarty.col + 1, StartKarty.row);
+                            Console.WriteLine(Program.error_logger.Get_Error_String() + " (Zły foramt czasu)");
+                            throw new Exception(Program.error_logger.Get_Error_String());
+                        }
                     }
                 }
-
                 // godz zakonczenia
                 try
                 {
@@ -414,8 +512,36 @@ namespace All_Readeer
                     }
                     else
                     {
-                        Program.error_logger.New_Error(danei, "godziny zakończenia pracy", StartKarty.col + 2, StartKarty.row, "Nieprawidłowy format czasu pracy.");
-                        throw new Exception(Program.error_logger.Get_Error_String());
+                        //here try to solve times like 07:59:60 xdd
+                        if (danei.Split(':').Count() == 3)
+                        {
+                            var parts = danei.Split(':');
+
+                            if (int.TryParse(parts[0], out int hours) &&
+                                int.TryParse(parts[1], out int minutes) &&
+                                int.TryParse(parts[2], out int seconds))
+                            {
+                                if (seconds >= 60)
+                                {
+                                    seconds -= 60;
+                                    minutes += 1;
+                                }
+                                if (minutes >= 60)
+                                {
+                                    minutes -= 60;
+                                    hours += 1;
+                                }
+                                hours %= 24;
+                                dzien.godz_zakoncz_pracy = new TimeSpan(hours, minutes, seconds);
+                            }
+
+                        }
+                        else
+                        {
+                            Program.error_logger.New_Error(danei, "godz_zakoncz_pracy", StartKarty.col +2, StartKarty.row);
+                            Console.WriteLine(Program.error_logger.Get_Error_String() + " (Zły foramt czasu)");
+                            throw new Exception(Program.error_logger.Get_Error_String());
+                        }
                     }
                 }
                 catch
@@ -440,218 +566,41 @@ namespace All_Readeer
                     }
                     else
                     {
-                        Program.error_logger.New_Error(danei, "godziny zakończenia pracy", StartKarty.col + 2, StartKarty.row, "Nieprawidłowy format czasu pracy.");
-                        throw new Exception(Program.error_logger.Get_Error_String());
+                        //here try to solve times like 07:59:60 xdd
+                        if (danei.Split(':').Count() == 3)
+                        {
+                            var parts = danei.Split(':');
+
+                            if (int.TryParse(parts[0], out int hours) &&
+                                int.TryParse(parts[1], out int minutes) &&
+                                int.TryParse(parts[2], out int seconds))
+                            {
+                                if (seconds >= 60)
+                                {
+                                    seconds -= 60;
+                                    minutes += 1;
+                                }
+                                if (minutes >= 60)
+                                {
+                                    minutes -= 60;
+                                    hours += 1;
+                                }
+                                hours %= 24;
+                                dzien.godz_zakoncz_pracy = new TimeSpan(hours, minutes, seconds);
+                            }
+
+                        }
+                        else
+                        {
+                            Program.error_logger.New_Error(danei, "godz_zakoncz_pracy", StartKarty.col + 2, StartKarty.row);
+                            Console.WriteLine(Program.error_logger.Get_Error_String() + " (Zły foramt czasu)");
+                            throw new Exception(Program.error_logger.Get_Error_String());
+                        }
                     }
-                }
-
-                // Liczba godz. przepracowanych
-                var dane = worksheet.Cell(StartKarty.row, StartKarty.col + 7).GetValue<string>().Trim();
-                if (string.IsNullOrEmpty(dane))
-                {
-                    Program.error_logger.New_Error(dane, "liczba godz przepracowanych", StartKarty.col + 7, StartKarty.row, "Brak wpisanej liczba godz przepracowanych");
-                    throw new Exception(Program.error_logger.Get_Error_String());
-                }
-
-                if (decimal.TryParse(dane, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.GetCultureInfo("pl-PL"), out decimal liczba))
-                {
-                    dzien.liczba_godz_przepracowanych = Math.Abs(liczba);
-                }
-                else
-                {
-                    Program.error_logger.New_Error(dane, "liczba godz przepracowanych", StartKarty.col + 7, StartKarty.row, "Zly format liczba godz przepracowanych");
-                    throw new Exception(Program.error_logger.Get_Error_String());
-                }
-
-                // Praca wg grafiku
-                dane = worksheet.Cell(StartKarty.row, StartKarty.col + 8).GetValue<string>().Trim();
-                if (string.IsNullOrEmpty(dane))
-                {
-                    //ErrorLogger_v2.New_Error(dane, "praca wg grafiku", StartKarty.col + 8, StartKarty.row, "Brak wpisanej praca wg grafiku");
-                    //throw new Exception(ErrorLogger_v2.Get_Error_String());
-                } else if (decimal.TryParse(dane, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.GetCultureInfo("pl-PL"), out liczba))
-                {
-                    dzien.praca_wg_grafiku = Math.Abs(liczba);
-                }
-                else
-                {
-                    Program.error_logger.New_Error(dane, "praca wg grafiku", StartKarty.col + 8, StartKarty.row, "Zly format praca wg grafiku");
-                    throw new Exception(Program.error_logger.Get_Error_String());
-                }
-
-                //Godziny nadl. płatne z dod. 50%
-                dane = worksheet.Cell(StartKarty.row, StartKarty.col + 9).GetValue<string>().Trim();
-                if (string.IsNullOrEmpty(dane))
-                {
-                    //ErrorLogger_v2.New_Error(dane, "Godz nadl platne z dod 50", StartKarty.col + 9, StartKarty.row, "Brak wpisanej Godz nadl platne z dod 50");
-                    //throw new Exception(ErrorLogger_v2.Get_Error_String());
-                } else if (decimal.TryParse(dane, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.GetCultureInfo("pl-PL"), out liczba))
-                {
-                    dzien.Godz_nadl_platne_z_dod_50 = Math.Abs(liczba);
-                }
-                else
-                {
-                    Program.error_logger.New_Error(dane, "Godz nadl platne z dod 50", StartKarty.col + 9, StartKarty.row, "Zly format Godz nadl platne z dod 50");
-                    throw new Exception(Program.error_logger.Get_Error_String());
-                }
-
-                //Godziny nadl. płatne z dod. 100%
-                dane = worksheet.Cell(StartKarty.row, StartKarty.col + 10).GetValue<string>().Trim();
-                if (string.IsNullOrEmpty(dane))
-                {
-                    //ErrorLogger_v2.New_Error(dane, "Godz nadl platne z dod 100", StartKarty.col + 10, StartKarty.row, "Brak wpisanej Godz nadl platne z dod 100");
-                    //throw new Exception(ErrorLogger_v2.Get_Error_String());
-                } else if (decimal.TryParse(dane, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.GetCultureInfo("pl-PL"), out liczba))
-                {
-                    dzien.Godz_nadl_platne_z_dod_100 = Math.Abs(liczba);
-                }
-                else
-                {
-                    Program.error_logger.New_Error(dane, "Godz nadl platne z dod 100", StartKarty.col + 10, StartKarty.row, "Zly format Godz nadl platne z dod 100");
-                    throw new Exception(Program.error_logger.Get_Error_String());
                 }
                 karta_pracy.dane_dni.Add(dzien);
                 StartKarty.row++;
                 NrDnia = worksheet.Cell(StartKarty.row, StartKarty.col).GetValue<string>().Trim();
-            }
-        }
-        public void Set_Db_Tables_ConnectionString(string NewConnectionString)
-        {
-            Connection_String = NewConnectionString;
-        }
-        private void Insert_Pracownicy_To_Db(List<Pracownik> pracownicy)
-        {
-            using (SqlConnection connection = new SqlConnection(Connection_String))
-            {
-                connection.Open();
-                SqlTransaction tran = connection.BeginTransaction();
-
-                try
-                {
-                    foreach (var pracownik in pracownicy)
-                    {
-                        string checkQuery = "SELECT COUNT(1) FROM Karta_Pracy_Kucharska_Pracownicy WHERE Imie = @Imie AND Nazwisko = @Nazwisko";
-                        using (SqlCommand checkCmd = new SqlCommand(checkQuery, connection, tran))
-                        {
-                            checkCmd.Parameters.AddWithValue("@Imie", pracownik.Imie);
-                            checkCmd.Parameters.AddWithValue("@Nazwisko", pracownik.Nazwisko);
-
-                            int count = (int)checkCmd.ExecuteScalar();
-
-                            if (count == 0)
-                            {
-                                string insertQuery = "INSERT INTO Karta_Pracy_Kucharska_Pracownicy (Imie, Nazwisko, Ostatnia_Modyfikacja_Data, Ostatnia_Modyfikacja_Osoba) VALUES (@Imie, @Nazwisko, @Ostatnia_Modyfikacja_Data , @Ostatnia_Modyfikacja_Os)";
-                                using (SqlCommand insertCmd = new SqlCommand(insertQuery, connection, tran))
-                                {
-                                    insertCmd.Parameters.AddWithValue("@Imie", pracownik.Imie);
-                                    insertCmd.Parameters.AddWithValue("@Nazwisko", pracownik.Nazwisko);
-                                    insertCmd.Parameters.AddWithValue("@Ostatnia_Modyfikacja_Data", Last_Mod_Time);
-                                    insertCmd.Parameters.AddWithValue("@Ostatnia_Modyfikacja_Os", Last_Mod_Osoba);
-                                    insertCmd.ExecuteNonQuery();
-                                }
-                            }
-                        }
-                    }
-                    tran.Commit();
-                }
-                catch (Exception ex)
-                {
-                    tran.Rollback();
-                    Program.error_logger.New_Custom_Error(ex.Message);
-                    throw new Exception(Program.error_logger.Get_Error_String());
-                }
-            }
-        }
-        private int Insert_Karta_To_Db(Karta_Pracy karta)
-        {
-            int insertedId = -1;
-            using (SqlConnection connection = new SqlConnection(Connection_String))
-            {
-                connection.Open();
-                SqlTransaction tran = connection.BeginTransaction();
-                try
-                {
-                    var Id_Pracownika = 0;
-                    string selectQuery = "SELECT Id_Pracownika FROM Karta_Pracy_Kucharska_Pracownicy WHERE Imie = @Imie AND Nazwisko = @Nazwisko;";
-                    using (SqlCommand selectCmd = new SqlCommand(selectQuery, connection, tran))
-                    {
-                        selectCmd.Parameters.Add("@Imie", SqlDbType.NVarChar).Value = karta.pracownik.Imie;
-                        selectCmd.Parameters.Add("@Nazwisko", SqlDbType.NVarChar).Value = karta.pracownik.Nazwisko;
-                        object result = selectCmd.ExecuteScalar();
-                        Id_Pracownika = Convert.ToInt32(result);
-                    }
-                    string insertQuery = @"INSERT INTO Karty_Pracy_Kucharska (
-                                    Id_Pracownika,
-                                    Miesiac,
-                                    Rok,
-                                    Ostatnia_Modyfikacja_Data,
-                                    Ostatnia_Modyfikacja_Osoba
-                                )
-                                VALUES(
-                                    @Id_Pracownika,
-                                    @Miesiac,
-                                    @Rok,
-                                    @Ostatnia_Modyfikacja_Data,
-                                    @Ostatnia_Modyfikacja_Os
-                                ); SELECT SCOPE_IDENTITY();";
-
-                    using (SqlCommand insertCmd = new SqlCommand(insertQuery, connection, tran))
-                    {
-                        insertCmd.Parameters.Add("@Id_Pracownika", SqlDbType.Int).Value = Id_Pracownika;
-                        insertCmd.Parameters.Add("@Miesiac", SqlDbType.Int).Value = karta.miesiac;
-                        insertCmd.Parameters.Add("@Rok", SqlDbType.Int).Value = karta.rok;
-                        insertCmd.Parameters.AddWithValue("@Ostatnia_Modyfikacja_Data", Last_Mod_Time);
-                        insertCmd.Parameters.AddWithValue("@Ostatnia_Modyfikacja_Os", Last_Mod_Osoba);
-
-                        insertedId = Convert.ToInt32(insertCmd.ExecuteScalar());
-                        tran.Commit();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    tran.Rollback();
-                    Program.error_logger.New_Custom_Error(ex.Message);
-                    throw new Exception(Program.error_logger.Get_Error_String());
-                }
-            }
-            return insertedId;
-        }
-        private void Insert_Dni_To_Db(int Id_Karty, List<Dane_Dnia> dni)
-        {
-            using (SqlConnection connection = new SqlConnection(Connection_String))
-            {
-                connection.Open();
-                SqlTransaction tran = connection.BeginTransaction();
-                try
-                {
-                    string insertQuery = "INSERT INTO Karty_Pracy_Kucharska_Dane_Dni (Id_Karty, Dzien, Godzina_Rozpoczęcia_Pracy, Godzina_Zakonczenia_Pracy, Czas_Faktyczny_Przepracowany, Praca_WG_Grafiku, Ilosc_Godzin_Z_Dodatkiem_50, Ilosc_Godzin_Z_Dodatkiem_100, Ostatnia_Modyfikacja_Data, Ostatnia_Modyfikacja_Osoba) " +
-                                            "VALUES (@Id_Karty, @Dzien, @Godzina_Rozpoczecia, @Godzina_Zakonczenia_Pracy, @Czas_Faktyczny_Przepracowany, @Praca_WG_Grafiku, @Ilosc_Godzin_Z_Dodatkiem_50, @Ilosc_Godzin_Z_Dodatkiem_100, @Ostatnia_Modyfikacja_Data, @Ostatnia_Modyfikacja_Os);";
-
-                    foreach (var dzień in dni)
-                    {
-                        using (SqlCommand insertCmd = new SqlCommand(insertQuery, connection, tran))
-                        {
-                            insertCmd.Parameters.AddWithValue("@Id_Karty", Id_Karty);
-                            insertCmd.Parameters.AddWithValue("@Dzien", dzień.dzien);
-                            insertCmd.Parameters.AddWithValue("@Godzina_Rozpoczecia", dzień.godz_rozp_pracy);
-                            insertCmd.Parameters.AddWithValue("@Godzina_Zakonczenia_Pracy", dzień.godz_zakoncz_pracy);
-                            insertCmd.Parameters.AddWithValue("@Czas_Faktyczny_Przepracowany", dzień.liczba_godz_przepracowanych);
-                            insertCmd.Parameters.AddWithValue("@Praca_WG_Grafiku", dzień.praca_wg_grafiku);
-                            insertCmd.Parameters.AddWithValue("@Ilosc_Godzin_Z_Dodatkiem_50", dzień.Godz_nadl_platne_z_dod_50);
-                            insertCmd.Parameters.AddWithValue("@Ilosc_Godzin_Z_Dodatkiem_100", dzień.Godz_nadl_platne_z_dod_100);
-                            insertCmd.Parameters.AddWithValue("@Ostatnia_Modyfikacja_Data", Last_Mod_Time);
-                            insertCmd.Parameters.AddWithValue("@Ostatnia_Modyfikacja_Os", Last_Mod_Osoba);
-                            insertCmd.ExecuteNonQuery();
-                        }
-                    }
-                    tran.Commit();
-                }
-                catch (Exception ex)
-                {
-                    tran.Rollback();
-                    Program.error_logger.New_Custom_Error(ex.Message);
-                    throw new Exception(Program.error_logger.Get_Error_String());
-                }
             }
         }
         private void Wpierdol_Obecnosci_do_Optimy(Karta_Pracy karta, SqlTransaction tran, SqlConnection connection)
@@ -660,12 +609,20 @@ namespace All_Readeer
 DECLARE @id int;
 
 -- dodawaina pracownika do pracx i init pracpracdni
-DECLARE @PRI_PraId INT = (SELECT DISTINCT PRI_PraId FROM CDN.Pracidx where PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Imie1 = @PracownikImieInsert and PRI_Typ = 1);
-
+IF((select DISTINCT COUNT(PRI_PraId) from cdn.Pracidx WHERE PRI_Imie1 = @PracownikImieInsert and PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Typ = 1) > 1)
+BEGIN
+	DECLARE @ErrorMessageC NVARCHAR(500) = 'Jest 2 pracowników o takim samym imieniu i nazwisku: ' +@PracownikImieInsert + ' ' +  @PracownikNazwiskoInsert;
+	THROW 50001, @ErrorMessageC, 1;
+END
+DECLARE @PRI_PraId INT = (select DISTINCT PRI_PraId from cdn.Pracidx WHERE PRI_Imie1 = @PracownikImieInsert and PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Typ = 1);
 IF @PRI_PraId IS NULL
 BEGIN
-    DECLARE @ErrorMessage NVARCHAR(500) = 'Brak takiego pracownika w bazie: ' + @PracownikNazwiskoInsert + ' ' + @PracownikImieInsert;
-    THROW 50000, @ErrorMessage, 1;
+	SET @PRI_PraId = (select DISTINCT PRI_PraId from cdn.Pracidx WHERE PRI_Imie1 = @PracownikNazwiskoInsert  and PRI_Nazwisko = @PracownikImieInsert and PRI_Typ = 1);
+	IF @PRI_PraId IS NULL
+	BEGIN
+		DECLARE @ErrorMessage NVARCHAR(500) = 'Brak takiego pracownika w bazie: ' +@PracownikImieInsert + ' ' +  @PracownikNazwiskoInsert;
+		THROW 50000, @ErrorMessage, 1;
+	END
 END
 
 
@@ -870,6 +827,16 @@ END";
                 catch (SqlException ex)
                 {
                     Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
+                    if (ex.Number == 50000)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                    }
+                    if (ex.Number == 50001)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                    }
+                    Console.WriteLine(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
+                    Console.ForegroundColor = ConsoleColor.White;
                     tran.Rollback();
                     var e = new Exception(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
                     e.Data["zakladka"] = Program.error_logger.Nr_Zakladki;
@@ -880,11 +847,20 @@ END";
         private void Wjeb_Nieobecnosci_do_Optimy(List<Nieobecnosc> ListaNieobecności, SqlTransaction tran, SqlConnection connection)
         {
             var sqlQuery = @$"
+IF((select DISTINCT COUNT(PRI_PraId) from cdn.Pracidx WHERE PRI_Imie1 = @PracownikImieInsert and PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Typ = 1) > 1)
+BEGIN
+	DECLARE @ErrorMessageC NVARCHAR(500) = 'Jest 2 pracowników o takim samym imieniu i nazwisku: ' +@PracownikImieInsert + ' ' +  @PracownikNazwiskoInsert;
+	THROW 50001, @ErrorMessageC, 1;
+END
 DECLARE @PRACID INT = (select DISTINCT PRI_PraId from cdn.Pracidx WHERE PRI_Imie1 = @PracownikImieInsert and PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Typ = 1);
 IF @PRACID IS NULL
 BEGIN
-    DECLARE @ErrorMessage NVARCHAR(500) = 'Brak takiego pracownika w bazie: ' + @PracownikNazwiskoInsert + ' ' + @PracownikImieInsert;
-    THROW 50000, @ErrorMessage, 1;
+	SET @PRACID = (select DISTINCT PRI_PraId from cdn.Pracidx WHERE PRI_Imie1 = @PracownikNazwiskoInsert  and PRI_Nazwisko = @PracownikImieInsert and PRI_Typ = 1);
+	IF @PRACID IS NULL
+	BEGIN
+		DECLARE @ErrorMessage NVARCHAR(500) = 'Brak takiego pracownika w bazie: ' +@PracownikImieInsert + ' ' +  @PracownikNazwiskoInsert;
+		THROW 50000, @ErrorMessage, 1;
+	END
 END
 
 DECLARE @TNBID INT = (select TNB_TnbId from cdn.TypNieobec WHERE TNB_Nazwa = @NazwaNieobecnosci)
@@ -964,6 +940,7 @@ INSERT INTO [CDN].[PracNieobec]
                         if (string.IsNullOrEmpty(nazwa_nieobecnosci))
                         {
                             Program.error_logger.New_Custom_Error($"W programie brak dopasowanego kodu nieobecnosci: {ListaNieo[0].rodzaj_absencji} w dniu {new DateTime(ListaNieo[0].rok, ListaNieo[0].miesiac, ListaNieo[0].dzien)} dla pracownika {ListaNieo[0].pracownik.Nazwisko} {ListaNieo[0].pracownik.Imie} z pliku: {Program.error_logger.Nazwa_Pliku} z zakladki: {Program.error_logger.Nr_Zakladki}. Nieobecnosc nie dodana.");
+                            Console.WriteLine($"W programie brak dopasowanego kodu nieobecnosci: {ListaNieo[0].rodzaj_absencji} w dniu {new DateTime(ListaNieo[0].rok, ListaNieo[0].miesiac, ListaNieo[0].dzien)} dla pracownika {ListaNieo[0].pracownik.Nazwisko} {ListaNieo[0].pracownik.Imie} z pliku: {Program.error_logger.Nazwa_Pliku} z zakladki: {Program.error_logger.Nr_Zakladki}. Nieobecnosc nie dodana.");
                             var e = new Exception($"W programie brak dopasowanego kodu nieobecnosci: {ListaNieo[0].rodzaj_absencji} w dniu {new DateTime(ListaNieo[0].rok, ListaNieo[0].miesiac, ListaNieo[0].dzien)} dla pracownika {ListaNieo[0].pracownik.Nazwisko} {ListaNieo[0].pracownik.Imie} z pliku: {Program.error_logger.Nazwa_Pliku} z zakladki: {Program.error_logger.Nr_Zakladki}. Nieobecnosc nie dodana.");
                             e.Data["zakladka"] = Program.error_logger.Nr_Zakladki;
                             throw e;
@@ -980,8 +957,22 @@ INSERT INTO [CDN].[PracNieobec]
                         insertCmd.Parameters.Add("@DataOd", SqlDbType.DateTime).Value = dataniobecnoscistart;
                         insertCmd.Parameters.Add("@BaseDate", SqlDbType.DateTime).Value = dataBazowa;
                         insertCmd.Parameters.Add("@DataDo", SqlDbType.DateTime).Value = dataniobecnosciend;
-                        insertCmd.Parameters.AddWithValue("@ImieMod", Last_Mod_Osoba);
-                        insertCmd.Parameters.AddWithValue("@NazwiskoMod", Last_Mod_Osoba);
+                        if (Last_Mod_Osoba.Length > 20)
+                        {
+                            insertCmd.Parameters.AddWithValue("@ImieMod", Last_Mod_Osoba.Substring(0, 20));
+                        }
+                        else
+                        {
+                            insertCmd.Parameters.AddWithValue("@ImieMod", Last_Mod_Osoba);
+                        }
+                        if (Last_Mod_Osoba.Length > 50)
+                        {
+                            insertCmd.Parameters.AddWithValue("@NazwiskoMod", Last_Mod_Osoba.Substring(0, 50));
+                        }
+                        else
+                        {
+                            insertCmd.Parameters.AddWithValue("@NazwiskoMod", Last_Mod_Osoba);
+                        }
                         insertCmd.Parameters.AddWithValue("@DataMod", Last_Mod_Time);
                         insertCmd.ExecuteScalar();
                     }
@@ -989,8 +980,16 @@ INSERT INTO [CDN].[PracNieobec]
                 catch (SqlException ex)
                 {
                     Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
+                    if (ex.Number == 50000)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                    }
+                    if (ex.Number == 50001)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                    }
                     Console.WriteLine(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
-                    tran.Rollback();
+                    Console.ForegroundColor = ConsoleColor.White; tran.Rollback();
                     var e = new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
                     e.Data["zakladka"] = Program.error_logger.Nr_Zakladki;
                     throw e;
@@ -1002,6 +1001,7 @@ INSERT INTO [CDN].[PracNieobec]
         {
             return rodzaj switch
             {
+
                 RodzajNieobecnosci.UO => "Urlop okolicznościowy",
                 RodzajNieobecnosci.ZL => "Zwolnienie chorobowe/F",
                 RodzajNieobecnosci.ZY => "Zwolnienie chorobowe/wyp.w drodze/F",
@@ -1024,22 +1024,33 @@ INSERT INTO [CDN].[PracNieobec]
                 RodzajNieobecnosci.PP => "Dni wolne na poszukiwanie pracy",
                 RodzajNieobecnosci.UK => "Dni wolne z tyt. krwiodawstwa",
                 RodzajNieobecnosci.IK => "Covid19",
-                _ => ""
+                _ => "Nieobecność (B2B)"
             };
         }
         private int Dopasuj_Przyczyne(RodzajNieobecnosci rodzaj)
         {
             return rodzaj switch
             {
-                RodzajNieobecnosci.ZL => 2,        // Zwolnienie lekarskie
-                RodzajNieobecnosci.ZR => 3,        // Wypadek w pracy/choroba zawodowa
-                RodzajNieobecnosci.ZY => 4,        // Wypadek w drodze do/z pracy
-                RodzajNieobecnosci.ZZ => 5,        // Zwolnienie w okresie ciąży
-                RodzajNieobecnosci.ZK => 9,        // Opieka nad dzieckiem do lat 14
-                RodzajNieobecnosci.ZC => 10,       // Opieka nad inną osobą
-                RodzajNieobecnosci.ZS => 11,       // Leczenie szpitalne
-                RodzajNieobecnosci.UK => 12,       // Badanie dawcy/pobranie organów
-                _ => 1                             // Nie dotyczy dla pozostałych przypadków
+                RodzajNieobecnosci.ZL => 1,        // Zwolnienie lekarskie
+                RodzajNieobecnosci.DM => 2,        // Urlop macierzyński
+                RodzajNieobecnosci.DR => 13,        // Urlop opiekuńczy
+                RodzajNieobecnosci.NB => 1,        // Zwolnienie lekarskie
+                RodzajNieobecnosci.NN => 5,        // Nieobecność nieusprawiedliwiona
+                RodzajNieobecnosci.UC => 21,       // Urlop opiekuńczy
+                RodzajNieobecnosci.UD => 21,       // Urlop opiekuńczy
+                RodzajNieobecnosci.UJ => 10,       // Służba wojskowa
+                RodzajNieobecnosci.UL => 10,       // Służba wojskowa
+                RodzajNieobecnosci.UM => 2,       // Urlop macierzyński
+                RodzajNieobecnosci.UO => 4,       // Urlop okolicznościowy
+                RodzajNieobecnosci.UN => 3,       // Urlop rehabilitacyjny
+                RodzajNieobecnosci.UR => 3,       // Urlop rehabilitacyjny
+                RodzajNieobecnosci.ZC => 21,       // Urlop opiekuńczy
+                RodzajNieobecnosci.ZD => 21,       // Urlop opiekuńczy
+                RodzajNieobecnosci.ZK => 21,       // Urlop opiekuńczy
+                RodzajNieobecnosci.ZN => 1,       // Zwolnienie lekarskie
+                RodzajNieobecnosci.ZR => 3,       // Urlop rehabilitacyjny
+                RodzajNieobecnosci.ZZ => 1,       // Zwolnienie lekarskie
+                _ => 9                             // Nie dotyczy dla pozostałych przypadków
             };
         }
         private List<List<Nieobecnosc>> Podziel_Niobecnosci_Na_Osobne(List<Nieobecnosc> listaNieobecnosci)
@@ -1088,7 +1099,6 @@ INSERT INTO [CDN].[PracNieobec]
             {
                 throw;
             }
-
         }
         private int Ile_Dni_Roboczych(List<Nieobecnosc> listaNieobecnosci)
         {

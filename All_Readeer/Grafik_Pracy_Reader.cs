@@ -844,7 +844,7 @@ namespace All_Readeer
                     }
                 }
                 Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine($"Poprawnie dodawno obecnosci z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
+                Console.WriteLine($"Poprawnie dodawno plan z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
                 Console.ForegroundColor = ConsoleColor.White;
                 tran.Commit();
             }

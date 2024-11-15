@@ -122,3 +122,5 @@ G:\ITEGER\staż\obecności\All_Reader\All_Readeer\obj\Debug\net8.0\refint\All_Re
 G:\ITEGER\staż\obecności\All_Reader\All_Readeer\obj\Debug\net8.0\All_Readeer.pdb
 G:\ITEGER\staż\obecności\All_Reader\All_Readeer\obj\Debug\net8.0\All_Readeer.genruntimeconfig.cache
 G:\ITEGER\staż\obecności\All_Reader\All_Readeer\obj\Debug\net8.0\ref\All_Readeer.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\obj\Debug\net8.0\All_Readeer.sourcelink.json
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\Microsoft.Office.Interop.Excel.dll

@@ -52,12 +52,21 @@
         /// <returns>Zwraca wiadomość jaką wpisało by do pliku z errorami.</returns>
         public string Get_Error_String()
         {
-            string Wiadomosc = $"W pliku {Nazwa_Pliku} wystąpił błąd w zakładce nr {Nr_Zakladki}: W Kolumnie {Kolumna}, rzędzie {Rzad}, Powinna znaleźć się wartość {Poprawna_Wartosc_Pola} a jest: \"{Wartosc_Pola}\". Data wykrycia: {Data_Czas_Wykrycia_Bledu}.";
+            string Wiadomosc = @$"
+-------------------------------------------------------------------------------
+Wystąpił błąd w pliku: {Nazwa_Pliku}
+Zakładka nr: {Nr_Zakladki}
+Kolumna nr: {Kolumna}
+Rząd nr: {Rzad}
+Powinna znaleźć się wartość: {Poprawna_Wartosc_Pola}, a jest: {Wartosc_Pola}
+Data_czas wykrycia: {Data_Czas_Wykrycia_Bledu}
+";
             if (!string.IsNullOrEmpty(OptionalMsg))
             {
                 Wiadomosc += OptionalMsg;
                 OptionalMsg = string.Empty;
             }
+            Wiadomosc += Environment.NewLine + "-------------------------------------------------------------------------------" + Environment.NewLine;
             return Wiadomosc;
         }
         /// <summary>
@@ -65,6 +74,7 @@
         /// </summary>
         public void New_Custom_Error(string Error_Msg)
         {
+            Error_Msg = "-------------------------------------------------------------------------------" + Environment.NewLine + Error_Msg + Environment.NewLine + "-------------------------------------------------------------------------------" + Environment.NewLine;
             Append_Error_To_File(Error_Msg);
         }
         public void Set_Error_File_Path(string New_Error_File_Path)

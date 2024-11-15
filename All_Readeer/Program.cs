@@ -1,82 +1,50 @@
 ﻿using All_Readeer;
 using ClosedXML.Excel;
-using DocumentFormat.OpenXml.Vml;
-
 class Program
 {
-    private static string Files_Folder = "G:\\ITEGER\\staż\\obecności\\All_Reader\\Wszystkie pliki";
+    private static string Files_Folder = "G:\\ITEGER\\staż\\obecności\\All_Reader\\Wszystkie Pliki";
     private static string Errors_File_Folder = "G:\\ITEGER\\staż\\obecności\\All_Reader\\Errors\\";
     private static string Bad_Files_Folder = "G:\\ITEGER\\staż\\obecności\\All_Reader\\Bad Files\\";
     private static string Optima_Conection_String = "Server=ITEGER-NT;Database=CDN_Wars_Test_3_;User Id=sa;Password=cdn;Encrypt=True;TrustServerCertificate=True;";
     public static Error_Logger error_logger = new();
     public static void Main()
     {
+        Check_Foldery();
         //Wpierdol do while(true){} jeśli to tyle
         ZrobToWieszCoNoWieszOCoMiChodzi();
     }
 
     public static void ZrobToWieszCoNoWieszOCoMiChodzi()
     {
-        if (!Directory.Exists(Files_Folder))
-        {
-            Console.WriteLine("Brak folderu z plikami excel");
-            return;
-        }
-
-        if (!Directory.Exists(Errors_File_Folder))
-        {
-            Directory.CreateDirectory(Errors_File_Folder);
-        }
-        else
-        {
-            File.WriteAllText(Errors_File_Folder+"Errors.txt", string.Empty);
-        }
-
-        if (!Directory.Exists(Bad_Files_Folder))
-        {
-            Directory.CreateDirectory(Bad_Files_Folder);
-        }
-        else
-        {
-            foreach (var file in Directory.GetFiles(Bad_Files_Folder))
-            {
-                File.Delete(file);
-            }
-            foreach (var directory in Directory.GetDirectories(Bad_Files_Folder))
-            {
-                Directory.Delete(directory, recursive: true);
-            }
-        }
-
         string[] filePaths = Directory.GetFiles(Files_Folder);
-
         if (filePaths.Length == 0) {
             Console.WriteLine("Nie znaleziono żadnych plików");
             return;
         }
 
         error_logger.Set_Error_File_Path(Errors_File_Folder);
-        foreach (string filePath in filePaths)
+        foreach (string current_filePath in filePaths)
         {
+            string filePath = current_filePath;
             Console.ForegroundColor = ConsoleColor.Blue;
             Console.WriteLine($"Czytanie: {System.IO.Path.GetFileNameWithoutExtension(filePath)}");
             Console.ForegroundColor = ConsoleColor.White;
-            try
+            if (!Is_File_Xlsx(filePath))
             {
-                var workbook = new XLWorkbook(filePath);
-            }
-            catch
-            {
-                Console.WriteLine($"Plik to nie arkusz xlsx: {filePath}.");
-                Console.ReadLine();
                 continue;
             }
+
             error_logger.Nazwa_Pliku = filePath;
+
             var (Last_Mod_Osoba, Last_Mod_Time) = Get_File_Meta_Info(filePath);
-            if (Last_Mod_Osoba == "Error") { throw new Exception("Error reading file"); }
+            if (Last_Mod_Osoba == "Error") {
+                error_logger.New_Custom_Error($"Error reading file {filePath}, could not reed metatata");
+            }
+
             int ilosc_zakladek = 0;
             using (var workbook = new XLWorkbook(filePath))
             {
+                Kurwa_Usun_Ukryte_Karty_XD(workbook);
                 ilosc_zakladek = workbook.Worksheets.Count;
                 for (int i = 1; i <= ilosc_zakladek; i++)
                 {
@@ -98,7 +66,7 @@ class Program
                         }
                         catch
                         {
-                            Cp_File_To_Bad_Files_Folder(filePath, error_logger.Nr_Zakladki);
+                            Copy_Bad_Sheet_To_Files_Folder(filePath, error_logger.Nr_Zakladki);
                             continue;
                         }
                     }
@@ -112,7 +80,7 @@ class Program
                         }
                         catch
                         {
-                            Cp_File_To_Bad_Files_Folder(filePath, error_logger.Nr_Zakladki);
+                            Copy_Bad_Sheet_To_Files_Folder(filePath, error_logger.Nr_Zakladki);
                             continue;
                         }
                     }
@@ -126,11 +94,11 @@ class Program
                         }
                         catch
                         {
-                            Cp_File_To_Bad_Files_Folder(filePath, error_logger.Nr_Zakladki);
+                            Copy_Bad_Sheet_To_Files_Folder(filePath, error_logger.Nr_Zakladki);
                             continue;
                         }
                     }
-                    else if (typ_pliku == 3)
+                    else if (typ_pliku == 4)
                     {
                         try
                         {
@@ -140,19 +108,22 @@ class Program
                         }
                         catch
                         {
-                            Cp_File_To_Bad_Files_Folder(filePath, error_logger.Nr_Zakladki);
+                            Copy_Bad_Sheet_To_Files_Folder(filePath, error_logger.Nr_Zakladki);
                             continue;
                         }
                     }
-                    // TODO dodać zwlonienia/urlopy z grafików i kartareaderv1
-                    // TODO dodać support dla Zachód - zespół utrzymania czystości - Szczecin - karty pracy.xlsx bo obok siebie i pod są karty xdd
-                    // grafik v2024 //TODO SPRAWDZ KILKA GRAFIKOW POD SOBĄ i sprawdz multiples of LICZBA GODZIN
-                    // lepsze i wiecej errorów
-                    // pewno bedzie wiecej jebanych kurwa edgecasów JAJEBE
+                    // TODO Upgradee dodawania zwolnien/urlopów/nieobecnosci
+                    // TODO MOZE NIE JUPII dodać support dla Zachód - zespół utrzymania czystości - Szczecin - karty pracy.xlsx bo obok siebie i pod są karty xdd
+                    // grafik v2024 SPRAWDZ KILKA GRAFIKOW POD SOBĄ
+                    // co znaczy ob. w grafikach pracy v2 -> dałem nieobecnosc
+                    // TODO Nieobecności w grafik v2024 jeśli takie będą
+                    // 2 prac o tej samej nazwie
+                    // prac ktorych nie ma w bazie
+                    // Wyszyścic ten zjebany pierdolony śmierdzący gówno kurwa kod żygać mi się chce
 
                 }
             }
-            Console.ReadLine();
+            //Console.ReadLine();
         }
 
     }
@@ -223,109 +194,108 @@ class Program
             return ("Error", DateTime.Now);
         }
     }
-    private static void Cp_File_To_Bad_Files_Folder(string filePath, int sheetIndex)
+    private static void Copy_Bad_Sheet_To_Files_Folder(string filePath, int sheetIndex)
+    {
+        var newFilePath = System.IO.Path.Combine(Bad_Files_Folder, "copy_" + System.IO.Path.GetFileName(filePath));
+        try
+        {
+            using (var originalwb = new XLWorkbook(filePath))
+            {
+                var sheetToCopy = originalwb.Worksheet(sheetIndex);
+                string newSheetName = $"Copy_{sheetIndex}_{sheetToCopy.Name}";
+                if (newSheetName.Length > 31)
+                {
+                    newSheetName = newSheetName.Substring(0, 31);
+                }
+                using (var workbook = File.Exists(newFilePath) ? new XLWorkbook(newFilePath) : new XLWorkbook())
+                {
+                    if (workbook.Worksheets.Contains(newSheetName))
+                    {
+                        return;
+                    }
+                    sheetToCopy.CopyTo(workbook, newSheetName);
+                    var properties = originalwb.Properties;
+                    properties.Author = "Copied by program";
+                    properties.Modified = DateTime.Now;
+                    workbook.SaveAs(newFilePath);
+                }
+            }
+        }
+        catch (IOException ioEx)
+        {
+            Console.WriteLine($"File I/O error occurred: {ioEx.Message}");
+        }
+        catch (UnauthorizedAccessException authEx)
+        {
+            Console.WriteLine($"Access error occurred: {authEx.Message}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error occurred: {ex.Message} in {newFilePath}");
+        }
+    }
+    private static void Kurwa_Usun_Ukryte_Karty_XD(XLWorkbook workbook)
+    {
+        var hiddenSheets = new List<IXLWorksheet>();
+        foreach (var sheet in workbook.Worksheets)
+        {
+            if (sheet.Visibility == XLWorksheetVisibility.Hidden)
+            {
+                hiddenSheets.Add(sheet);
+            }
+        }
+        foreach (var sheet in hiddenSheets)
+        {
+            workbook.Worksheets.Delete(sheet.Name);
+        }
+        workbook.Save();
+    }
+    private static void Check_Foldery()
+    {
+        if (!Directory.Exists(Files_Folder))
+        {
+            Console.WriteLine("Brak folderu z plikami excel");
+            return;
+        }
+
+        if (!Directory.Exists(Errors_File_Folder))
+        {
+            Directory.CreateDirectory(Errors_File_Folder);
+        }
+        else
+        {
+            File.WriteAllText(Errors_File_Folder + "Errors.txt", string.Empty);
+        }
+
+        if (!Directory.Exists(Bad_Files_Folder))
+        {
+            Directory.CreateDirectory(Bad_Files_Folder);
+        }
+        else
+        {
+            foreach (var file in Directory.GetFiles(Bad_Files_Folder))
+            {
+                File.Delete(file);
+            }
+            foreach (var directory in Directory.GetDirectories(Bad_Files_Folder))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+
+    }
+    private static bool Is_File_Xlsx(string filePath)
     {
         try
         {
-            string fileName = System.IO.Path.GetFileNameWithoutExtension(filePath) + "_copy.xlsx";
-            string destPath = System.IO.Path.Combine(Bad_Files_Folder, fileName);
-
-            using (var sourceWorkbook = new XLWorkbook(filePath))
-            {
-                if (sheetIndex >= 1 && sheetIndex <= sourceWorkbook.Worksheets.Count)
-                {
-                    var sourceSheet = sourceWorkbook.Worksheet(sheetIndex);
-
-                    XLWorkbook destWorkbook;
-
-                    if (File.Exists(destPath))
-                    {
-                        destWorkbook = new XLWorkbook(destPath);
-                    }
-                    else
-                    {
-                        destWorkbook = new XLWorkbook();
-                    }
-
-                    var destSheet = destWorkbook.Worksheets.Add(sourceSheet.Name);
-
-                    foreach (var row in sourceSheet.Rows())
-                    {
-                        var destRow = destSheet.Row(row.RowNumber());
-                        foreach (var cell in row.Cells())
-                        {
-                            try
-                            {
-                                // Check if cell and destination row are valid
-                                if (cell != null && destRow != null)
-                                {
-                                    var destCell = destRow.Cell(cell.Address.ColumnNumber);
-                                    if (cell.Address.Equals(destCell.Address))
-                                    {
-                                        continue; // Pomijamy, jeśli komórki są takie same
-                                    }
-
-                                    destCell.Value = cell.Value;
-
-                                    // Copy styles only if they exist
-                                    if (cell.Style != null)
-                                    {
-                                        // Font
-                                        if (cell.Style.Font != null)
-                                            destCell.Style.Font = cell.Style.Font;
-
-                                        // Background Fill
-                                        if (cell.Style.Fill != null)
-                                            destCell.Style.Fill = cell.Style.Fill;
-
-                                        // Alignment
-                                        if (cell.Style.Alignment != null)
-                                            destCell.Style.Alignment = cell.Style.Alignment;
-
-                                        // Borders
-                                        if (cell.Style.Border != null)
-                                        {
-                                            destCell.Style.Border.TopBorder = cell.Style.Border.TopBorder;
-                                            destCell.Style.Border.BottomBorder = cell.Style.Border.BottomBorder;
-                                            destCell.Style.Border.LeftBorder = cell.Style.Border.LeftBorder;
-                                            destCell.Style.Border.RightBorder = cell.Style.Border.RightBorder;
-                                            destCell.Style.Border.TopBorderColor = cell.Style.Border.TopBorderColor;
-                                            destCell.Style.Border.BottomBorderColor = cell.Style.Border.BottomBorderColor;
-                                            destCell.Style.Border.LeftBorderColor = cell.Style.Border.LeftBorderColor;
-                                            destCell.Style.Border.RightBorderColor = cell.Style.Border.RightBorderColor;
-                                        }
-                                    }
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                Console.WriteLine($"Error processing cell {cell.Address}: {ex.Message}");
-                            }
-                        }
-                    }
-                    destWorkbook.SaveAs(destPath);
-                }
-                else
-                {
-                    Console.WriteLine($"Arkusz o indeksie '{sheetIndex}' nie istnieje w pliku '{filePath}'.");
-                }
-            }
+            var workbook = new XLWorkbook(filePath);
         }
         catch
         {
-            Console.WriteLine($"Arkusz o indeksie '{sheetIndex}' w pliku '{filePath}' nie mógł być skopiowany, skopiowano cały plik.");
-            try
-            {
-                string fileName = System.IO.Path.GetFileName(filePath);
-                string destPath = System.IO.Path.Combine(Bad_Files_Folder, fileName);
-                File.Copy(filePath, destPath, true);
-                Console.WriteLine($"Plik skopiowany do folderu z błędami: {destPath}");
-            }
-            catch (Exception copyEx)
-            {
-                Console.WriteLine($"Błąd przy kopiowaniu pliku: {copyEx.Message}");
-            }
+            Console.WriteLine($"Plik to nie arkusz xlsx: {filePath}.");
+            return false;
         }
+        return true;
     }
 }
 //{

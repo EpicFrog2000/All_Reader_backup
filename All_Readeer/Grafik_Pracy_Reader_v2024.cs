@@ -1,5 +1,4 @@
 ﻿using ClosedXML.Excel;
-using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.Data.SqlClient;
 using System.Data;
 using System.Globalization;
@@ -23,6 +22,10 @@ namespace All_Readeer
             public void Set_Miesiac(string wartosc)
             {
                 var mies = wartosc.Trim().ToLower();
+                if(mies == "pażdziernik")
+                {
+                    mies = "październik";
+                }
                 if (mies == "styczeń")
                 {
                     miesiac = 1;
@@ -100,52 +103,31 @@ namespace All_Readeer
         private string File_Path = "";
         private string Last_Mod_Osoba = "";
         private DateTime Last_Mod_Time = DateTime.Now;
-        private string Connection_String = "";
         private string Optima_Connection_String = "";
         public void Process_Zakladka_For_Optima(IXLWorksheet worksheet, string last_Mod_Osoba, DateTime last_Mod_Time)
         {
             Grafik grafik = new();
-            grafik.nazwa_pliku = Program.error_logger.Nazwa_Pliku;
-            grafik.nr_zakladki = Program.error_logger.Nr_Zakladki;
-            Get_Header_Karta_Info(worksheet, ref grafik);
-            Get_Dane_Dni(worksheet, ref grafik);
-            Wpierdol_Plan_do_Optimy(grafik);
-        }
-        public void Set_File_Path(string New_File_Path)
-        {
-            if (string.IsNullOrEmpty(New_File_Path))
-            {
-                Console.WriteLine("error: Empty file path");
-                return;
-            }
-            File_Path = New_File_Path;
-        }
-        private (string, DateTime) Get_File_Meta_Info()
-        {
             try
             {
-                using (var workbook = new XLWorkbook(File_Path))
-                {
-                    string lastModifiedBy = workbook.Properties.LastModifiedBy!;
-                    DateTime lastWriteTime = File.GetLastWriteTime(File_Path);
-                    return (lastModifiedBy, lastWriteTime);
-                }
+                grafik.nazwa_pliku = Program.error_logger.Nazwa_Pliku;
+                grafik.nr_zakladki = Program.error_logger.Nr_Zakladki;
+                Get_Header_Karta_Info(worksheet, ref grafik);
+                Get_Dane_Dni(worksheet, ref grafik);
             }
-            catch (Exception ex)
+            catch(Exception ex)
             {
-                Program.error_logger.New_Custom_Error(ex.Message);
-                Console.WriteLine($"Error: {ex.Message}");
-                return ("Error", DateTime.Now);
+                Console.WriteLine(ex.Message);
+                throw;
             }
-        }
-        public void Set_Db_Tables_ConnectionString(string NewConnectionString)
-        {
-            if (string.IsNullOrEmpty(NewConnectionString))
+
+            try
             {
-                Console.WriteLine("error: Empty Connection string");
-                return;
+                Wpierdol_Plan_do_Optimy(grafik);
             }
-            Connection_String = NewConnectionString;
+            catch
+            {
+                throw;
+            }
         }
         public void Set_Optima_ConnectionString(string NewConnectionString)
         {
@@ -155,65 +137,6 @@ namespace All_Readeer
                 return;
             }
             Optima_Connection_String = NewConnectionString;
-        }
-        public void Process()
-        {
-            List<Grafik> grafiki = ReadXlsx();
-            List<Pracownik> listaPracowników = new();
-            foreach (var grafik in grafiki)
-            {
-                foreach (var danedni in grafik.dane_dni)
-                {
-                    listaPracowników.Add(danedni.pracownik);
-                }
-            }
-            try
-            {
-                Insert_Pracownicy_To_Db(listaPracowników);
-                foreach (var grafik in grafiki)
-                {
-                    int Id_Grafiku = Insert_Grafik_To_Db(grafik);
-                    Insert_Grafik_Pracy_Detale_To_Db(Id_Grafiku, grafik.dane_dni);
-                    Wpierdol_Plan_do_Optimy(grafik);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-        }
-        private List<Grafik> ReadXlsx()
-        {
-            Program.error_logger.Nazwa_Pliku = File_Path;
-            (Last_Mod_Osoba, Last_Mod_Time) = Get_File_Meta_Info();
-            if (Last_Mod_Osoba == "Error") { throw new Exception("Error reading file"); }
-            List<Grafik> grafiki = [];
-            try
-            {
-                using (var workbook = new XLWorkbook(File_Path))
-                {
-                    Program.error_logger.Nr_Zakladki = workbook.Worksheets.Count;
-                    var worksheet = workbook.Worksheet(workbook.Worksheets.Count);
-                    try
-                    {
-                        Grafik grafik = new Grafik();
-                        grafik.nazwa_pliku = File_Path;
-                        grafik.nr_zakladki = workbook.Worksheets.Count;
-                        Get_Header_Karta_Info(worksheet, ref grafik);
-                        Get_Dane_Dni(worksheet, ref grafik);
-                        grafiki.Add(grafik);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ex.Message);
-                    }
-                }
-            }
-            catch(Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-            return grafiki;
         }
         private void Get_Header_Karta_Info(IXLWorksheet worksheet, ref Grafik grafik)
         {
@@ -229,6 +152,7 @@ namespace All_Readeer
                 if (grafik.miesiac == 0)
                 {
                     Program.error_logger.New_Error(dane, "Miesiac", 1, 1, "Źle wpisany miesiąc");
+                    Console.WriteLine(Program.error_logger.Get_Error_String());
                     throw new Exception(Program.error_logger.Get_Error_String());
                 }
                 if (int.TryParse(dane.Split(' ')[5].Trim(), out int parsedYear))
@@ -290,12 +214,31 @@ namespace All_Readeer
                     var dziennr = worksheet.Cell(3, poz.col + 1 + j).GetValue<string>().Trim();
                     if (!string.IsNullOrEmpty(dziennr))
                     {
-                        dane_dnia.dzien = int.Parse(dziennr);
+                        if (int.TryParse(dziennr, out int parsedDzien))
+                        {
+                            dane_dnia.dzien = parsedDzien;
+                        }
+                        else if (DateTime.TryParse(dziennr, out DateTime Data))
+                        {
+                            dane_dnia.dzien = Data.Day;
+                        }
+                        else
+                        {
+                            Program.error_logger.New_Error(dziennr, "dzien", poz.col, 5, "Błędny nr dnia");
+                            Console.WriteLine(Program.error_logger.Get_Error_String());
+                            throw new Exception(Program.error_logger.Get_Error_String());
+                        }
+                        if (dane_dnia.dzien > 31 || dane_dnia.dzien == 0)
+                        {
+                            break;
+                        }
+
                         // get godziny pracy dnia
                         for (int k = 1; k <= height; k++)
                         {
                             Godz_Pracy godziny = new();
                             var godzr = worksheet.Cell(3 + k, poz.col + 1 + j).GetValue<string>().Trim();
+
                             if (!string.IsNullOrEmpty(godzr) && godzr != "" && godzr.Length > 0)
                             {
                                 if (DateTime.TryParse(godzr, out DateTime parsedTime))
@@ -304,8 +247,42 @@ namespace All_Readeer
                                 }
                                 else
                                 {
-                                    Program.error_logger.New_Error(godzr, "godziny rozpoczęcia pracy.", poz.col, poz.row, "Nieprawidłowy format godziny rozpoczęcia pracy.");
-                                    throw new Exception(Program.error_logger.Get_Error_String());
+                                    if (DateTime.TryParse(godzr.Replace('.', ':'), out DateTime parsedTime2))
+                                    {
+                                        godziny.Godz_Rozpoczecia_Pracy = parsedTime2.TimeOfDay;
+                                    }
+                                    else
+                                    {
+                                        //here try to solve times like 07:59:60 xdd
+                                        if (godzr.Split(':').Count() == 3)
+                                        {
+                                            var parts = godzr.Split(':');
+
+                                            if (int.TryParse(parts[0], out int hours) &&
+                                                int.TryParse(parts[1], out int minutes) &&
+                                                int.TryParse(parts[2], out int seconds))
+                                            {
+                                                if (seconds >= 60)
+                                                {
+                                                    seconds -= 60;
+                                                    minutes += 1;
+                                                }
+                                                if (minutes >= 60)
+                                                {
+                                                    minutes -= 60;
+                                                    hours += 1;
+                                                }
+                                                hours %= 24;
+                                                godziny.Godz_Rozpoczecia_Pracy = new TimeSpan(hours, minutes, seconds);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            Program.error_logger.New_Error(godzr, "Godz_Rozpoczecia_Pracy", poz.col + 1 + j, 3 + k);
+                                            Console.WriteLine(Program.error_logger.Get_Error_String() + " Nieprawidłowy format godziny rozpoczęcia pracy");
+                                            throw new Exception(Program.error_logger.Get_Error_String());
+                                        }
+                                    }
                                 }
                             }
                             var godzz = worksheet.Cell(3 + k, poz.col + 1 + j + 1).GetValue<string>().Trim();
@@ -317,10 +294,47 @@ namespace All_Readeer
                                 }
                                 else
                                 {
-                                    Program.error_logger.New_Error(godzr, "godziny zakończenia pracy.", poz.col, poz.row, "Nieprawidłowy format godziny zakończenia pracy.");
-                                    throw new Exception(Program.error_logger.Get_Error_String());
+                                    if (DateTime.TryParse(godzz.Replace('.', ':'), out DateTime parsedTime2))
+                                    {
+                                        godziny.Godz_Zakonczenia_Pracy = parsedTime2.TimeOfDay;
+                                    }
+                                    else
+                                    {
+                                        //here try to solve times like 07:59:60 xdd
+                                        if (godzz.Split(':').Count() == 3)
+                                        {
+                                            var parts = godzz.Split(':');
+
+                                            if (int.TryParse(parts[0], out int hours) &&
+                                                int.TryParse(parts[1], out int minutes) &&
+                                                int.TryParse(parts[2], out int seconds))
+                                            {
+                                                if (seconds >= 60)
+                                                {
+                                                    seconds -= 60;
+                                                    minutes += 1;
+                                                }
+                                                if (minutes >= 60)
+                                                {
+                                                    minutes -= 60;
+                                                    hours += 1;
+                                                }
+                                                hours %= 24;
+                                                godziny.Godz_Zakonczenia_Pracy = new TimeSpan(hours, minutes, seconds);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            Program.error_logger.New_Error(godzz, "Godz_Zakonczenia_Pracy", poz.col + 1 + j + 1, 3 + k);
+                                            Console.WriteLine(Program.error_logger.Get_Error_String() + " Nieprawidłowy format godziny zakończenia pracy");
+                                            throw new Exception(Program.error_logger.Get_Error_String());
+                                        }
+                                    }
                                 }
-                                dane_dnia.godz_pracy.Add(godziny);
+                                if (godziny.Godz_Rozpoczecia_Pracy != TimeSpan.Zero && godziny.Godz_Zakonczenia_Pracy != TimeSpan.Zero)
+                                {
+                                    dane_dnia.godz_pracy.Add(godziny);
+                                }
                             }
                         }
                     }
@@ -331,162 +345,27 @@ namespace All_Readeer
                 poz.row += height+1;
             }
         }
-        private int Insert_Grafik_To_Db(Grafik grafik_pracy)
-        {
-            int insertedId = -1;
-            using (SqlConnection connection = new SqlConnection(Connection_String))
-            {
-                connection.Open();
-                SqlTransaction tran = connection.BeginTransaction();
-                try
-                {
-                    string insertQuery = "INSERT INTO Grafiki_Pracy (Miesiac, Rok, Ostatnia_Modyfikacja_Data, Ostatnia_Modyfikacja_Osoba) " +
-                                            "VALUES (@Miesiac, @Rok, @Ostatnia_Modyfikacja_Data , @Ostatnia_Modyfikacja_Osoba); " +
-                                            "SELECT SCOPE_IDENTITY();";
-                    using (SqlCommand insertCmd = new SqlCommand(insertQuery, connection, tran))
-                    {
-                        insertCmd.Parameters.Add("@Miesiac", SqlDbType.Int).Value = grafik_pracy.miesiac;
-                        insertCmd.Parameters.Add("@Rok", SqlDbType.Int).Value = grafik_pracy.rok;
-                        insertCmd.Parameters.AddWithValue("@Ostatnia_Modyfikacja_Data", Last_Mod_Time);
-                        insertCmd.Parameters.AddWithValue("@Ostatnia_Modyfikacja_Osoba", Last_Mod_Osoba);
-                        insertedId = Convert.ToInt32(insertCmd.ExecuteScalar());
-                        tran.Commit();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Program.error_logger.New_Custom_Error(ex.Message);
-                    tran.Rollback();
-                }
-            }
-            return insertedId;
-        }
-        private void Insert_Grafik_Pracy_Detale_To_Db(int ID_Grafiku_Pracy, List<Dane_Dni> daneMiesiaca)
-        {
-            using (SqlConnection connection = new SqlConnection(Connection_String))
-            {
-                connection.Open();
-                using (SqlTransaction tran = connection.BeginTransaction())
-                {
-                    try
-                    {
-                        foreach (var dana in daneMiesiaca)
-                        {
-                            string checkQuery = "SELECT Id_Pracownika FROM Grafik_Pracy_Pracownicy WHERE Imie = @Imie AND Nazwisko = @Nazwisko";
-                            int Id_Pracownika = 0;
-                            using (SqlCommand checkCmd = new SqlCommand(checkQuery, connection, tran))
-                            {
-                                checkCmd.Parameters.AddWithValue("@Imie", dana.pracownik.Imie);
-                                checkCmd.Parameters.AddWithValue("@Nazwisko", dana.pracownik.Nazwisko);
-
-                                object result = checkCmd.ExecuteScalar();
-                                if (result != null)
-                                {
-                                    Id_Pracownika = Convert.ToInt32(result);
-                                }
-                            }
-                            string insertQuery = "INSERT INTO Grafik_Pracy_Detale (Id_Grafiku, Id_Pracownika, Ostatnia_Modyfikacja_Data, Ostatnia_Modyfikacja_Osoba) " +
-                                                 "VALUES (@Id_Grafiku, @Id_Pracownika, @Ostatnia_Modyfikacja_Data , @Ostatnia_Modyfikacja_Osoba); " +
-                                                 "SELECT SCOPE_IDENTITY();";
-                            using (SqlCommand insertCmd = new SqlCommand(insertQuery, connection, tran))
-                            {
-                                insertCmd.Parameters.AddWithValue("@Id_Grafiku", ID_Grafiku_Pracy);
-                                insertCmd.Parameters.AddWithValue("@Id_Pracownika", Id_Pracownika);
-                                insertCmd.Parameters.AddWithValue("@Ostatnia_Modyfikacja_Data", Last_Mod_Time);
-                                insertCmd.Parameters.AddWithValue("@Ostatnia_Modyfikacja_Osoba", Last_Mod_Osoba);
-                                int Id_Detalu = Convert.ToInt32(insertCmd.ExecuteScalar());
-
-                                foreach (var dzien in dana.dane_dnia)
-                                {
-                                    Insert_Grafik_Pracy_Detale_Dni_To_Db(Id_Detalu, dzien, connection, tran);
-                                }
-                            }
-                        }
-                        tran.Commit();
-                    }
-                    catch (Exception ex)
-                    {
-                        Program.error_logger.New_Custom_Error(ex.Message + " Nie wpisano dnia do bazy");
-                        Console.WriteLine(Program.error_logger.Get_Error_String());
-                        tran.Rollback();
-                    }
-                }
-            }
-
-        }
-        private void Insert_Grafik_Pracy_Detale_Dni_To_Db(int Id_Detalu, Dane_Dnia detale_Dnia, SqlConnection connection, SqlTransaction tran)
-        {
-            string insertQuery = "INSERT INTO Grafik_Pracy_Detale_Dni (Id_Detalu, Dzien, Godzina_Rozpoczecia_Pracy, Godzina_Zakonczenia_Pracy, Ostatnia_Modyfikacja_Data, Ostatnia_Modyfikacja_Osoba) " +
-                    "VALUES (@Id_Detalu, @Dzien, @Godzina_Rozpoczecia_Pracy, @Godzina_Zakonczenia_Pracy, @Ostatnia_Modyfikacja_Data , @Ostatnia_Modyfikacja_Osoba);";
-            foreach (var godziny in detale_Dnia.godz_pracy)
-            {
-                using (SqlCommand insertCmd = new SqlCommand(insertQuery, connection, tran))
-                {
-                    insertCmd.Parameters.AddWithValue("@Id_Detalu", Id_Detalu);
-                    insertCmd.Parameters.AddWithValue("@Dzien", detale_Dnia.dzien);
-                    insertCmd.Parameters.AddWithValue("@Godzina_Rozpoczecia_Pracy", godziny.Godz_Rozpoczecia_Pracy);
-                    insertCmd.Parameters.AddWithValue("@Godzina_Zakonczenia_Pracy", godziny.Godz_Zakonczenia_Pracy);
-                    insertCmd.Parameters.AddWithValue("@Ostatnia_Modyfikacja_Data", Last_Mod_Time);
-                    insertCmd.Parameters.AddWithValue("@Ostatnia_Modyfikacja_Osoba", Last_Mod_Osoba);
-                    insertCmd.ExecuteNonQuery();
-                }
-            }
-        }
-        private void Insert_Pracownicy_To_Db(List<Pracownik> pracownicy)
-        {
-            using (SqlConnection connection = new SqlConnection(Connection_String))
-            {
-                connection.Open();
-                SqlTransaction tran = connection.BeginTransaction();
-
-                try
-                {
-                    foreach (var pracownik in pracownicy)
-                    {
-                        string checkQuery = "SELECT COUNT(1) FROM Grafik_Pracy_Pracownicy WHERE Imie = @Imie AND Nazwisko = @Nazwisko";
-                        using (SqlCommand checkCmd = new SqlCommand(checkQuery, connection, tran))
-                        {
-                            checkCmd.Parameters.AddWithValue("@Imie", pracownik.Imie);
-                            checkCmd.Parameters.AddWithValue("@Nazwisko", pracownik.Nazwisko);
-
-                            int count = (int)checkCmd.ExecuteScalar();
-
-                            if (count == 0)
-                            {
-                                string insertQuery = "INSERT INTO Grafik_Pracy_Pracownicy (Imie, Nazwisko, Ostatnia_Modyfikacja_Data, Ostatnia_Modyfikacja_Osoba) VALUES (@Imie, @Nazwisko, @Ostatnia_Modyfikacja_Data , @Ostatnia_Modyfikacja_Osoba)";
-                                using (SqlCommand insertCmd = new SqlCommand(insertQuery, connection, tran))
-                                {
-                                    insertCmd.Parameters.AddWithValue("@Imie", pracownik.Imie);
-                                    insertCmd.Parameters.AddWithValue("@Nazwisko", pracownik.Nazwisko);
-                                    insertCmd.Parameters.AddWithValue("@Ostatnia_Modyfikacja_Data", Last_Mod_Time);
-                                    insertCmd.Parameters.AddWithValue("@Ostatnia_Modyfikacja_Osoba", Last_Mod_Osoba);
-                                    insertCmd.ExecuteNonQuery();
-                                }
-                            }
-                        }
-                    }
-                    tran.Commit();
-                }
-                catch (Exception ex)
-                {
-                    Program.error_logger.New_Custom_Error(ex.Message);
-                    tran.Rollback();
-                }
-            }
-        }
         private void Wpierdol_Plan_do_Optimy(Grafik grafik)
         {
             var sqlQuery = $@"
 DECLARE @id int;
 
-DECLARE @PRI_PraId INT = (SELECT DISTINCT PRI_PraId FROM CDN.Pracidx where PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Imie1 = @PracownikImieInsert and PRI_Typ = 1)
 
+IF((select DISTINCT COUNT(PRI_PraId) from cdn.Pracidx WHERE PRI_Imie1 = @PracownikImieInsert and PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Typ = 1) > 1)
+BEGIN
+	DECLARE @ErrorMessageC NVARCHAR(500) = 'Jest 2 pracowników o takim samym imieniu i nazwisku: ' +@PracownikImieInsert + ' ' +  @PracownikNazwiskoInsert;
+	THROW 50001, @ErrorMessageC, 1;
+END
+DECLARE @PRI_PraId INT = (select DISTINCT PRI_PraId from cdn.Pracidx WHERE PRI_Imie1 = @PracownikImieInsert and PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Typ = 1);
 IF @PRI_PraId IS NULL
 BEGIN
-DECLARE @ErrorMessage NVARCHAR(500) = 'Brak takiego pracownika w bazie: ' + @PracownikNazwiskoInsert + ' ' + @PracownikImieInsert;
-THROW 50000, @ErrorMessage, 1;
+	SET @PRI_PraId = (select DISTINCT PRI_PraId from cdn.Pracidx WHERE PRI_Imie1 = @PracownikNazwiskoInsert  and PRI_Nazwisko = @PracownikImieInsert and PRI_Typ = 1);
+	IF @PRI_PraId IS NULL
+	BEGIN
+		DECLARE @ErrorMessage NVARCHAR(500) = 'Brak takiego pracownika w bazie: ' +@PracownikImieInsert + ' ' +  @PracownikNazwiskoInsert;
+		THROW 50000, @ErrorMessage, 1;
+	END
 END
-
 DECLARE @EXISTSPRACTEST INT = (SELECT CDN.PracKod.PRA_PraId FROM CDN.PracKod where PRA_Kod = @PRI_PraId)
 
 IF @EXISTSPRACTEST IS NULL
@@ -689,7 +568,16 @@ END";
                         catch (SqlException ex)
                         {
                             Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
+                            if (ex.Number == 50000)
+                            {
+                                Console.ForegroundColor = ConsoleColor.Yellow;
+                            }
+                            if (ex.Number == 50001)
+                            {
+                                Console.ForegroundColor = ConsoleColor.Red;
+                            }
                             Console.WriteLine(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
+                            Console.ForegroundColor = ConsoleColor.White;
                             tran.Rollback();
                             var e = new Exception(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
                             e.Data["zakladka"] = Program.error_logger.Nr_Zakladki;
@@ -701,6 +589,7 @@ END";
                 Console.WriteLine($"Poprawnie dodawno plan z pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
                 Console.ForegroundColor = ConsoleColor.White;
                 tran.Commit();
+                connection.Close();
             }
         }
     }

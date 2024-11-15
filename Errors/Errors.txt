@@ -1,203 +1,207 @@
-W programie brak dopasowanego kodu nieobecnosci: UB w dniu 01.10.2024 00:00:00 dla pracownika CHMIELEWSKA LIDIA z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala -  dział utrzymania czystości - karty pracy.xlsx z zakladki: 1. Nieobecnosc nie dodana.
-W programie brak dopasowanego kodu nieobecnosci: UN w dniu 01.10.2024 00:00:00 dla pracownika DUDKO URSZULA z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala -  dział utrzymania czystości - karty pracy.xlsx z zakladki: 2. Nieobecnosc nie dodana.
-W programie brak dopasowanego kodu nieobecnosci: PZ w dniu 01.10.2024 00:00:00 dla pracownika GIESZCZYK ANDRZEJ z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala -  dział utrzymania czystości - karty pracy.xlsx z zakladki: 3. Nieobecnosc nie dodana.
-W programie brak dopasowanego kodu nieobecnosci: PZ w dniu 25.10.2024 00:00:00 dla pracownika GUT KATARZYNA z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala -  dział utrzymania czystości - karty pracy.xlsx z zakladki: 4. Nieobecnosc nie dodana.
-W programie brak dopasowanego kodu nieobecnosci: PZ w dniu 07.10.2024 00:00:00 dla pracownika KALIŚ MICHAŁ z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala -  dział utrzymania czystości - karty pracy.xlsx z zakladki: 6. Nieobecnosc nie dodana.
-W programie brak dopasowanego kodu nieobecnosci: UN w dniu 01.10.2024 00:00:00 dla pracownika NOWIK PAULINA z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala -  dział utrzymania czystości - karty pracy.xlsx z zakladki: 8. Nieobecnosc nie dodana.
-Brak takiego pracownika w bazie: PRADYSZCZYK KATARZYNA z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala -  dział utrzymania czystości - karty pracy.xlsx z zakladki: 9
-W programie brak dopasowanego kodu nieobecnosci: DE w dniu 16.10.2024 00:00:00 dla pracownika SIEDZIEWSKA EDYTA z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala -  dział utrzymania czystości - karty pracy.xlsx z zakladki: 11. Nieobecnosc nie dodana.
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "Zwolniona w pierwszym dniu pracy tj", Dla pracownika Kowalczyk Katarzyna w dniu 2015-6-2. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - dział gastronomii - grafik.xlsx z zakladki 1.
-Brak takiego pracownika w bazie: Ścibor Katarzyna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - dział gastronomii - grafik.xlsx z zakladki 3
-Brak takiego pracownika w bazie: Ścibor Katarzyna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - dział gastronomii - grafik.xlsx z zakladki 4
-W pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - dział gastronomii - grafik.xlsx wystąpił błąd w zakładce nr 5: W Kolumnie 3, rzędzie 1, Powinna znaleźć się wartość Data Grafiku miesiac a jest: "pażdziernik". Data wykrycia: 13.11.2024 15:25:20. Dodatkowa informacja: Błąd czytania miesiaca
-Brak takiego pracownika w bazie: Białek Anna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - dział gastronomii - grafik.xlsx z zakladki 6
-Brak takiego pracownika w bazie: Białek Anna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - dział gastronomii - grafik.xlsx z zakladki 7
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "ZL", Dla pracownika Rudnik Ewa w dniu 2016-1-1. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - dział gastronomii - grafik.xlsx z zakladki 8.
-Brak takiego pracownika w bazie: Rudnik Ewa w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - dział gastronomii - grafik.xlsx z zakladki 9
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "ZL", Dla pracownika Felczak Grażyna w dniu 2016-3-1. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - dział gastronomii - grafik.xlsx z zakladki 10.
-Brak takiego pracownika w bazie: Kunkowska Paulina w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - dział gastronomii - grafik.xlsx z zakladki 11
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "10U", Dla pracownika Żydak Agnieszka w dniu 2016-5-9. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - dział gastronomii - grafik.xlsx z zakladki 12.
-Brak takiego pracownika w bazie: Anyszewska Małgorz w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - dział gastronomii - grafik.xlsx z zakladki 13
-Brak takiego pracownika w bazie: Anyszewska Małgorz w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - dział gastronomii - grafik.xlsx z zakladki 14
-W programie brak dopasowanego kodu nieobecnosci: WY w dniu 16.10.2024 00:00:00 dla pracownika CZORNIEJ MARTA z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - dział gastronomii - karty pracy.xlsx z zakladki: 8. Nieobecnosc nie dodana.
-W pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - dział gastronomii - karty pracy.xlsx wystąpił błąd w zakładce nr 10: W Kolumnie 9, rzędzie 20, Powinna znaleźć się wartość liczba godz przepracowanych a jest: "". Data wykrycia: 13.11.2024 15:25:25. Dodatkowa informacja: Brak wpisanej liczba godz przepracowanych
-Brak takiego pracownika w bazie: GOŁĘBIOWSKA - z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - dział gastronomii - karty pracy.xlsx z zakladki: 11
-W programie brak dopasowanego kodu nieobecnosci: ON w dniu 22.10.2024 00:00:00 dla pracownika Jakubiec Mariola z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - dział gastronomii - karty pracy.xlsx z zakladki: 16. Nieobecnosc nie dodana.
-Nie rozpoznano tego rodzaju zakladki: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - dział gastronomii - karty pracy.xlsxnr zakladki: 17
-Nie rozpoznano tego rodzaju zakladki: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - dział gastronomii - karty pracy.xlsxnr zakladki: 18
-Nie rozpoznano tego rodzaju zakladki: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - dział gastronomii - karty pracy.xlsxnr zakladki: 27
-W pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - dział gastronomii - karty pracy.xlsx wystąpił błąd w zakładce nr 37: W Kolumnie 5, rzędzie 39, Powinna znaleźć się wartość kod nieobecnosci a jest: "uw". Data wykrycia: 13.11.2024 15:25:26. Dodatkowa informacja: Nieprawidłowy kod nieobecności
-Brak takiego pracownika w bazie: WAWER - z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - dział gastronomii - karty pracy.xlsx z zakladki: 42
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "Zwolniona w pierwszym dniu pracy tj", Dla pracownika Kowalczyk Katarzyna w dniu 2015-6-2. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - dział utrzymania czystości infolinia - grafik.xlsx z zakladki 1.
-Brak takiego pracownika w bazie: Ścibor Katarzyna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - dział utrzymania czystości infolinia - grafik.xlsx z zakladki 3
-Brak takiego pracownika w bazie: Ścibor Katarzyna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - dział utrzymania czystości infolinia - grafik.xlsx z zakladki 4
-W pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - dział utrzymania czystości infolinia - grafik.xlsx wystąpił błąd w zakładce nr 5: W Kolumnie 3, rzędzie 1, Powinna znaleźć się wartość Data Grafiku miesiac a jest: "pażdziernik". Data wykrycia: 13.11.2024 15:25:28. Dodatkowa informacja: Błąd czytania miesiaca
-Brak takiego pracownika w bazie: Białek Anna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - dział utrzymania czystości infolinia - grafik.xlsx z zakladki 6
-Brak takiego pracownika w bazie: Białek Anna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - dział utrzymania czystości infolinia - grafik.xlsx z zakladki 7
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "ZL", Dla pracownika Rudnik Ewa w dniu 2016-1-1. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - dział utrzymania czystości infolinia - grafik.xlsx z zakladki 8.
-Brak takiego pracownika w bazie: Rudnik Ewa w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - dział utrzymania czystości infolinia - grafik.xlsx z zakladki 9
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "ZL", Dla pracownika Felczak Grażyna w dniu 2016-3-1. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - dział utrzymania czystości infolinia - grafik.xlsx z zakladki 10.
-Brak takiego pracownika w bazie: Kunkowska Paulina w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - dział utrzymania czystości infolinia - grafik.xlsx z zakladki 11
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "10U", Dla pracownika Żydak Agnieszka w dniu 2016-5-9. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - dział utrzymania czystości infolinia - grafik.xlsx z zakladki 12.
-Brak takiego pracownika w bazie: Anyszewska Małgorz w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - dział utrzymania czystości infolinia - grafik.xlsx z zakladki 13
-Brak takiego pracownika w bazie: Anyszewska Małgorz w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - dział utrzymania czystości infolinia - grafik.xlsx z zakladki 14
-W programie brak dopasowanego kodu nieobecnosci: NB w dniu 21.10.2024 00:00:00 dla pracownika SZMIDT JANUSZ z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - Zespół Administracyjny - karty pracy.xlsx z zakladki: 2. Nieobecnosc nie dodana.
-Brak takiego pracownika w bazie: ANETA PACZUSKA z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - zespół finansowy - karty pracy.xlsx z zakladki: 1
-W programie brak dopasowanego kodu nieobecnosci: PZ w dniu 25.10.2024 00:00:00 dla pracownika ALESZCZYK ALEKSANDER z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - zespół finansowy - karty pracy.xlsx z zakladki: 2. Nieobecnosc nie dodana.
-Brak takiego pracownika w bazie: NAZWISKO IMIĘ z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - zespół finansowy - karty pracy.xlsx z zakladki: 3
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "Zwolniona w pierwszym dniu pracy tj", Dla pracownika Kowalczyk Katarzyna w dniu 2015-6-2. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - zespół kontroli - grafik.xlsx z zakladki 1.
-Brak takiego pracownika w bazie: Ścibor Katarzyna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - zespół kontroli - grafik.xlsx z zakladki 3
-Brak takiego pracownika w bazie: Ścibor Katarzyna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - zespół kontroli - grafik.xlsx z zakladki 4
-W pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - zespół kontroli - grafik.xlsx wystąpił błąd w zakładce nr 5: W Kolumnie 3, rzędzie 1, Powinna znaleźć się wartość Data Grafiku miesiac a jest: "pażdziernik". Data wykrycia: 13.11.2024 15:25:30. Dodatkowa informacja: Błąd czytania miesiaca
-Brak takiego pracownika w bazie: Białek Anna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - zespół kontroli - grafik.xlsx z zakladki 6
-Brak takiego pracownika w bazie: Białek Anna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - zespół kontroli - grafik.xlsx z zakladki 7
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "ZL", Dla pracownika Rudnik Ewa w dniu 2016-1-1. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - zespół kontroli - grafik.xlsx z zakladki 8.
-Brak takiego pracownika w bazie: Rudnik Ewa w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - zespół kontroli - grafik.xlsx z zakladki 9
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "ZL", Dla pracownika Felczak Grażyna w dniu 2016-3-1. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - zespół kontroli - grafik.xlsx z zakladki 10.
-Brak takiego pracownika w bazie: Kunkowska Paulina w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - zespół kontroli - grafik.xlsx z zakladki 11
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "10U", Dla pracownika Żydak Agnieszka w dniu 2016-5-9. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - zespół kontroli - grafik.xlsx z zakladki 12.
-Brak takiego pracownika w bazie: Anyszewska Małgorz w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - zespół kontroli - grafik.xlsx z zakladki 13
-Brak takiego pracownika w bazie: Anyszewska Małgorz w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - zespół kontroli - grafik.xlsx z zakladki 14
-W programie brak dopasowanego kodu nieobecnosci: OD w dniu 28.10.2024 00:00:00 dla pracownika CHOCHULSKI JANUSZ z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - zespół kontroli - karty pracy.xlsx z zakladki: 1. Nieobecnosc nie dodana.
-W programie brak dopasowanego kodu nieobecnosci: OD w dniu 09.10.2024 00:00:00 dla pracownika JAWORSKI JACEK z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - zespół kontroli - karty pracy.xlsx z zakladki: 3. Nieobecnosc nie dodana.
-W programie brak dopasowanego kodu nieobecnosci: OD w dniu 28.10.2024 00:00:00 dla pracownika ŻACZEK DAWID z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - zespół kontroli - karty pracy.xlsx z zakladki: 6. Nieobecnosc nie dodana.
-W programie brak dopasowanego kodu nieobecnosci: ON w dniu 17.10.2024 00:00:00 dla pracownika Wasilewska Kamila z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - zespół księgowości - karty pracy.xlsx z zakladki: 1. Nieobecnosc nie dodana.
-Brak takiego pracownika w bazie: NAZWISKO IMIĘ z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - zespół księgowości - karty pracy.xlsx z zakladki: 5
-W pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - zespół księgowości - karty pracy.xlsx wystąpił błąd w zakładce nr 6: W Kolumnie 5, rzędzie 25, Powinna znaleźć się wartość kod nieobecnosci a jest: " ". Data wykrycia: 13.11.2024 15:25:33. Dodatkowa informacja: Nieprawidłowy kod nieobecności
-W programie brak dopasowanego kodu nieobecnosci: ON w dniu 31.10.2024 00:00:00 dla pracownika BIEREZOWCZUK-HAJOST ANNA z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - zespół księgowości - karty pracy.xlsx z zakladki: 7. Nieobecnosc nie dodana.
-W programie brak dopasowanego kodu nieobecnosci: ON w dniu 18.10.2024 00:00:00 dla pracownika GOLIS RENATA z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - zespół księgowości - karty pracy.xlsx z zakladki: 8. Nieobecnosc nie dodana.
-W pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - zespół księgowości - karty pracy.xlsx wystąpił błąd w zakładce nr 9: W Kolumnie 14, rzędzie 3, Powinna znaleźć się wartość data a jest: "". Data wykrycia: 13.11.2024 15:25:34. Dodatkowa informacja: Brak daty w pliku
-W programie brak dopasowanego kodu nieobecnosci: PZ w dniu 09.10.2024 00:00:00 dla pracownika GAŃKO MONIKA z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - zespół organizacyjny - karty pracy.xlsx z zakladki: 1. Nieobecnosc nie dodana.
-Nie rozpoznano tego rodzaju zakladki: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - zespół płac - karty pracy (2).xlsxnr zakladki: 6
-Nie rozpoznano tego rodzaju zakladki: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - zespół płac - karty pracy.xlsxnr zakladki: 6
-W programie brak dopasowanego kodu nieobecnosci: DE w dniu 08.10.2024 00:00:00 dla pracownika DARIUSZ ŁĘPICKI z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - zespół szkoleń - karty pracy.xlsx z zakladki: 1. Nieobecnosc nie dodana.
-Brak takiego pracownika w bazie: KRZYSZTOF ŚWIERCZEWSKI z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrala - zespół szkoleń - karty pracy.xlsx z zakladki: 2
-Brak takiego pracownika w bazie: NAZWISKO IMIĘ z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - Baran Kinga - karta pracy.xlsx z zakladki: 1
-Nie rozpoznano tego rodzaju zakladki: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - Baran Kinga - karta pracy.xlsxnr zakladki: 2
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "Zwolniona w pierwszym dniu pracy tj", Dla pracownika Kowalczyk Katarzyna w dniu 2015-6-2. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - grafik - M. Owczarek.xlsx z zakladki 1.
-Brak takiego pracownika w bazie: Ścibor Katarzyna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - grafik - M. Owczarek.xlsx z zakladki 3
-Brak takiego pracownika w bazie: Ścibor Katarzyna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - grafik - M. Owczarek.xlsx z zakladki 4
-W pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - grafik - M. Owczarek.xlsx wystąpił błąd w zakładce nr 5: W Kolumnie 3, rzędzie 1, Powinna znaleźć się wartość Data Grafiku miesiac a jest: "pażdziernik". Data wykrycia: 13.11.2024 15:26:57. Dodatkowa informacja: Błąd czytania miesiaca
-Brak takiego pracownika w bazie: Białek Anna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - grafik - M. Owczarek.xlsx z zakladki 6
-Brak takiego pracownika w bazie: Białek Anna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - grafik - M. Owczarek.xlsx z zakladki 7
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "ZL", Dla pracownika Rudnik Ewa w dniu 2016-1-1. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - grafik - M. Owczarek.xlsx z zakladki 8.
-Brak takiego pracownika w bazie: Rudnik Ewa w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - grafik - M. Owczarek.xlsx z zakladki 9
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "ZL", Dla pracownika Felczak Grażyna w dniu 2016-3-1. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - grafik - M. Owczarek.xlsx z zakladki 10.
-Brak takiego pracownika w bazie: Kunkowska Paulina w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - grafik - M. Owczarek.xlsx z zakladki 11
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "10U", Dla pracownika Żydak Agnieszka w dniu 2016-5-9. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - grafik - M. Owczarek.xlsx z zakladki 12.
-Brak takiego pracownika w bazie: Anyszewska Małgorz w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - grafik - M. Owczarek.xlsx z zakladki 13
-Brak takiego pracownika w bazie: Anyszewska Małgorz w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - grafik - M. Owczarek.xlsx z zakladki 14
-Brak takiego pracownika w bazie: NAZWISKO IMIĘ z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - Guzowska Bogusława - karta pracy.xlsx z zakladki: 1
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "Zwolniona w pierwszym dniu pracy tj", Dla pracownika Kowalczyk Katarzyna w dniu 2015-6-2. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - osadzeni - Białystok - grafik.xlsx z zakladki 1.
-Brak takiego pracownika w bazie: Ścibor Katarzyna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - osadzeni - Białystok - grafik.xlsx z zakladki 3
-Brak takiego pracownika w bazie: Ścibor Katarzyna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - osadzeni - Białystok - grafik.xlsx z zakladki 4
-W pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - osadzeni - Białystok - grafik.xlsx wystąpił błąd w zakładce nr 5: W Kolumnie 3, rzędzie 1, Powinna znaleźć się wartość Data Grafiku miesiac a jest: "pażdziernik". Data wykrycia: 13.11.2024 15:27:09. Dodatkowa informacja: Błąd czytania miesiaca
-Brak takiego pracownika w bazie: Białek Anna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - osadzeni - Białystok - grafik.xlsx z zakladki 6
-Brak takiego pracownika w bazie: Białek Anna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - osadzeni - Białystok - grafik.xlsx z zakladki 7
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "ZL", Dla pracownika Rudnik Ewa w dniu 2016-1-1. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - osadzeni - Białystok - grafik.xlsx z zakladki 8.
-Brak takiego pracownika w bazie: Rudnik Ewa w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - osadzeni - Białystok - grafik.xlsx z zakladki 9
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "ZL", Dla pracownika Felczak Grażyna w dniu 2016-3-1. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - osadzeni - Białystok - grafik.xlsx z zakladki 10.
-Brak takiego pracownika w bazie: Kunkowska Paulina w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - osadzeni - Białystok - grafik.xlsx z zakladki 11
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "10U", Dla pracownika Żydak Agnieszka w dniu 2016-5-9. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - osadzeni - Białystok - grafik.xlsx z zakladki 12.
-Brak takiego pracownika w bazie: Anyszewska Małgorz w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - osadzeni - Białystok - grafik.xlsx z zakladki 13
-Brak takiego pracownika w bazie: Anyszewska Małgorz w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - osadzeni - Białystok - grafik.xlsx z zakladki 14
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "Zwolniona w pierwszym dniu pracy tj", Dla pracownika Kowalczyk Katarzyna w dniu 2015-6-2. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - osadzeni - Łódź - grafik.xlsx z zakladki 1.
-Brak takiego pracownika w bazie: Ścibor Katarzyna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - osadzeni - Łódź - grafik.xlsx z zakladki 3
-Brak takiego pracownika w bazie: Ścibor Katarzyna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - osadzeni - Łódź - grafik.xlsx z zakladki 4
-W pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - osadzeni - Łódź - grafik.xlsx wystąpił błąd w zakładce nr 5: W Kolumnie 3, rzędzie 1, Powinna znaleźć się wartość Data Grafiku miesiac a jest: "pażdziernik". Data wykrycia: 13.11.2024 15:27:12. Dodatkowa informacja: Błąd czytania miesiaca
-Brak takiego pracownika w bazie: Białek Anna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - osadzeni - Łódź - grafik.xlsx z zakladki 6
-Brak takiego pracownika w bazie: Białek Anna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - osadzeni - Łódź - grafik.xlsx z zakladki 7
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "ZL", Dla pracownika Rudnik Ewa w dniu 2016-1-1. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - osadzeni - Łódź - grafik.xlsx z zakladki 8.
-Brak takiego pracownika w bazie: Rudnik Ewa w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - osadzeni - Łódź - grafik.xlsx z zakladki 9
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "ZL", Dla pracownika Felczak Grażyna w dniu 2016-3-1. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - osadzeni - Łódź - grafik.xlsx z zakladki 10.
-Brak takiego pracownika w bazie: Kunkowska Paulina w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - osadzeni - Łódź - grafik.xlsx z zakladki 11
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "10U", Dla pracownika Żydak Agnieszka w dniu 2016-5-9. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - osadzeni - Łódź - grafik.xlsx z zakladki 12.
-Brak takiego pracownika w bazie: Anyszewska Małgorz w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - osadzeni - Łódź - grafik.xlsx z zakladki 13
-Brak takiego pracownika w bazie: Anyszewska Małgorz w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - osadzeni - Łódź - grafik.xlsx z zakladki 14
-Brak takiego pracownika w bazie: NAZWISKO IMIĘ z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - Sieczych Marek - karta pracy.xlsx z zakladki: 1
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "Zwolniona w pierwszym dniu pracy tj", Dla pracownika Kowalczyk Katarzyna w dniu 2015-6-2. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - Suwałki - grafik.xlsx z zakladki 1.
-Brak takiego pracownika w bazie: Ścibor Katarzyna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - Suwałki - grafik.xlsx z zakladki 3
-Brak takiego pracownika w bazie: Ścibor Katarzyna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - Suwałki - grafik.xlsx z zakladki 4
-W pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - Suwałki - grafik.xlsx wystąpił błąd w zakładce nr 5: W Kolumnie 3, rzędzie 1, Powinna znaleźć się wartość Data Grafiku miesiac a jest: "pażdziernik". Data wykrycia: 13.11.2024 15:27:16. Dodatkowa informacja: Błąd czytania miesiaca
-Brak takiego pracownika w bazie: Białek Anna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - Suwałki - grafik.xlsx z zakladki 6
-Brak takiego pracownika w bazie: Białek Anna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - Suwałki - grafik.xlsx z zakladki 7
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "ZL", Dla pracownika Rudnik Ewa w dniu 2016-1-1. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - Suwałki - grafik.xlsx z zakladki 8.
-Brak takiego pracownika w bazie: Rudnik Ewa w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - Suwałki - grafik.xlsx z zakladki 9
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "ZL", Dla pracownika Felczak Grażyna w dniu 2016-3-1. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - Suwałki - grafik.xlsx z zakladki 10.
-Brak takiego pracownika w bazie: Kunkowska Paulina w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - Suwałki - grafik.xlsx z zakladki 11
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "10U", Dla pracownika Żydak Agnieszka w dniu 2016-5-9. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - Suwałki - grafik.xlsx z zakladki 12.
-Brak takiego pracownika w bazie: Anyszewska Małgorz w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - Suwałki - grafik.xlsx z zakladki 13
-Brak takiego pracownika w bazie: Anyszewska Małgorz w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - Suwałki - grafik.xlsx z zakladki 14
-W pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - Terespol - karty pracy.xlsx wystąpił błąd w zakładce nr 1: W Kolumnie 14, rzędzie 3, Powinna znaleźć się wartość data a jest: "". Data wykrycia: 13.11.2024 15:27:19. Dodatkowa informacja: Brak daty w pliku
-W pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - Terespol - karty pracy.xlsx wystąpił błąd w zakładce nr 2: W Kolumnie 14, rzędzie 3, Powinna znaleźć się wartość data a jest: "". Data wykrycia: 13.11.2024 15:27:19. Dodatkowa informacja: Brak daty w pliku
-W pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - Terespol - karty pracy.xlsx wystąpił błąd w zakładce nr 3: W Kolumnie 14, rzędzie 3, Powinna znaleźć się wartość data a jest: "". Data wykrycia: 13.11.2024 15:27:19. Dodatkowa informacja: Brak daty w pliku
-W pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - Warszawa - sprzątanie - karty pracy.xlsx wystąpił błąd w zakładce nr 1: W Kolumnie 14, rzędzie 3, Powinna znaleźć się wartość data a jest: "". Data wykrycia: 13.11.2024 15:27:21. Dodatkowa informacja: Brak daty w pliku
-W pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - Warszawa - sprzątanie - karty pracy.xlsx wystąpił błąd w zakładce nr 2: W Kolumnie 14, rzędzie 3, Powinna znaleźć się wartość data a jest: "". Data wykrycia: 13.11.2024 15:27:21. Dodatkowa informacja: Brak daty w pliku
-W pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - Warszawa - sprzątanie - karty pracy.xlsx wystąpił błąd w zakładce nr 3: W Kolumnie 14, rzędzie 3, Powinna znaleźć się wartość data a jest: "". Data wykrycia: 13.11.2024 15:27:21. Dodatkowa informacja: Brak daty w pliku
-W pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - Warszawa - sprzątanie - karty pracy.xlsx wystąpił błąd w zakładce nr 4: W Kolumnie 14, rzędzie 3, Powinna znaleźć się wartość data a jest: "". Data wykrycia: 13.11.2024 15:27:21. Dodatkowa informacja: Brak daty w pliku
-W pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - Warszawa - sprzątanie - karty pracy.xlsx wystąpił błąd w zakładce nr 5: W Kolumnie 14, rzędzie 3, Powinna znaleźć się wartość data a jest: "". Data wykrycia: 13.11.2024 15:27:21. Dodatkowa informacja: Brak daty w pliku
-W pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - Wiśniewski Rafał - karta pracy.xlsx wystąpił błąd w zakładce nr 1: W Kolumnie 14, rzędzie 3, Powinna znaleźć się wartość data a jest: "Październik". Data wykrycia: 13.11.2024 15:27:23. Dodatkowa informacja: Zły format daty w pliku
-Nie rozpoznano tego rodzaju zakladki: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół kontroli - karty pracy.xlsxnr zakladki: 2
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "Zwolniona w pierwszym dniu pracy tj", Dla pracownika Kowalczyk Katarzyna w dniu 2015-6-2. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół magazynowy - grafik.xlsx z zakladki 1.
-Brak takiego pracownika w bazie: Ścibor Katarzyna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół magazynowy - grafik.xlsx z zakladki 3
-Brak takiego pracownika w bazie: Ścibor Katarzyna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół magazynowy - grafik.xlsx z zakladki 4
-W pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół magazynowy - grafik.xlsx wystąpił błąd w zakładce nr 5: W Kolumnie 3, rzędzie 1, Powinna znaleźć się wartość Data Grafiku miesiac a jest: "pażdziernik". Data wykrycia: 13.11.2024 15:27:26. Dodatkowa informacja: Błąd czytania miesiaca
-Brak takiego pracownika w bazie: Białek Anna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół magazynowy - grafik.xlsx z zakladki 6
-Brak takiego pracownika w bazie: Białek Anna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół magazynowy - grafik.xlsx z zakladki 7
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "ZL", Dla pracownika Rudnik Ewa w dniu 2016-1-1. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół magazynowy - grafik.xlsx z zakladki 8.
-Brak takiego pracownika w bazie: Rudnik Ewa w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół magazynowy - grafik.xlsx z zakladki 9
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "ZL", Dla pracownika Felczak Grażyna w dniu 2016-3-1. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół magazynowy - grafik.xlsx z zakladki 10.
-Brak takiego pracownika w bazie: Kunkowska Paulina w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół magazynowy - grafik.xlsx z zakladki 11
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "10U", Dla pracownika Żydak Agnieszka w dniu 2016-5-9. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół magazynowy - grafik.xlsx z zakladki 12.
-Brak takiego pracownika w bazie: Anyszewska Małgorz w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół magazynowy - grafik.xlsx z zakladki 13
-Brak takiego pracownika w bazie: Anyszewska Małgorz w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół magazynowy - grafik.xlsx z zakladki 14
-Brak takiego pracownika w bazie: NAZWISKO IMIĘ z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół magazynowy - karty pracy.xlsx z zakladki: 1
-Brak takiego pracownika w bazie: NAZWISKO IMIĘ z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół magazynowy - karty pracy.xlsx z zakladki: 2
-Brak takiego pracownika w bazie: NAZWISKO IMIĘ z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół magazynowy - karty pracy.xlsx z zakladki: 3
-Brak takiego pracownika w bazie: NAZWISKO IMIĘ z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół magazynowy - karty pracy.xlsx z zakladki: 4
-Brak takiego pracownika w bazie: NAZWISKO IMIĘ z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół magazynowy - karty pracy.xlsx z zakladki: 6
-Brak takiego pracownika w bazie: NAZWISKO IMIĘ z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół magazynowy - karty pracy.xlsx z zakladki: 7
-Brak takiego pracownika w bazie: NAZWISKO IMIĘ z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół magazynowy - karty pracy.xlsx z zakladki: 8
-Brak takiego pracownika w bazie: NAZWISKO IMIĘ z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół magazynowy - karty pracy.xlsx z zakladki: 9
-Brak takiego pracownika w bazie: NAZWISKO IMIĘ z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół magazynowy - karty pracy.xlsx z zakladki: 10
-Brak takiego pracownika w bazie: NAZWISKO IMIĘ z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół magazynowy - karty pracy.xlsx z zakladki: 11
-Brak takiego pracownika w bazie: NAZWISKO IMIĘ z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół magazynowy - karty pracy.xlsx z zakladki: 12
-Brak takiego pracownika w bazie: NAZWISKO IMIĘ z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół magazynowy - karty pracy.xlsx z zakladki: 13
-Brak takiego pracownika w bazie: NAZWISKO IMIĘ z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół magazynowy - karty pracy.xlsx z zakladki: 14
-Brak takiego pracownika w bazie: NAZWISKO IMIĘ z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół magazynowy - karty pracy.xlsx z zakladki: 15
-Brak takiego pracownika w bazie: NAZWISKO IMIĘ z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół magazynowy - karty pracy.xlsx z zakladki: 16
-Brak takiego pracownika w bazie: NAZWISKO IMIĘ z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół magazynowy - karty pracy.xlsx z zakladki: 17
-Brak takiego pracownika w bazie: NAZWISKO IMIĘ z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół magazynowy - karty pracy.xlsx z zakladki: 18
-W pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół organizacji przewozów - karty pracy.xlsx wystąpił błąd w zakładce nr 11: W Kolumnie 5, rzędzie 19, Powinna znaleźć się wartość kod nieobecnosci a jest: "UŻ". Data wykrycia: 13.11.2024 15:27:32. Dodatkowa informacja: Nieprawidłowy kod nieobecności
-W programie brak dopasowanego kodu nieobecnosci: UD w dniu 16.10.2024 00:00:00 dla pracownika GURBIEL SŁAWOMIR z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół organizacji przewozów - karty pracy.xlsx z zakladki: 13. Nieobecnosc nie dodana.
-W pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół organizacji przewozów - karty pracy.xlsx wystąpił błąd w zakładce nr 15: W Kolumnie 5, rzędzie 27, Powinna znaleźć się wartość kod nieobecnosci a jest: "UŻ". Data wykrycia: 13.11.2024 15:27:33. Dodatkowa informacja: Nieprawidłowy kod nieobecności
-Z podzapytania została zwrócona więcej niż 1 wartość. Jest to niedozwolone, jeśli podzapytanie następuje po znaku =, !=, <, <= , > lub >= albo gdy jest używane jako wyrażenie.
-Brak takiego pracownika w bazie: MALINOWSKI TOMASZ z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół organizacji przewozów - karty pracy.xlsx z zakladki: 17
-Brak takiego pracownika w bazie: SHAUTSAU EDUARD z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół organizacji przewozów - karty pracy.xlsx z zakladki: 29
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "Zwolniona w pierwszym dniu pracy tj", Dla pracownika Kowalczyk Katarzyna w dniu 2015-6-2. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół utrzymania czystości - Białystok - grafik.xlsx z zakladki 1.
-Brak takiego pracownika w bazie: Ścibor Katarzyna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół utrzymania czystości - Białystok - grafik.xlsx z zakladki 3
-Brak takiego pracownika w bazie: Ścibor Katarzyna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół utrzymania czystości - Białystok - grafik.xlsx z zakladki 4
-W pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół utrzymania czystości - Białystok - grafik.xlsx wystąpił błąd w zakładce nr 5: W Kolumnie 3, rzędzie 1, Powinna znaleźć się wartość Data Grafiku miesiac a jest: "pażdziernik". Data wykrycia: 13.11.2024 15:27:38. Dodatkowa informacja: Błąd czytania miesiaca
-Brak takiego pracownika w bazie: Białek Anna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół utrzymania czystości - Białystok - grafik.xlsx z zakladki 6
-Brak takiego pracownika w bazie: Białek Anna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół utrzymania czystości - Białystok - grafik.xlsx z zakladki 7
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "ZL", Dla pracownika Rudnik Ewa w dniu 2016-1-1. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół utrzymania czystości - Białystok - grafik.xlsx z zakladki 8.
-Brak takiego pracownika w bazie: Rudnik Ewa w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół utrzymania czystości - Białystok - grafik.xlsx z zakladki 9
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "ZL", Dla pracownika Felczak Grażyna w dniu 2016-3-1. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół utrzymania czystości - Białystok - grafik.xlsx z zakladki 10.
-Brak takiego pracownika w bazie: Kunkowska Paulina w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół utrzymania czystości - Białystok - grafik.xlsx z zakladki 11
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "10U", Dla pracownika Żydak Agnieszka w dniu 2016-5-9. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół utrzymania czystości - Białystok - grafik.xlsx z zakladki 12.
-Brak takiego pracownika w bazie: Anyszewska Małgorz w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół utrzymania czystości - Białystok - grafik.xlsx z zakladki 13
-Brak takiego pracownika w bazie: Anyszewska Małgorz w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół utrzymania czystości - Białystok - grafik.xlsx z zakladki 14
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "Zwolniona w pierwszym dniu pracy tj", Dla pracownika Kowalczyk Katarzyna w dniu 2015-6-2. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół utrzymania czystości - Lublin - grafik.xlsx z zakladki 1.
-Brak takiego pracownika w bazie: Ścibor Katarzyna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół utrzymania czystości - Lublin - grafik.xlsx z zakladki 3
-Brak takiego pracownika w bazie: Ścibor Katarzyna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół utrzymania czystości - Lublin - grafik.xlsx z zakladki 4
-W pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół utrzymania czystości - Lublin - grafik.xlsx wystąpił błąd w zakładce nr 5: W Kolumnie 3, rzędzie 1, Powinna znaleźć się wartość Data Grafiku miesiac a jest: "pażdziernik". Data wykrycia: 13.11.2024 15:27:42. Dodatkowa informacja: Błąd czytania miesiaca
-Brak takiego pracownika w bazie: Białek Anna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół utrzymania czystości - Lublin - grafik.xlsx z zakladki 6
-Brak takiego pracownika w bazie: Białek Anna w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół utrzymania czystości - Lublin - grafik.xlsx z zakladki 7
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "ZL", Dla pracownika Rudnik Ewa w dniu 2016-1-1. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół utrzymania czystości - Lublin - grafik.xlsx z zakladki 8.
-Brak takiego pracownika w bazie: Rudnik Ewa w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół utrzymania czystości - Lublin - grafik.xlsx z zakladki 9
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "ZL", Dla pracownika Felczak Grażyna w dniu 2016-3-1. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół utrzymania czystości - Lublin - grafik.xlsx z zakladki 10.
-Brak takiego pracownika w bazie: Kunkowska Paulina w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół utrzymania czystości - Lublin - grafik.xlsx z zakladki 11
-Program nie znalazł oznaczenia w legendzie: oznaczenie: "10U", Dla pracownika Żydak Agnieszka w dniu 2016-5-9. Nie wpierdolono dnia planu do bazy. Brak rekordu w legendzie w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół utrzymania czystości - Lublin - grafik.xlsx z zakladki 12.
-Brak takiego pracownika w bazie: Anyszewska Małgorz w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół utrzymania czystości - Lublin - grafik.xlsx z zakladki 13
-Brak takiego pracownika w bazie: Anyszewska Małgorz w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół utrzymania czystości - Lublin - grafik.xlsx z zakladki 14
-Nie rozpoznano tego rodzaju zakladki: G:\ITEGER\staż\obecności\All_Reader\Wszystkie pliki\Centrum - zespół utrzymania czystości - Lublin - grafik.xlsxnr zakladki: 16
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Anna Białek z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - dział gastronomii - grafik.xlsx z zakladki: 1
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Agnieszka Suchocka z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - dział gastronomii - grafik.xlsx z zakladki: 2
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Henryka Szczepańczyk z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - dział gastronomii - grafik.xlsx z zakladki: 3
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Dorota Mikusek z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - dział gastronomii - grafik.xlsx z zakladki: 4
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Agnieszka Suchocka w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - dział gastronomii - grafik.xlsx z zakladki 5
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Anna Białek w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - dział gastronomii - grafik.xlsx z zakladki 6
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Anna Białek w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - dział gastronomii - grafik.xlsx z zakladki 7
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Ewa Rudnik z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - dział gastronomii - grafik.xlsx z zakladki: 8
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Paulina Kunkowska z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - dział gastronomii - grafik.xlsx z zakladki: 9
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Ewa Rudnik z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - dział gastronomii - grafik.xlsx z zakladki: 10
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Paulina Kunkowska w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - dział gastronomii - grafik.xlsx z zakladki 11
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Małgorz Anyszewska w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - dział gastronomii - grafik.xlsx z zakladki 12
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Małgorz Anyszewska w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - dział gastronomii - grafik.xlsx z zakladki 13
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Małgorz Anyszewska w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - dział gastronomii - grafik.xlsx z zakladki 14
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Yulia Bodnar z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - dział gastronomii - grafik.xlsx z zakladki: 15
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: - GOŁĘBIOWSKA z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - dział gastronomii - karty pracy.xlsx z zakladki: 11
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Nie rozpoznano tego rodzaju zakladki: G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - dział gastronomii - karty pracy.xlsxnr zakladki: 17
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Nie rozpoznano tego rodzaju zakladki: G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - dział gastronomii - karty pracy.xlsxnr zakladki: 18
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Nie rozpoznano tego rodzaju zakladki: G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - dział gastronomii - karty pracy.xlsxnr zakladki: 27
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: - WAWER z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - dział gastronomii - karty pracy.xlsx z zakladki: 42
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Anna Białek z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - dział utrzymania czystości infolinia - grafik.xlsx z zakladki: 1
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Agnieszka Suchocka z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - dział utrzymania czystości infolinia - grafik.xlsx z zakladki: 2
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Henryka Szczepańczyk z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - dział utrzymania czystości infolinia - grafik.xlsx z zakladki: 3
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Dorota Mikusek z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - dział utrzymania czystości infolinia - grafik.xlsx z zakladki: 4
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Agnieszka Suchocka w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - dział utrzymania czystości infolinia - grafik.xlsx z zakladki 5
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Anna Białek w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - dział utrzymania czystości infolinia - grafik.xlsx z zakladki 6
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Anna Białek w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - dział utrzymania czystości infolinia - grafik.xlsx z zakladki 7
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Ewa Rudnik z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - dział utrzymania czystości infolinia - grafik.xlsx z zakladki: 8
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Paulina Kunkowska z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - dział utrzymania czystości infolinia - grafik.xlsx z zakladki: 9
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Ewa Rudnik z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - dział utrzymania czystości infolinia - grafik.xlsx z zakladki: 10
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Paulina Kunkowska w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - dział utrzymania czystości infolinia - grafik.xlsx z zakladki 11
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Małgorz Anyszewska w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - dział utrzymania czystości infolinia - grafik.xlsx z zakladki 12
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Małgorz Anyszewska w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - dział utrzymania czystości infolinia - grafik.xlsx z zakladki 13
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Małgorz Anyszewska w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - dział utrzymania czystości infolinia - grafik.xlsx z zakladki 14
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: IMIĘ NAZWISKO z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - zespół finansowy - karty pracy.xlsx z zakladki: 3
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Anna Białek z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - zespół kontroli - grafik.xlsx z zakladki: 1
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Agnieszka Suchocka z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - zespół kontroli - grafik.xlsx z zakladki: 2
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Henryka Szczepańczyk z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - zespół kontroli - grafik.xlsx z zakladki: 3
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Dorota Mikusek z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - zespół kontroli - grafik.xlsx z zakladki: 4
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Agnieszka Suchocka w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - zespół kontroli - grafik.xlsx z zakladki 5
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Anna Białek w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - zespół kontroli - grafik.xlsx z zakladki 6
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Anna Białek w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - zespół kontroli - grafik.xlsx z zakladki 7
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Ewa Rudnik z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - zespół kontroli - grafik.xlsx z zakladki: 8
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Paulina Kunkowska z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - zespół kontroli - grafik.xlsx z zakladki: 9
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Ewa Rudnik z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - zespół kontroli - grafik.xlsx z zakladki: 10
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Paulina Kunkowska w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - zespół kontroli - grafik.xlsx z zakladki 11
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Małgorz Anyszewska w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - zespół kontroli - grafik.xlsx z zakladki 12
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: Małgorz Anyszewska w pliku G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - zespół kontroli - grafik.xlsx z zakladki 13
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Brak takiego pracownika w bazie: IMIĘ NAZWISKO z pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - zespół księgowości - karty pracy.xlsx z zakladki: 5
+-------------------------------------------------------------------------------
+
+
+-------------------------------------------------------------------------------
+Wystąpił błąd w pliku: G:\ITEGER\staż\obecności\All_Reader\Wszystkie Pliki\Centrala - zespół księgowości - karty pracy.xlsx
+Zakładka nr: 9
+Kolumna nr: 14
+Rząd nr: 3
+Powinna znaleźć się wartość: data, a jest: 
+Data_czas wykrycia: 15.11.2024 11:53:07
+ Dodatkowa informacja: Brak daty w pliku
+-------------------------------------------------------------------------------
+
