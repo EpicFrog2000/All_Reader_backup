@@ -681,6 +681,8 @@ namespace All_Readeer
         }
         private void Insert_Obecnosci_do_Optimy(Karta_Pracy karta, SqlTransaction tran, SqlConnection connection)
         {
+
+
             if (!string.IsNullOrEmpty(karta.Pracownik.Imie) &&
                 !string.IsNullOrEmpty(karta.Pracownik.Nazwisko) &&
                 karta.Rok != 0 &&

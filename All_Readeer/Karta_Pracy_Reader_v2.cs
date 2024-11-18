@@ -448,71 +448,337 @@ namespace All_Readeer
         }
         private void Wpierdol_Obecnosci_do_Optimy(Karta_Pracy karta, SqlTransaction tran, SqlConnection connection)
         {
+            var sqlInsertNew = @"
+DECLARE @id int;
+
+                -- dodawaina pracownika do pracx i init pracpracdni
+IF((select DISTINCT COUNT(PRI_PraId) from cdn.Pracidx WHERE PRI_Imie1 = @PracownikImieInsert and PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Typ = 1) > 1)
+BEGIN
+	DECLARE @ErrorMessageC NVARCHAR(500) = 'Jest 2 pracowników w bazie o takim samym imieniu i nazwisku: ' +@PracownikImieInsert + ' ' +  @PracownikNazwiskoInsert;
+	THROW 50001, @ErrorMessageC, 1;
+END
+DECLARE @PRI_PraId INT = (select DISTINCT PRI_PraId from cdn.Pracidx WHERE PRI_Imie1 = @PracownikImieInsert and PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Typ = 1);
+IF @PRI_PraId IS NULL
+BEGIN
+	SET @PRI_PraId = (select DISTINCT PRI_PraId from cdn.Pracidx WHERE PRI_Imie1 = @PracownikNazwiskoInsert  and PRI_Nazwisko = @PracownikImieInsert and PRI_Typ = 1);
+	IF @PRI_PraId IS NULL
+	BEGIN
+		DECLARE @ErrorMessage NVARCHAR(500) = 'Brak takiego pracownika w bazie o imieniu i nazwisku: ' +@PracownikImieInsert + ' ' +  @PracownikNazwiskoInsert;
+		THROW 50000, @ErrorMessage, 1;
+	END
+END
+
+DECLARE @EXISTSPRACTEST INT = (SELECT PracKod.PRA_PraId FROM CDN.PracKod where PRA_Kod = @PRI_PraId)
+
+IF @EXISTSPRACTEST IS NULL
+BEGIN
+    INSERT INTO [CDN].[PracKod]
+            ([PRA_Kod]
+            ,[PRA_Archiwalny]
+            ,[PRA_Nadrzedny]
+            ,[PRA_EPEmail]
+            ,[PRA_EPTelefon]
+            ,[PRA_EPNrPokoju]
+            ,[PRA_EPDostep]
+            ,[PRA_HasloDoWydrukow])
+        VALUES
+            (@PRI_PraId
+            ,0
+            ,0
+            ,''
+            ,''
+            ,''
+            ,0
+            ,'')
+END
+
+DECLARE @PRA_PraId INT = (SELECT PracKod.PRA_PraId FROM CDN.PracKod where PRA_Kod = @PRI_PraId);
+
+DECLARE @EXISTSDZIEN DATETIME = (SELECT PracPracaDni.PPR_Data FROM cdn.PracPracaDni WHERE PPR_PraId = @PRA_PraId and PPR_Data = @DataInsert)
+IF @EXISTSDZIEN is null
+BEGIN
+    BEGIN TRY
+        INSERT INTO [CDN].[PracPracaDni]
+                    ([PPR_PraId]
+                    ,[PPR_Data]
+                    ,[PPR_TS_Zal]
+                    ,[PPR_TS_Mod]
+                    ,[PPR_OpeModKod]
+                    ,[PPR_OpeModNazwisko]
+                    ,[PPR_OpeZalKod]
+                    ,[PPR_OpeZalNazwisko]
+                    ,[PPR_Zrodlo])
+                VALUES
+                    (@PRI_PraId
+                    ,@DataInsert
+                    ,GETDATE()
+                    ,GETDATE()
+                    ,'ADMIN'
+                    ,'Administrator'
+                    ,'ADMIN'
+                    ,'Administrator'
+                    ,0)
+    END TRY
+    BEGIN CATCH
+    END CATCH
+END
+
+SET @id = (select PPR_PprId from cdn.PracPracaDni where CAST(PPR_Data as datetime) = @DataInsert and PPR_PraId = @PRI_PraId);
+
+INSERT INTO CDN.PracPracaDniGodz
+		(PGR_PprId,
+		PGR_Lp,
+		PGR_OdGodziny,
+		PGR_DoGodziny,
+		PGR_Strefa,
+		PGR_DzlId,
+		PGR_PrjId,
+		PGR_Uwagi,
+		PGR_OdbNadg)
+	VALUES
+		(@id,
+		1,
+		DATEADD(MINUTE, 0, @GodzOdDate),
+		DATEADD(MINUTE, -60 * (@CzasPrzepracowanyInsert - @PracaWgGrafikuInsert), @GodzDoDate),
+		@TypPracy,
+		1,
+		1,
+		'',
+		1);";
+
             foreach (var dane_Dni in karta.dane_dni)
             {
                 try
                 {
-                    // jak praca po północy to na next dzien przeniesc
+                    DateTime WażnaData = DateTime.Parse($"{karta.rok}-{karta.miesiac:D2}-{dane_Dni.dzien:D2}");
+                    var (startPodstawowy, endPodstawowy, startNadl50, endNadl50, startNadl100, endNadl100) = Oblicz_Czas_Z_Dodatkiem(dane_Dni);
+                    double czasPrzepracowany = 0;
                     if (dane_Dni.godz_zakoncz_pracy < dane_Dni.godz_rozp_pracy)
                     {
-                        // insert godziny przed północą
-                        using (SqlCommand insertCmd = new SqlCommand(Program.sqlQueryInsertObecnościDoOptimy, connection, tran))
-                        {
-                            insertCmd.Parameters.AddWithValue("@DataInsert", DateTime.ParseExact($"{karta.rok}-{karta.miesiac:D2}-{dane_Dni.dzien:D2}", "yyyy-MM-dd", CultureInfo.InvariantCulture));
-                            DateTime baseDate = new DateTime(1899, 12, 30);
-                            DateTime godzOdDate = baseDate + dane_Dni.godz_rozp_pracy;
-                            DateTime godzDoDate = baseDate + TimeSpan.FromHours(24);
-                            insertCmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = godzOdDate;
-                            insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
-                            double czasPrzepracowanyInsert = (TimeSpan.FromHours(24) - dane_Dni.godz_rozp_pracy).TotalHours;
-                            insertCmd.Parameters.AddWithValue("@CzasPrzepracowanyInsert", czasPrzepracowanyInsert);
-                            insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", czasPrzepracowanyInsert);
-                            insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", karta.pracownik.Nazwisko);
-                            insertCmd.Parameters.AddWithValue("@PracownikImieInsert", karta.pracownik.Imie);
-                            insertCmd.Parameters.AddWithValue("@Godz_dod_50", dane_Dni.Godz_nadl_platne_z_dod_50);
-                            insertCmd.Parameters.AddWithValue("@Godz_dod_100", dane_Dni.Godz_nadl_platne_z_dod_100);
-                            insertCmd.ExecuteScalar();
-                        }
-                        // insert po północy
-                        using (SqlCommand insertCmd = new SqlCommand(Program.sqlQueryInsertObecnościDoOptimy, connection, tran))
-                        {
-                            var data = new DateTime(karta.rok, karta.miesiac, dane_Dni.dzien).AddDays(1);
-                            insertCmd.Parameters.AddWithValue("@DataInsert", DateTime.ParseExact($"{data:yyyy-MM-dd}", "yyyy-MM-dd", CultureInfo.InvariantCulture));
-                            DateTime baseDate = new DateTime(1899, 12, 30);
-                            DateTime godzOdDate = baseDate + TimeSpan.FromHours(0);
-                            DateTime godzDoDate = baseDate + dane_Dni.godz_zakoncz_pracy;
-                            insertCmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = godzOdDate;
-                            insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
-                            double czasPrzepracowanyInsert = dane_Dni.godz_zakoncz_pracy.TotalHours;
-                            insertCmd.Parameters.AddWithValue("@CzasPrzepracowanyInsert", czasPrzepracowanyInsert);
-                            insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", czasPrzepracowanyInsert);
-                            insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", karta.pracownik.Nazwisko);
-                            insertCmd.Parameters.AddWithValue("@PracownikImieInsert", karta.pracownik.Imie);
-                            insertCmd.Parameters.AddWithValue("@Godz_dod_50", dane_Dni.Godz_nadl_platne_z_dod_50);
-                            insertCmd.Parameters.AddWithValue("@Godz_dod_100", dane_Dni.Godz_nadl_platne_z_dod_100);
-                            insertCmd.ExecuteScalar();
-                        }
+                        czasPrzepracowany = (TimeSpan.FromHours(24) - dane_Dni.godz_rozp_pracy).TotalHours + dane_Dni.godz_zakoncz_pracy.TotalHours;
                     }
                     else
                     {
-                        using (SqlCommand insertCmd = new SqlCommand(Program.sqlQueryInsertObecnościDoOptimy, connection, tran))
-                        {
-                            insertCmd.Parameters.AddWithValue("@DataInsert", DateTime.ParseExact($"{karta.rok}-{karta.miesiac:D2}-{dane_Dni.dzien:D2}", "yyyy-MM-dd", CultureInfo.InvariantCulture));
+                        czasPrzepracowany = (dane_Dni.godz_zakoncz_pracy - dane_Dni.godz_rozp_pracy).TotalHours;
+                    }
+                    double czasPodstawowy = czasPrzepracowany - (double)(dane_Dni.Godz_nadl_platne_z_dod_50 + dane_Dni.Godz_nadl_platne_z_dod_100);
 
-                            DateTime dataBazowa = new DateTime(1899, 12, 30);
-                            DateTime godzOdDate = dataBazowa + dane_Dni.godz_rozp_pracy;
-                            DateTime godzDoDate = dataBazowa + dane_Dni.godz_zakoncz_pracy;
-                            insertCmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = godzOdDate;
-                            insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
-                            insertCmd.Parameters.AddWithValue("@CzasPrzepracowanyInsert", (dane_Dni.godz_zakoncz_pracy - dane_Dni.godz_rozp_pracy).TotalHours);
-                            insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", (dane_Dni.godz_zakoncz_pracy - dane_Dni.godz_rozp_pracy).TotalHours);
-                            insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", karta.pracownik.Nazwisko);
-                            insertCmd.Parameters.AddWithValue("@PracownikImieInsert", karta.pracownik.Imie);
-                            insertCmd.Parameters.AddWithValue("@Godz_dod_50", dane_Dni.Godz_nadl_platne_z_dod_50);
-                            insertCmd.Parameters.AddWithValue("@Godz_dod_100", dane_Dni.Godz_nadl_platne_z_dod_100);
-                            insertCmd.ExecuteScalar();
+                    bool czy_next_dzien = false;
+
+                    // zrob to co ponizej ale dla wszystkich 3 xdd
+                    if (czasPodstawowy > 0)
+                    {
+                        if (endPodstawowy < startPodstawowy)
+                        {
+                            czy_next_dzien = true;
+                            // insert godziny przed północą
+                            using (SqlCommand insertCmd = new SqlCommand(sqlInsertNew, connection, tran))
+                            {
+                                insertCmd.Parameters.AddWithValue("@DataInsert",WażnaData);
+                                DateTime baseDate = new DateTime(1899, 12, 30);
+                                DateTime godzOdDate = baseDate + startPodstawowy;
+                                DateTime godzDoDate = baseDate + TimeSpan.FromHours(24);
+                                insertCmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = godzOdDate;
+                                insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
+                                double czasPrzepracowanyInsert = (TimeSpan.FromHours(24) - startPodstawowy).TotalHours;
+                                insertCmd.Parameters.AddWithValue("@CzasPrzepracowanyInsert", czasPrzepracowanyInsert);
+                                insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", czasPrzepracowanyInsert);
+                                insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", karta.pracownik.Nazwisko);
+                                insertCmd.Parameters.AddWithValue("@PracownikImieInsert", karta.pracownik.Imie);
+                                insertCmd.Parameters.AddWithValue("@TypPracy", 2); // podstawowy
+                                insertCmd.ExecuteScalar();
+                            }
+                            // insert po północy
+                            using (SqlCommand insertCmd = new SqlCommand(sqlInsertNew, connection, tran))
+                            {
+                                var data = WażnaData.AddDays(1);
+                                insertCmd.Parameters.AddWithValue("@DataInsert", DateTime.ParseExact($"{data:yyyy-MM-dd}", "yyyy-MM-dd", CultureInfo.InvariantCulture));
+                                DateTime baseDate = new DateTime(1899, 12, 30);
+                                DateTime godzOdDate = baseDate + TimeSpan.FromHours(0);
+                                DateTime godzDoDate = baseDate + endPodstawowy;
+                                insertCmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = godzOdDate;
+                                insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
+                                double czasPrzepracowanyInsert = endPodstawowy.TotalHours;
+                                insertCmd.Parameters.AddWithValue("@CzasPrzepracowanyInsert", czasPrzepracowanyInsert);
+                                insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", czasPrzepracowanyInsert);
+                                insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", karta.pracownik.Nazwisko);
+                                insertCmd.Parameters.AddWithValue("@PracownikImieInsert", karta.pracownik.Imie);
+                                insertCmd.Parameters.AddWithValue("@TypPracy", 2); // podstawowy
+                                insertCmd.ExecuteScalar();
+                            }
+                        }
+                        else
+                        {
+                            using (SqlCommand insertCmd = new SqlCommand(sqlInsertNew, connection, tran))
+                            {
+                                insertCmd.Parameters.AddWithValue("@DataInsert", WażnaData);
+
+                                DateTime dataBazowa = new DateTime(1899, 12, 30);
+                                DateTime godzOdDate = dataBazowa + startPodstawowy;
+                                DateTime godzDoDate = dataBazowa + endPodstawowy;
+                                insertCmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = godzOdDate;
+                                insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
+                                insertCmd.Parameters.AddWithValue("@CzasPrzepracowanyInsert", (endPodstawowy - startPodstawowy).TotalHours);
+                                insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", (endPodstawowy - startPodstawowy).TotalHours);
+                                insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", karta.pracownik.Nazwisko);
+                                insertCmd.Parameters.AddWithValue("@PracownikImieInsert", karta.pracownik.Imie);
+                                insertCmd.Parameters.AddWithValue("@TypPracy", 2); // podstawowy
+                                insertCmd.ExecuteScalar();
+                            }
                         }
                     }
+                    if (czy_next_dzien)
+                    {
+                        WażnaData = WażnaData.AddDays(1);
+                        czy_next_dzien = false;
+                    }
+                    if (dane_Dni.Godz_nadl_platne_z_dod_50 > 0)
+                    {
+                        if (endNadl50 < startNadl50)
+                        {
+                            czy_next_dzien = true;
+                            // insert godziny przed północą
+                            using (SqlCommand insertCmd = new SqlCommand(sqlInsertNew, connection, tran))
+                            {
+                                DateTime baseDate = new DateTime(1899, 12, 30);
+                                DateTime godzOdDate = baseDate + startNadl50;
+                                DateTime godzDoDate = baseDate + TimeSpan.FromHours(24);
+                                double czasPrzepracowanyInsert = (TimeSpan.FromHours(24) - startNadl50).TotalHours;
+                                if (godzOdDate != godzDoDate)
+                                {
+                                    insertCmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = godzOdDate;
+                                    insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
+                                    insertCmd.Parameters.AddWithValue("@DataInsert", WażnaData);
+                                    insertCmd.Parameters.AddWithValue("@CzasPrzepracowanyInsert", czasPrzepracowanyInsert);
+                                    insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", czasPrzepracowanyInsert);
+                                    insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", karta.pracownik.Nazwisko);
+                                    insertCmd.Parameters.AddWithValue("@PracownikImieInsert", karta.pracownik.Imie);
+                                    insertCmd.Parameters.AddWithValue("@TypPracy", 8); // 50%
+                                    insertCmd.ExecuteScalar();
+                                }
+                            }
+                            // insert po północy
+                            using (SqlCommand insertCmd = new SqlCommand(sqlInsertNew, connection, tran))
+                            {
+                                var data = WażnaData.AddDays(1);
+                                insertCmd.Parameters.AddWithValue("@DataInsert", DateTime.ParseExact($"{data:yyyy-MM-dd}", "yyyy-MM-dd", CultureInfo.InvariantCulture));
+                                DateTime baseDate = new DateTime(1899, 12, 30);
+                                DateTime godzOdDate = baseDate + TimeSpan.FromHours(0);
+                                DateTime godzDoDate = baseDate + endNadl50;
+                                double czasPrzepracowanyInsert = endNadl50.TotalHours;
+                                if (godzOdDate != godzDoDate)
+                                {
+                                    insertCmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = godzOdDate;
+                                    insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
+                                    insertCmd.Parameters.AddWithValue("@CzasPrzepracowanyInsert", czasPrzepracowanyInsert);
+                                    insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", czasPrzepracowanyInsert);
+                                    insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", karta.pracownik.Nazwisko);
+                                    insertCmd.Parameters.AddWithValue("@PracownikImieInsert", karta.pracownik.Imie);
+                                    insertCmd.Parameters.AddWithValue("@TypPracy", 8); // 50%
+                                    insertCmd.ExecuteScalar();
+                                }
+                            }
+                        }
+                        else
+                        {
+                            using (SqlCommand insertCmd = new SqlCommand(sqlInsertNew, connection, tran))
+                            {
+                                insertCmd.Parameters.AddWithValue("@DataInsert", WażnaData);
+
+                                DateTime dataBazowa = new DateTime(1899, 12, 30);
+                                DateTime godzOdDate = dataBazowa + startNadl50;
+                                DateTime godzDoDate = dataBazowa + endNadl50;
+                                if (godzOdDate != godzDoDate)
+                                {
+                                    insertCmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = godzOdDate;
+                                    insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
+                                    insertCmd.Parameters.AddWithValue("@CzasPrzepracowanyInsert", (endNadl50 - startNadl50).TotalHours);
+                                    insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", (endNadl50 - startNadl50).TotalHours);
+                                    insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", karta.pracownik.Nazwisko);
+                                    insertCmd.Parameters.AddWithValue("@PracownikImieInsert", karta.pracownik.Imie);
+                                    insertCmd.Parameters.AddWithValue("@TypPracy", 8); // 50%
+                                    insertCmd.ExecuteScalar();
+                                }
+                            }
+                        }
+                    }
+                    if (czy_next_dzien)
+                    {
+                        WażnaData = WażnaData.AddDays(1);
+                        czy_next_dzien = false;
+                    }
+                    if (dane_Dni.Godz_nadl_platne_z_dod_100 > 0)
+                    {
+                        czy_next_dzien = true;
+                        if (endNadl100 < startNadl100)
+                        {
+                            // insert godziny przed północą
+                            using (SqlCommand insertCmd = new SqlCommand(sqlInsertNew, connection, tran))
+                            {
+                                insertCmd.Parameters.AddWithValue("@DataInsert", WażnaData);
+                                DateTime baseDate = new DateTime(1899, 12, 30);
+                                DateTime godzOdDate = baseDate + startNadl100;
+                                DateTime godzDoDate = baseDate + TimeSpan.FromHours(24);
+                                double czasPrzepracowanyInsert = (TimeSpan.FromHours(24) - startNadl100).TotalHours;
+                                if (godzOdDate != godzDoDate)
+                                {
+                                    insertCmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = godzOdDate;
+                                    insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
+                                    insertCmd.Parameters.AddWithValue("@CzasPrzepracowanyInsert", czasPrzepracowanyInsert);
+                                    insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", czasPrzepracowanyInsert);
+                                    insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", karta.pracownik.Nazwisko);
+                                    insertCmd.Parameters.AddWithValue("@PracownikImieInsert", karta.pracownik.Imie);
+                                    insertCmd.Parameters.AddWithValue("@TypPracy", 6); // 100%
+                                    insertCmd.ExecuteScalar();
+                                }
+                            }
+                            // insert po północy
+                            using (SqlCommand insertCmd = new SqlCommand(sqlInsertNew, connection, tran))
+                            {
+                                var data = WażnaData.AddDays(1);
+                                insertCmd.Parameters.AddWithValue("@DataInsert", DateTime.ParseExact($"{data:yyyy-MM-dd}", "yyyy-MM-dd", CultureInfo.InvariantCulture));
+                                DateTime baseDate = new DateTime(1899, 12, 30);
+                                DateTime godzOdDate = baseDate + TimeSpan.FromHours(0);
+                                DateTime godzDoDate = baseDate + endNadl100;
+                                double czasPrzepracowanyInsert = endNadl100.TotalHours;
+                                if (godzOdDate != godzDoDate)
+                                {
+                                    insertCmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = godzOdDate;
+                                    insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
+                                    insertCmd.Parameters.AddWithValue("@CzasPrzepracowanyInsert", czasPrzepracowanyInsert);
+                                    insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", czasPrzepracowanyInsert);
+                                    insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", karta.pracownik.Nazwisko);
+                                    insertCmd.Parameters.AddWithValue("@PracownikImieInsert", karta.pracownik.Imie);
+                                    insertCmd.Parameters.AddWithValue("@TypPracy", 6); // 100%
+                                    insertCmd.ExecuteScalar();
+                                }
+                            }
+                        }
+                        else
+                        {
+                            using (SqlCommand insertCmd = new SqlCommand(sqlInsertNew, connection, tran))
+                            {
+                                insertCmd.Parameters.AddWithValue("@DataInsert", WażnaData);
+
+                                DateTime dataBazowa = new DateTime(1899, 12, 30);
+                                DateTime godzOdDate = dataBazowa + startNadl100;
+                                DateTime godzDoDate = dataBazowa + endNadl100;
+                                if (godzOdDate != godzDoDate)
+                                {
+                                    insertCmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = godzOdDate;
+                                    insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
+                                    insertCmd.Parameters.AddWithValue("@CzasPrzepracowanyInsert", (endNadl100 - startNadl100).TotalHours);
+                                    insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", (endNadl100 - startNadl100).TotalHours);
+                                    insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", karta.pracownik.Nazwisko);
+                                    insertCmd.Parameters.AddWithValue("@PracownikImieInsert", karta.pracownik.Imie);
+                                    insertCmd.Parameters.AddWithValue("@TypPracy", 6); // 100%
+                                    insertCmd.ExecuteScalar();
+                                }
+                            }
+                        }
+                    }
+
+
                 }
                 catch (SqlException ex)
                 {
@@ -724,6 +990,42 @@ namespace All_Readeer
                 }
             }
             return total;
+        }
+        private (TimeSpan, TimeSpan, TimeSpan, TimeSpan, TimeSpan, TimeSpan) Oblicz_Czas_Z_Dodatkiem(Dane_Dnia dane_Dni)
+        {
+            TimeSpan godzRozpPracy = dane_Dni.godz_rozp_pracy;
+            TimeSpan godzZakonczPracy = dane_Dni.godz_zakoncz_pracy;
+            double godzNadlPlatne50 = (double)dane_Dni.Godz_nadl_platne_z_dod_50;
+            double godzNadlPlatne100 = (double)dane_Dni.Godz_nadl_platne_z_dod_100;
+
+            double czasPrzepracowany = 0;
+
+            if (godzZakonczPracy < godzRozpPracy)
+            {
+                czasPrzepracowany = (TimeSpan.FromHours(24) - godzRozpPracy).TotalHours + godzZakonczPracy.TotalHours;
+            }
+            else
+            {
+                czasPrzepracowany = (godzZakonczPracy - godzRozpPracy).TotalHours;
+            }
+
+            double czasPodstawowy = czasPrzepracowany - (godzNadlPlatne50 + godzNadlPlatne100);
+
+            TimeSpan startPodstawowy = godzRozpPracy;
+            TimeSpan endPodstawowy = startPodstawowy + TimeSpan.FromHours(czasPodstawowy);
+
+            TimeSpan startNadl50 = endPodstawowy;
+            TimeSpan endNadl50 = startNadl50 + TimeSpan.FromHours(godzNadlPlatne50);
+
+            TimeSpan startNadl100 = endNadl50;
+            TimeSpan endNadl100 = startNadl100 + TimeSpan.FromHours(godzNadlPlatne100);
+
+            return (new TimeSpan((int)startPodstawowy.TotalHours % 24, startPodstawowy.Minutes, startPodstawowy.Seconds),
+                new TimeSpan((int)endPodstawowy.TotalHours % 24, endPodstawowy.Minutes, endPodstawowy.Seconds),
+                new TimeSpan((int)startNadl50.TotalHours % 24, startNadl50.Minutes, startNadl50.Seconds),
+                new TimeSpan((int)endNadl50.TotalHours % 24, endNadl50.Minutes, endNadl50.Seconds),
+                new TimeSpan((int)startNadl100.TotalHours % 24, startNadl100.Minutes, startNadl100.Seconds),
+                new TimeSpan((int)endNadl100.TotalHours % 24, endNadl100.Minutes, endNadl100.Seconds));
         }
     }
 }

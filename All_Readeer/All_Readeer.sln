@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.35122.118
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "All_Readeer", "All_Readeer.csproj", "{51188863-BB71-45E5-A6E8-7B2949A2EC43}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "All_Readeer", "All_Readeer.csproj", "{51188863-BB71-45E5-A6E8-7B2949A2EC43}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
