@@ -241,10 +241,9 @@ namespace All_Readeer
                     throw new Exception("Nie znaleziono słowa 'Dzień' w kolumnie.");
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                Console.WriteLine(ex.Message);
-                throw new Exception("Nie znaleziono słowa 'Dzień' w kolumnie.");
+                throw;
             }
         }
         private void Get_Header_Karta_Info(CurrentPosition StartKarty, IXLWorksheet worksheet, ref Karta_Pracy karta_pracy)
@@ -255,43 +254,49 @@ namespace All_Readeer
             {
                 dane = dane.Substring(0, dane.Length - 1).Trim();
             }
+
             if (string.IsNullOrEmpty(dane))
             {
                 Program.error_logger.New_Error(dane, "data", StartKarty.col + 12, StartKarty.row - 3, "Brak daty w pliku");
-                Console.WriteLine(Program.error_logger.Get_Error_String());
                 throw new Exception(Program.error_logger.Get_Error_String());
             }
-
-            if (karta_pracy.Set_Data(dane) == 1) {
-                if (dane.Split(" ").Length == 2)
+            if (DateTime.TryParse(dane, out DateTime parsedData))
+            {
+                karta_pracy.miesiac= parsedData.Month;
+                karta_pracy.rok = parsedData.Year;
+            }
+            else
+            {
+                if (karta_pracy.Set_Data(dane) == 1)
                 {
-                    var ndata = dane.Split(" ");
-                    if (ndata[0].ToLower() == "pażdziernik")
+                    if (dane.Split(" ").Length == 2)
                     {
-                        ndata[0] = "październik";
+                        var ndata = dane.Split(" ");
+                        if (ndata[0].ToLower() == "pażdziernik")
+                        {
+                            ndata[0] = "październik";
+                        }
+                        try
+                        {
+                            karta_pracy.Set_Miesiac(ndata[0]);
+                            karta_pracy.rok = int.Parse(Regex.Replace(ndata[1], @"\D", ""));
+                        }
+                        catch
+                        {
+                            karta_pracy.Set_Miesiac("Zle dane");
+                            karta_pracy.rok = int.Parse(Regex.Replace(ndata[1], @"\D", ""));
+                        }
+                        if (karta_pracy.miesiac == 0)
+                        {
+                            Program.error_logger.New_Error(dane, "data", StartKarty.col + 12, StartKarty.row - 3, "Zły format daty w pliku");
+                            throw new Exception(Program.error_logger.Get_Error_String());
+                        }
                     }
-                    try
-                    {
-                        karta_pracy.Set_Miesiac(ndata[0]);
-                        karta_pracy.rok = int.Parse(Regex.Replace(ndata[1], @"\D", ""));
-                    }
-                    catch
-                    {
-                        karta_pracy.Set_Miesiac("Zle dane");
-                        karta_pracy.rok = int.Parse(Regex.Replace(ndata[1], @"\D", ""));
-                    }
-                    if (karta_pracy.miesiac == 0)
+                    else
                     {
                         Program.error_logger.New_Error(dane, "data", StartKarty.col + 12, StartKarty.row - 3, "Zły format daty w pliku");
-                        Console.WriteLine(Program.error_logger.Get_Error_String());
                         throw new Exception(Program.error_logger.Get_Error_String());
                     }
-                }
-                else
-                {
-                    Program.error_logger.New_Error(dane, "data", StartKarty.col + 12, StartKarty.row - 3, "Zły format daty w pliku");
-                    Console.WriteLine(Program.error_logger.Get_Error_String());
-                    throw new Exception(Program.error_logger.Get_Error_String());
                 }
             }
 
@@ -300,7 +305,6 @@ namespace All_Readeer
             if (string.IsNullOrEmpty(dane))
             {
                 Program.error_logger.New_Error(dane, "nazwisko i imie", StartKarty.col, StartKarty.row - 2, "Nie wykryto nazwiska i imienia w pliku");
-                Console.WriteLine(Program.error_logger.Get_Error_String());
                 throw new Exception(Program.error_logger.Get_Error_String());
             }
             if(dane.Contains("KARTA PRACY:"))
@@ -316,7 +320,6 @@ namespace All_Readeer
                     if (string.IsNullOrEmpty(dane))
                     {
                         Program.error_logger.New_Error(dane, "nazwisko i imie", StartKarty.col - 2, StartKarty.row, "Zły format pola nazwisko i imie");
-                        Console.WriteLine(Program.error_logger.Get_Error_String());
                         throw new Exception(Program.error_logger.Get_Error_String());
                     }
                     else
@@ -339,7 +342,6 @@ namespace All_Readeer
             if (karta_pracy.pracownik.Nazwisko == null || karta_pracy.pracownik.Imie == null)
             {
                 Program.error_logger.New_Error(dane, "nazwisko i imie", StartKarty.col - 2, StartKarty.row, "Zły format pola nazwisko i imie");
-                Console.WriteLine(Program.error_logger.Get_Error_String());
                 throw new Exception(Program.error_logger.Get_Error_String());
             }
         }
@@ -360,18 +362,17 @@ namespace All_Readeer
                 }else
                 {
                     Program.error_logger.New_Error(NrDnia, "dzien", StartKarty.col, StartKarty.row, "Błędny nr dnia");
-                    Console.WriteLine(Program.error_logger.Get_Error_String());
                     throw new Exception(Program.error_logger.Get_Error_String());
                 }
-
+                var Cell_Value = "";
                 //try get nieobecność:
                 try
                 {
-                    var danei = worksheet.Cell(StartKarty.row, StartKarty.col + 3).GetValue<string>();
-                    if (!string.IsNullOrEmpty(danei.Trim()))
+                    Cell_Value = worksheet.Cell(StartKarty.row, StartKarty.col + 3).GetValue<string>();
+                    if (!string.IsNullOrEmpty(Cell_Value.Trim()))
                     {
                         Nieobecnosc nieobecnosc = new();
-                        if (RodzajNieobecnosci.TryParse(danei.ToUpper(), out RodzajNieobecnosci Rnieobecnosc))
+                        if (RodzajNieobecnosci.TryParse(Cell_Value.ToUpper(), out RodzajNieobecnosci Rnieobecnosc))
                         {
                             nieobecnosc.rodzaj_absencji = Rnieobecnosc;
                             nieobecnosc.pracownik = karta_pracy.pracownik;
@@ -381,7 +382,7 @@ namespace All_Readeer
                         }
                         else
                         {
-                            Console.WriteLine($"Nieprawidłowy kod nieobecności: {danei} w pliku {Program.error_logger.Nazwa_Pliku} w zakladce {Program.error_logger.Nr_Zakladki}");
+                            Program.error_logger.New_Error(Cell_Value, "Kod absencji", StartKarty.col + 3, StartKarty.row, "Nieprawidłowy kod nieobecności");
                             throw new Exception(Program.error_logger.Get_Error_String());
                         }
                         karta_pracy.ListaNieobecnosci.Add(nieobecnosc);
@@ -392,216 +393,52 @@ namespace All_Readeer
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.Message);
                     throw new Exception(ex.Message);
                 }
                 // godz rozpoczecia
-                try
-                {
-                    var danei = worksheet.Cell(StartKarty.row, StartKarty.col + 1).GetValue<string>().Trim().Split(' ')[1];
-                    danei = danei.Replace('.', ':');
-                    if (string.IsNullOrEmpty(danei))
+                try{
+                    Cell_Value = worksheet.Cell(StartKarty.row, StartKarty.col + 1).GetValue<string>().Trim();
+                    if (!string.IsNullOrEmpty(Cell_Value))
                     {
-                        //ErrorLogger_v2.New_Error(danei, "godziny pozpoczęcia pracy", StartKarty.col + 1, StartKarty.row, "Brak wpisanej godziny pozpoczęcia pracy");
-                        //throw new Exception(ErrorLogger_v2.Get_Error_String());
-                        StartKarty.row++;
-                        NrDnia = worksheet.Cell(StartKarty.row, StartKarty.col).GetValue<string>().Trim();
-                        continue;
-                    }
-                    if (TimeSpan.TryParse(danei, out TimeSpan czasRozpoczecia))
-                    {
-                        dzien.godz_rozp_pracy = czasRozpoczecia;
-                    }
-                    else
-                    {
-                        //here try to solve times like 07:59:60 xdd
-                        if (danei.Split(':').Count() == 3)
-                        {
-                            var parts = danei.Split(':');
-
-                            if (int.TryParse(parts[0], out int hours) &&
-                                int.TryParse(parts[1], out int minutes) &&
-                                int.TryParse(parts[2], out int seconds))
-                            {
-                                if (seconds >= 60)
-                                {
-                                    seconds -= 60;
-                                    minutes += 1;
-                                }
-                                if (minutes >= 60)
-                                {
-                                    minutes -= 60;
-                                    hours += 1;
-                                }
-                                hours %= 24;
-                                dzien.godz_rozp_pracy = new TimeSpan(hours, minutes, seconds);
-                            }
-
-                        }
-                        else
-                        {
-                            Program.error_logger.New_Error(danei, "godz_rozp_pracy", StartKarty.col + 1, StartKarty.row);
-                            Console.WriteLine(Program.error_logger.Get_Error_String() + " (Zły foramt czasu)");
-                            throw new Exception(Program.error_logger.Get_Error_String());
-                        }
+                        dzien.godz_rozp_pracy = Reader.Try_Get_Date(Cell_Value);
                     }
                 }
-                catch
+                catch(Exception ex)
                 {
-                    var danei = worksheet.Cell(StartKarty.row, StartKarty.col + 1).GetValue<string>().Trim();
-                    danei = danei.Replace('.', ':');
-                    if (string.IsNullOrEmpty(danei))
-                    {
-                        //ErrorLogger_v2.New_Error(danei, "godziny pozpoczęcia pracy", StartKarty.col + 1, StartKarty.row, "Brak wpisanej godziny pozpoczęcia pracy");
-                        //throw new Exception(ErrorLogger_v2.Get_Error_String());
-                        StartKarty.row++;
-                        NrDnia = worksheet.Cell(StartKarty.row, StartKarty.col).GetValue<string>().Trim();
-                        continue;
-                    }
-                    if (TimeSpan.TryParse(danei, out TimeSpan czasRozpoczecia))
-                    {
-                        dzien.godz_rozp_pracy = czasRozpoczecia;
-                    }
-                    else
-                    {
-                        //here try to solve times like 07:59:60 xdd
-                        if (danei.Split(':').Count() == 3)
-                        {
-                            var parts = danei.Split(':');
-
-                            if (int.TryParse(parts[0], out int hours) &&
-                                int.TryParse(parts[1], out int minutes) &&
-                                int.TryParse(parts[2], out int seconds))
-                            {
-                                if (seconds >= 60)
-                                {
-                                    seconds -= 60;
-                                    minutes += 1;
-                                }
-                                if (minutes >= 60)
-                                {
-                                    minutes -= 60;
-                                    hours += 1;
-                                }
-                                hours %= 24;
-                                dzien.godz_rozp_pracy = new TimeSpan(hours, minutes, seconds);
-                            }
-
-                        }
-                        else
-                        {
-                            Program.error_logger.New_Error(danei, "godz_rozp_pracy", StartKarty.col + 1, StartKarty.row);
-                            Console.WriteLine(Program.error_logger.Get_Error_String() + " (Zły foramt czasu)");
-                            throw new Exception(Program.error_logger.Get_Error_String());
-                        }
-                    }
+                    Program.error_logger.New_Error(Cell_Value, "Godzina_Rozpoczęcia_Pracy", StartKarty.col + 1, StartKarty.row, ex.Message);
+                    throw new Exception(Program.error_logger.Get_Error_String());
                 }
+
                 // godz zakonczenia
                 try
                 {
-                    var danei = worksheet.Cell(StartKarty.row, StartKarty.col + 2).GetValue<string>().Trim().Split(' ')[1];
-                    danei = danei.Replace('.', ':');
-                    if (string.IsNullOrEmpty(danei))
+                    Cell_Value = worksheet.Cell(StartKarty.row, StartKarty.col + 2).GetValue<string>().Trim();
+                    if (!string.IsNullOrEmpty(Cell_Value))
                     {
-                        //ErrorLogger_v2.New_Error(danei, "godziny zakończenia pracy", StartKarty.col + 2, StartKarty.row, "Brak wpisanej godziny zakonczenia pracy");
-                        //throw new Exception(ErrorLogger_v2.Get_Error_String());
-                        StartKarty.row++;
-                        NrDnia = worksheet.Cell(StartKarty.row, StartKarty.col).GetValue<string>().Trim();
-                        continue;
-                    }
-                    if (TimeSpan.TryParse(danei, out TimeSpan czasZakonczenia))
-                    {
-                        dzien.godz_zakoncz_pracy = czasZakonczenia;
-                    }
-                    else
-                    {
-                        //here try to solve times like 07:59:60 xdd
-                        if (danei.Split(':').Count() == 3)
-                        {
-                            var parts = danei.Split(':');
-
-                            if (int.TryParse(parts[0], out int hours) &&
-                                int.TryParse(parts[1], out int minutes) &&
-                                int.TryParse(parts[2], out int seconds))
-                            {
-                                if (seconds >= 60)
-                                {
-                                    seconds -= 60;
-                                    minutes += 1;
-                                }
-                                if (minutes >= 60)
-                                {
-                                    minutes -= 60;
-                                    hours += 1;
-                                }
-                                hours %= 24;
-                                dzien.godz_zakoncz_pracy = new TimeSpan(hours, minutes, seconds);
-                            }
-
-                        }
-                        else
-                        {
-                            Program.error_logger.New_Error(danei, "godz_zakoncz_pracy", StartKarty.col +2, StartKarty.row);
-                            Console.WriteLine(Program.error_logger.Get_Error_String() + " (Zły foramt czasu)");
-                            throw new Exception(Program.error_logger.Get_Error_String());
-                        }
+                        dzien.godz_zakoncz_pracy = Reader.Try_Get_Date(Cell_Value);
                     }
                 }
-                catch
+                catch(Exception ex)
                 {
-                    var danei = worksheet.Cell(StartKarty.row, StartKarty.col + 2).GetValue<string>().Trim();
-                    danei = danei.Replace('.', ':');
-                    if (string.IsNullOrEmpty(danei))
-                    {
-                        //ErrorLogger_v2.New_Error(danei, "godziny zakończenia pracy", StartKarty.col + 2, StartKarty.row, "Brak wpisanej godziny zakonczenia pracy");
-                        //throw new Exception(ErrorLogger_v2.Get_Error_String());
-                        StartKarty.row++;
-                        NrDnia = worksheet.Cell(StartKarty.row, StartKarty.col).GetValue<string>().Trim();
-                        continue;
-                    }
-                    if (TimeSpan.TryParse(danei, out TimeSpan czasZakonczenia))
-                    {
-                        dzien.godz_zakoncz_pracy = czasZakonczenia;
-                        if (dzien.godz_zakoncz_pracy == TimeSpan.Zero)
-                        {
-                            dzien.godz_zakoncz_pracy = TimeSpan.FromHours(24);
-                        }
-                    }
-                    else
-                    {
-                        //here try to solve times like 07:59:60 xdd
-                        if (danei.Split(':').Count() == 3)
-                        {
-                            var parts = danei.Split(':');
-
-                            if (int.TryParse(parts[0], out int hours) &&
-                                int.TryParse(parts[1], out int minutes) &&
-                                int.TryParse(parts[2], out int seconds))
-                            {
-                                if (seconds >= 60)
-                                {
-                                    seconds -= 60;
-                                    minutes += 1;
-                                }
-                                if (minutes >= 60)
-                                {
-                                    minutes -= 60;
-                                    hours += 1;
-                                }
-                                hours %= 24;
-                                dzien.godz_zakoncz_pracy = new TimeSpan(hours, minutes, seconds);
-                            }
-
-                        }
-                        else
-                        {
-                            Program.error_logger.New_Error(danei, "godz_zakoncz_pracy", StartKarty.col + 2, StartKarty.row);
-                            Console.WriteLine(Program.error_logger.Get_Error_String() + " (Zły foramt czasu)");
-                            throw new Exception(Program.error_logger.Get_Error_String());
-                        }
-                    }
+                    Program.error_logger.New_Error(Cell_Value, "Godzina_Rozpoczęcia_Pracy", StartKarty.col + 1, StartKarty.row, ex.Message);
+                    throw new Exception(Program.error_logger.Get_Error_String());
                 }
-                if(dzien.godz_rozp_pracy != TimeSpan.Zero && dzien.godz_zakoncz_pracy != TimeSpan.Zero)
+
+                //get godz_nad 50
+                Cell_Value = worksheet.Cell(StartKarty.row, StartKarty.col + 9).GetValue<string>().Trim();
+                if (!string.IsNullOrEmpty(Cell_Value))
+                {
+                    dzien.Godz_nadl_platne_z_dod_50 = decimal.Parse(Cell_Value);
+                }
+                //get godz_nad 100
+                Cell_Value = worksheet.Cell(StartKarty.row, StartKarty.col + 10).GetValue<string>().Trim();
+                if (!string.IsNullOrEmpty(Cell_Value))
+                {
+                    dzien.Godz_nadl_platne_z_dod_100 = decimal.Parse(Cell_Value);
+                }
+
+
+                if (dzien.godz_rozp_pracy != TimeSpan.Zero && dzien.godz_zakoncz_pracy != TimeSpan.Zero)
                 {
                     karta_pracy.dane_dni.Add(dzien);
                 }
@@ -632,8 +469,8 @@ namespace All_Readeer
                             insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", czasPrzepracowanyInsert);
                             insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", karta.pracownik.Nazwisko);
                             insertCmd.Parameters.AddWithValue("@PracownikImieInsert", karta.pracownik.Imie);
-                            insertCmd.Parameters.AddWithValue("@Godz_dod_50", 0);
-                            insertCmd.Parameters.AddWithValue("@Godz_dod_100", 0);
+                            insertCmd.Parameters.AddWithValue("@Godz_dod_50", dane_Dni.Godz_nadl_platne_z_dod_50);
+                            insertCmd.Parameters.AddWithValue("@Godz_dod_100", dane_Dni.Godz_nadl_platne_z_dod_100);
                             insertCmd.ExecuteScalar();
                         }
                         // insert po północy
@@ -651,8 +488,8 @@ namespace All_Readeer
                             insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", czasPrzepracowanyInsert);
                             insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", karta.pracownik.Nazwisko);
                             insertCmd.Parameters.AddWithValue("@PracownikImieInsert", karta.pracownik.Imie);
-                            insertCmd.Parameters.AddWithValue("@Godz_dod_50", 0);
-                            insertCmd.Parameters.AddWithValue("@Godz_dod_100", 0);
+                            insertCmd.Parameters.AddWithValue("@Godz_dod_50", dane_Dni.Godz_nadl_platne_z_dod_50);
+                            insertCmd.Parameters.AddWithValue("@Godz_dod_100", dane_Dni.Godz_nadl_platne_z_dod_100);
                             insertCmd.ExecuteScalar();
                         }
                     }
@@ -671,8 +508,8 @@ namespace All_Readeer
                             insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", (dane_Dni.godz_zakoncz_pracy - dane_Dni.godz_rozp_pracy).TotalHours);
                             insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", karta.pracownik.Nazwisko);
                             insertCmd.Parameters.AddWithValue("@PracownikImieInsert", karta.pracownik.Imie);
-                            insertCmd.Parameters.AddWithValue("@Godz_dod_50", 0);
-                            insertCmd.Parameters.AddWithValue("@Godz_dod_100", 0);
+                            insertCmd.Parameters.AddWithValue("@Godz_dod_50", dane_Dni.Godz_nadl_platne_z_dod_50);
+                            insertCmd.Parameters.AddWithValue("@Godz_dod_100", dane_Dni.Godz_nadl_platne_z_dod_100);
                             insertCmd.ExecuteScalar();
                         }
                     }
@@ -682,6 +519,10 @@ namespace All_Readeer
                     tran.Rollback();
                     Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
                     throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
+                }
+                catch (FormatException)
+                {
+                    continue;
                 }
                 catch (Exception ex)
                 {
@@ -749,6 +590,10 @@ namespace All_Readeer
                     tran.Rollback();
                     Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
                     throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
+                }
+                catch (FormatException)
+                {
+                    continue;
                 }
                 catch (Exception ex)
                 {

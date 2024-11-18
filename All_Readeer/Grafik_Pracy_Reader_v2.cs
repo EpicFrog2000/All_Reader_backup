@@ -255,7 +255,6 @@ namespace All_Readeer
                                 if(dane_dnia.kod == null)
                                 {
                                     Program.error_logger.New_Error(kodzik, "Kod Aktywnosci Dnia", pozycja.col, pozycja.row, "Blędny kod aktywności dnia, wystąpił null w komórce");
-                                    Console.WriteLine(Program.error_logger.Get_Error_String());
                                     throw new Exception(Program.error_logger.Get_Error_String());
                                 }
                                 else
@@ -273,10 +272,9 @@ namespace All_Readeer
                     }
                     pozycja.row++;
                 }
-                catch(Exception ex)
+                catch
                 {
-                    Console.WriteLine(ex.Message);
-                    break;
+                    throw;
                 }
             }
         }
@@ -408,6 +406,10 @@ namespace All_Readeer
                         Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
                         throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
                     }
+                    catch (FormatException)
+                    {
+                        continue;
+                    }
                     catch (Exception ex)
                     {
                         tran.Rollback();
@@ -469,6 +471,10 @@ namespace All_Readeer
                     tran.Rollback();
                     Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
                     throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
+                }
+                catch (FormatException)
+                {
+                    continue;
                 }
                 catch (Exception ex)
                 {

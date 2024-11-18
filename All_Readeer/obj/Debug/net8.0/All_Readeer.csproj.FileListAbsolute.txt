@@ -124,3 +124,5 @@ G:\ITEGER\staż\obecności\All_Reader\All_Readeer\obj\Debug\net8.0\All_Readeer.g
 G:\ITEGER\staż\obecności\All_Reader\All_Readeer\obj\Debug\net8.0\ref\All_Readeer.dll
 G:\ITEGER\staż\obecności\All_Reader\All_Readeer\obj\Debug\net8.0\All_Readeer.sourcelink.json
 G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\Microsoft.Office.Interop.Excel.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\ExcelDataReader.dll
+G:\ITEGER\staż\obecności\All_Reader\All_Readeer\bin\Debug\net8.0\ExcelDataReader.DataSet.dll

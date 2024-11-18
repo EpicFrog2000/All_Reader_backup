@@ -1,8 +1,11 @@
 ﻿using All_Readeer;
 using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Bibliography;
+using ExcelDataReader;
+using System.Data;
 class Program
 {
-    private static string Files_Folder = "G:\\ITEGER\\staż\\obecności\\All_Reader\\Wszystkie Pliki\\";
+    private static string Files_Folder = "G:\\ITEGER\\staż\\obecności\\All_Reader\\";
     private static string Errors_File_Folder = "G:\\ITEGER\\staż\\obecności\\All_Reader\\Errors\\";
     private static string Bad_Files_Folder = "G:\\ITEGER\\staż\\obecności\\All_Reader\\Bad Files\\";
     private static string Optima_Conection_String = "Server=ITEGER-NT;Database=CDN_Wars_Test_3_;User Id=sa;Password=cdn;Encrypt=True;TrustServerCertificate=True;";
@@ -390,15 +393,40 @@ END";
         //Wpierdol do while(true){} jeśli to tyle
         ZrobToWieszCoNoWieszOCoMiChodzi();
     }
-    // TODO Upgradee dodawania zwolnien/urlopów/nieobecnosci
-    // TODO MOZE NIE JUPII dodać support dla Zachód - zespół utrzymania czystości - Szczecin - karty pracy.xlsx bo obok siebie i pod są karty xdd
-    // grafik v2024 SPRAWDZ KILKA GRAFIKOW POD SOBĄ
+
+    // TODO MUST now or later
+    // Upgrade dodawania zwolnien/urlopów/nieobecnosci
     // co znaczy ob. w grafikach pracy v2 -> dałem nieobecnosc
-    // TODO Nieobecności w grafik v2024 jeśli takie będą
     // 2 prac o tej samej nazwie
     // prac ktorych nie ma w bazie
+    // dodać Godz_dod_50 do kart pracy
+
+
+
+    //-------------------------------------------------------------------------------
+    //Plik: osadzeni panie - Warszawa - karty pracy.xlsx
+    //Nazwa zakladki: Buchaj Sylwia
+    //Nr Zakladki: 5
+    //Kolumna: 14
+    //Rzad: 3
+    //Wartość w komórce: ': Październik 2024'
+    //Poprawna wartość jaka powinna być: data
+    //Dodatkowa wiadomość: Zły format daty w pliku
+    //-------------------------------------------------------------------------------
+
+    // TODO RACZEJ NIE TRZEBA
+    // dodać support dla Zachód - zespół utrzymania czystości - Szczecin - karty pracy.xlsx bo są kurwa w kostke rubika zrobione
+    // grafik v2024 SPRAWDZ KILKA GRAFIKOW POD SOBĄ np Centru - Terespol - grafiki ALbo możliwe że nie trzeba
+    // TODO Nieobecności w grafik v2024 jeśli takie będą
+
+    // TODO OBY NIE
     // Wyszyścic ten zjebany pierdolony śmierdzący gówno kurwa kod żygać mi się chce
-    // konwersja plikow z xls/xlsb/inne do xlsx
+    // TODO fix nieobecnosci przerywane weekendami i nowymi miesiacami itp JEŚLI SIĘ DA a raczej nie i nie no w sumie to nie no raczej nie mhm nie
+
+
+
+
+
     public static void ZrobToWieszCoNoWieszOCoMiChodzi()
     {
         string[] filePaths = Directory.GetFiles(Files_Folder);
@@ -416,7 +444,16 @@ END";
             Console.ForegroundColor = ConsoleColor.White;
             if (!Is_File_Xlsx(filePath))
             {
-                continue;
+                try
+                {
+                    ConvertToXlsx(filePath, Path.ChangeExtension(filePath, ".xlsx"));
+                    filePath = Path.ChangeExtension(filePath, ".xlsx");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    continue;
+                }
             }
 
             error_logger.Nazwa_Pliku = filePath;
@@ -434,7 +471,9 @@ END";
                 for (int i = 1; i <= ilosc_zakladek; i++)
                 {
                     error_logger.Nr_Zakladki = i;
+
                     var zakladka = workbook.Worksheet(i);
+                    error_logger.Nazwa_Zakladki = zakladka.Name;
                     var typ_pliku = Kurwa_tego_no_wez_zobacz_ktory_rodzaj_zakladki_to_jest_mordzia_co(zakladka);
                     if (typ_pliku == 0)
                     {
@@ -556,16 +595,20 @@ END";
         {
             using (var workbook = new XLWorkbook(File_Path))
             {
-                string lastModifiedBy = workbook.Properties.LastModifiedBy!;
                 DateTime lastWriteTime = File.GetLastWriteTime(File_Path);
-                return (lastModifiedBy, lastWriteTime);
+
+                if (workbook.Properties.LastModifiedBy == null)
+                {
+                    return ("", lastWriteTime);
+                }
+                return (workbook.Properties.LastModifiedBy, lastWriteTime);
             }
         }
-        catch (Exception ex)
+        catch
         {
-            Program.error_logger.New_Custom_Error(ex.Message);
-            Console.WriteLine($"Error: {ex.Message}");
-            return ("Error", DateTime.Now);
+            DateTime lastWriteTime = File.GetLastWriteTime(File_Path);
+            return ("", lastWriteTime);
+
         }
     }
     private static void Copy_Bad_Sheet_To_Files_Folder(string filePath, int sheetIndex)
@@ -666,12 +709,66 @@ END";
         }
         catch
         {
-            Console.WriteLine($"Plik to nie arkusz xlsx: {filePath}.");
+            //Console.WriteLine($"Plik to nie arkusz xlsx: {filePath}.");
             return false;
         }
         return true;
     }
+    public static void ConvertToXlsx(string inputFilePath, string outputFilePath)
+    {
+        if (!File.Exists(inputFilePath))
+            throw new FileNotFoundException($"Plik {inputFilePath} nie istnieje.");
+
+        System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+
+        DataSet dataSet;
+        using (var stream = File.Open(inputFilePath, FileMode.Open, FileAccess.Read))
+        using (var reader = ExcelReaderFactory.CreateReader(stream))
+        {
+            var config = new ExcelDataSetConfiguration
+            {
+                ConfigureDataTable = _ => new ExcelDataTableConfiguration
+                {
+                    UseHeaderRow = true
+                }
+            };
+            dataSet = reader.AsDataSet(config);
+        }
+
+        using var workbook = new XLWorkbook();
+        foreach (DataTable table in dataSet.Tables)
+        {
+            var worksheet = workbook.Worksheets.Add(table.TableName);
+            for (int i = 0; i < table.Columns.Count; i++)
+                worksheet.Cell(1, i + 1).Value = table.Columns[i].ColumnName;
+
+            for (int i = 0; i < table.Rows.Count; i++)
+            {
+                for (int j = 0; j < table.Columns.Count; j++)
+                {
+                    var value = table.Rows[i][j];
+
+                    if (value == DBNull.Value)
+                    {
+                        worksheet.Cell(i + 2, j + 1).Value = string.Empty;
+                    }
+                    else
+                    {
+                        worksheet.Cell(i + 2, j + 1).Value = value.ToString();
+                    }
+                }
+            }
+        }
+
+
+        workbook.SaveAs(outputFilePath);
+        var (o, d) = Get_File_Meta_Info(inputFilePath);
+        workbook.Properties.LastModifiedBy = o;
+        workbook.Properties.Modified = d;
+        workbook.SaveAs(outputFilePath);
+    }
 }
+
 //{
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::.................................::::::::----::::::-==+=======--:----==
 //::::::--::::::::::::::::::::::::::::::::::::::::::::::::::::::...............::::..................:::::-------:::::===+====---:::::---

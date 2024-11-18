@@ -7,6 +7,7 @@
 
         // Zakładka na której wystąpił błąd
         public int Nr_Zakladki = 0;
+        public string Nazwa_Zakladki = "";
 
         // Obecna wartość pola z błędem
         private string Wartosc_Pola = "";
@@ -53,6 +54,7 @@
             {
                 Wiadomosc += Environment.NewLine + "Plik: " + System.IO.Path.GetFileName(Nazwa_Pliku);
             }
+            Wiadomosc += Environment.NewLine + "Nazwa zakladki: " + Nazwa_Zakladki;
             if (Nr_Zakladki != 0)
             {
                 Wiadomosc += Environment.NewLine + "Nr Zakladki: " + Nr_Zakladki;

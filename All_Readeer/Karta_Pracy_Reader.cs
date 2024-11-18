@@ -285,7 +285,6 @@ namespace All_Readeer
 
                 if (string.IsNullOrEmpty(strnumer))
                 {
-                    //Program.error_logger.New_Error(strnumer, "dzień", Karta_Pos_Start.Col, Karta_Pos_Start.Row);
                     break;
                 }
 
@@ -299,7 +298,6 @@ namespace All_Readeer
                     else
                     {
                         Program.error_logger.New_Error(strnumer, "dzień", Karta_Pos_Start.Col, Karta_Pos_Start.Row, "Nieprawidłowy dzień");
-                        Console.WriteLine($"Nieprawidłowy dzień: {strnumer} w pliku {Program.error_logger.Nazwa_Pliku} w zakladce {Program.error_logger.Nr_Zakladki}");
                         throw new Exception(Program.error_logger.Get_Error_String());
                     }
                 }
@@ -320,7 +318,6 @@ namespace All_Readeer
                         else
                         {
                             Program.error_logger.New_Error(danei, "kod nieobecnosci", Karta_Pos_Start.Col + 3, Karta_Pos_Start.Row, "Nieprawidłowy kod nieobecności");
-                            Console.WriteLine($"Nieprawidłowy kod nieobecności: {danei} w pliku {Program.error_logger.Nazwa_Pliku} w zakladce {Program.error_logger.Nr_Zakladki}");
                             throw new Exception(Program.error_logger.Get_Error_String());
                         }
                         karta_Pracy.ListaNieobecnosci.Add(nieobecnosc);
@@ -333,98 +330,33 @@ namespace All_Readeer
                     throw new Exception(ex.Message);
                 }
 
-                strnumer = worksheet.Cell(Karta_Pos_Start.Row, Karta_Pos_Start.Col + 1).GetFormattedString();
-                strnumer = strnumer.Trim().Replace('.', ':');
-                TimeSpan time;
+                strnumer = worksheet.Cell(Karta_Pos_Start.Row, Karta_Pos_Start.Col + 1).GetFormattedString().Trim();
                 if (!string.IsNullOrEmpty(strnumer))
                 {
-                    if (!string.IsNullOrEmpty(strnumer))
+                    try
                     {
-                        if (TimeSpan.TryParse(strnumer.Trim(), out time))
-                        {
-                            dzien.Godzina_Rozpoczęcia_Pracy = time;
-                        }
-                        else
-                        {
-                            //here try to solve times like 07:59:60 xdd
-                            if (strnumer.Split(':').Count() == 3)
-                            {
-                                var parts = strnumer.Split(':');
-
-                                if (int.TryParse(parts[0], out int hours) &&
-                                    int.TryParse(parts[1], out int minutes) &&
-                                    int.TryParse(parts[2], out int seconds))
-                                {
-                                    if (seconds >= 60)
-                                    {
-                                        seconds -= 60;
-                                        minutes += 1;
-                                    }
-                                    if (minutes >= 60)
-                                    {
-                                        minutes -= 60;
-                                        hours += 1;
-                                    }
-                                    hours %= 24;
-                                    dzien.Godzina_Rozpoczęcia_Pracy = new TimeSpan(hours, minutes, seconds);
-                                }
-                            }
-                            else
-                            {
-                                Program.error_logger.New_Error(strnumer, "Godzina_Rozpoczęcia_Pracy", Karta_Pos_Start.Col + 1, Karta_Pos_Start.Row);
-                                Console.WriteLine(Program.error_logger.Get_Error_String() + " (Zły foramt czasu)");
-                                throw new Exception(Program.error_logger.Get_Error_String());
-                            }
-                        }
+                        dzien.Godzina_Rozpoczęcia_Pracy = Reader.Try_Get_Date(strnumer);
+                    }
+                    catch(Exception ex)
+                    {
+                        Program.error_logger.New_Error(strnumer, "Godzina_Rozpoczęcia_Pracy", Karta_Pos_Start.Col + 1, Karta_Pos_Start.Row, ex.Message);
+                        throw new Exception(Program.error_logger.Get_Error_String());
                     }
                 }
 
-                strnumer = worksheet.Cell(Karta_Pos_Start.Row, Karta_Pos_Start.Col + 2).GetFormattedString();
-                dzien.Absencja = strnumer.Trim();
+                dzien.Absencja = worksheet.Cell(Karta_Pos_Start.Row, Karta_Pos_Start.Col + 2).GetFormattedString().Trim();
 
-                strnumer = worksheet.Cell(Karta_Pos_Start.Row, Karta_Pos_Start.Col + 3).GetFormattedString();
-                strnumer = strnumer.Trim().Replace('.', ':');
+                strnumer = worksheet.Cell(Karta_Pos_Start.Row, Karta_Pos_Start.Col + 3).GetFormattedString().Trim();
                 if (!string.IsNullOrEmpty(strnumer))
                 {
-                    if (!string.IsNullOrEmpty(strnumer))
+                    try
                     {
-                        if (TimeSpan.TryParse(strnumer.Trim(), out time))
-                        {
-                            dzien.Godzina_Zakończenia_Pracy = time;
-                        }
-                        else
-                        {
-                            //here try to solve times like 07:59:60 xdd
-                            if (strnumer.Split(':').Count() == 3)
-                            {
-                                var parts = strnumer.Split(':');
-
-                                if (int.TryParse(parts[0], out int hours) &&
-                                    int.TryParse(parts[1], out int minutes) &&
-                                    int.TryParse(parts[2], out int seconds))
-                                {
-                                    if (seconds >= 60)
-                                    {
-                                        seconds -= 60;
-                                        minutes += 1;
-                                    }
-                                    if (minutes >= 60)
-                                    {
-                                        minutes -= 60;
-                                        hours += 1;
-                                    }
-                                    hours %= 24;
-                                    dzien.Godzina_Zakończenia_Pracy = new TimeSpan(hours, minutes, seconds);
-                                }
-
-                            }
-                            else
-                            {
-                                Program.error_logger.New_Error(strnumer, "Godzina_Zakończenia_Pracy", Karta_Pos_Start.Col + 3, Karta_Pos_Start.Row);
-                                Console.WriteLine(Program.error_logger.Get_Error_String() + " (Zły foramt czasu)");
-                                throw new Exception(Program.error_logger.Get_Error_String());
-                            }
-                        }
+                        dzien.Godzina_Zakończenia_Pracy = Reader.Try_Get_Date(strnumer);
+                    }
+                    catch (Exception ex)
+                    {
+                        Program.error_logger.New_Error(strnumer, "Godzina_Zakończenia_Pracy", Karta_Pos_Start.Col + 1, Karta_Pos_Start.Row, ex.Message);
+                        throw new Exception(Program.error_logger.Get_Error_String());
                     }
                 }
 
@@ -457,46 +389,31 @@ namespace All_Readeer
         private void Wyczytaj_Naglowek(Pos Karta_Pos_Start)
         {
             Wczytaj_Pracownika(Karta_Pos_Start);
-
             if (karta_Pracy.Pracownik.Nazwisko == "" || karta_Pracy.Pracownik.Imie == "")
             {
                 Program.error_logger.New_Error(karta_Pracy?.Pracownik?.Imie + karta_Pracy?.Pracownik?.Nazwisko, "Imie i Nazwisko", Karta_Pos_Start.Row, Karta_Pos_Start.Col);
                 throw new Exception(Program.error_logger.Get_Error_String());
             }
-
-            var data = worksheet.Cell(Karta_Pos_Start.Row - 2, Karta_Pos_Start.Col + 12).GetFormattedString().Trim().Replace("   ", " ").Replace("  ", " ");
+            var data = "";
+            data = worksheet.Cell(Karta_Pos_Start.Row - 2, Karta_Pos_Start.Col + 12).GetFormattedString().Trim().Replace("   ", " ").Replace("  ", " ");
             if (data.EndsWith("r"))
             {
                 data = data.Substring(0, data.Length - 1).Trim();
             }
-            if (!string.IsNullOrEmpty(data) && data.Split(" ").Length > 1)
+            if (DateTime.TryParse(data, out DateTime parsedData))
             {
-                var ndata = data.Split(" ");
-                if (ndata[0].ToLower() == "październik")
-                {
-                    ndata[0] = "październik";
-                }
-                try
-                {
-                    karta_Pracy.Set_Miesiac(ndata[0]);
-                    karta_Pracy.Rok = Try_Set_Num(ndata[1]);
-                }
-                catch
-                {
-                    karta_Pracy.Set_Miesiac("Zle dane");
-                    karta_Pracy.Rok = Try_Set_Num(ndata[0]);
-                }
+                karta_Pracy.Miesiac = parsedData.Month;
+                karta_Pracy.Rok = parsedData.Year;
             }
             else
             {
-                data = worksheet.Cell(Karta_Pos_Start.Row - 3, Karta_Pos_Start.Col + 12).GetFormattedString().Trim().Replace("   ", " ").Replace("  ", " ");
-                if (data.EndsWith("r"))
-                {
-                    data = data.Substring(0, data.Length - 1).Trim();
-                }
                 if (!string.IsNullOrEmpty(data) && data.Split(" ").Length > 1)
                 {
                     var ndata = data.Split(" ");
+                    if (ndata[0].ToLower() == "październik")
+                    {
+                        ndata[0] = "październik";
+                    }
                     try
                     {
                         karta_Pracy.Set_Miesiac(ndata[0]);
@@ -510,10 +427,97 @@ namespace All_Readeer
                 }
                 else
                 {
-                    if (DateTime.TryParse(data, out DateTime DataP))
+                    data = worksheet.Cell(Karta_Pos_Start.Row - 3, Karta_Pos_Start.Col + 12).GetFormattedString().Trim().Replace("   ", " ").Replace("  ", " ");
+                    if (data.EndsWith("r"))
                     {
-                        karta_Pracy.Miesiac = DataP.Month;
-                        karta_Pracy.Rok = DataP.Year;
+                        data = data.Substring(0, data.Length - 1).Trim();
+                    }
+                    if (!string.IsNullOrEmpty(data) && data.Split(" ").Length > 1)
+                    {
+                        var ndata = data.Split(" ");
+                        try
+                        {
+                            karta_Pracy.Set_Miesiac(ndata[0]);
+                            karta_Pracy.Rok = Try_Set_Num(ndata[1]);
+                        }
+                        catch
+                        {
+                            karta_Pracy.Set_Miesiac("Zle dane");
+                            karta_Pracy.Rok = Try_Set_Num(ndata[0]);
+                        }
+                    }
+                    else
+                    {
+                        if (DateTime.TryParse(data, out DateTime DataP))
+                        {
+                            karta_Pracy.Miesiac = DataP.Month;
+                            karta_Pracy.Rok = DataP.Year;
+                        }
+                    }
+                }
+            }
+
+            if (karta_Pracy.Miesiac == 0)
+            {
+                data = worksheet.Cell(Karta_Pos_Start.Row - 3, Karta_Pos_Start.Col + 12).GetFormattedString().Trim().Replace("   ", " ").Replace("  ", " ");
+                if (data.EndsWith("r"))
+                {
+                    data = data.Substring(0, data.Length - 1).Trim();
+                }
+                if (DateTime.TryParse(data, out DateTime parsedData2))
+                {
+                    karta_Pracy.Miesiac = parsedData2.Month;
+                    karta_Pracy.Rok = parsedData2.Year;
+                }
+                else
+                {
+                    if (!string.IsNullOrEmpty(data) && data.Split(" ").Length > 1)
+                    {
+                        var ndata = data.Split(" ");
+                        if (ndata[0].ToLower() == "październik")
+                        {
+                            ndata[0] = "październik";
+                        }
+                        try
+                        {
+                            karta_Pracy.Set_Miesiac(ndata[0]);
+                            karta_Pracy.Rok = Try_Set_Num(ndata[1]);
+                        }
+                        catch
+                        {
+                            karta_Pracy.Set_Miesiac("Zle dane");
+                            karta_Pracy.Rok = Try_Set_Num(ndata[0]);
+                        }
+                    }
+                    else
+                    {
+                        data = worksheet.Cell(Karta_Pos_Start.Row - 3, Karta_Pos_Start.Col + 12).GetFormattedString().Trim().Replace("   ", " ").Replace("  ", " ");
+                        if (data.EndsWith("r"))
+                        {
+                            data = data.Substring(0, data.Length - 1).Trim();
+                        }
+                        if (!string.IsNullOrEmpty(data) && data.Split(" ").Length > 1)
+                        {
+                            var ndata = data.Split(" ");
+                            try
+                            {
+                                karta_Pracy.Set_Miesiac(ndata[0]);
+                                karta_Pracy.Rok = Try_Set_Num(ndata[1]);
+                            }
+                            catch
+                            {
+                                karta_Pracy.Set_Miesiac("Zle dane");
+                                karta_Pracy.Rok = Try_Set_Num(ndata[0]);
+                            }
+                        }
+                        else
+                        {
+                            if (DateTime.TryParse(data, out DateTime DataP))
+                            {
+                                karta_Pracy.Miesiac = DataP.Month;
+                                karta_Pracy.Rok = DataP.Year;
+                            }
+                        }
                     }
                 }
             }
@@ -707,6 +711,11 @@ namespace All_Readeer
                         Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
                         throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
                     }
+                    catch (FormatException)
+                    {
+                        tran.Rollback();
+                        continue;
+                    }
                     catch (Exception ex)
                     {
                         tran.Rollback();
@@ -812,6 +821,11 @@ namespace All_Readeer
                     Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
                     throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
                 }
+                catch (FormatException)
+                {
+                    tran.Rollback();
+                    continue;
+                }
                 catch (Exception ex)
                 {
                     tran.Rollback();
@@ -884,7 +898,6 @@ namespace All_Readeer
         {
             List<List<Nieobecnosc>> listaOsobnychNieobecnosci = new();
             List<Nieobecnosc> currentGroup = new();
-
             foreach (var nieobecnosc in listaNieobecnosci)
             {
                 if (currentGroup.Count == 0 || nieobecnosc.dzien == currentGroup[^1].dzien + 1)
@@ -897,12 +910,10 @@ namespace All_Readeer
                     currentGroup = new List<Nieobecnosc> { nieobecnosc };
                 }
             }
-
             if (currentGroup.Count > 0)
             {
                 listaOsobnychNieobecnosci.Add(currentGroup);
             }
-
             return listaOsobnychNieobecnosci;
         }
         private void Dodaj_Dane_Do_Optimy(Karta_Pracy karta)

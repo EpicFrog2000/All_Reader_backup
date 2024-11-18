@@ -177,7 +177,7 @@ namespace All_Readeer
                 Dane_Dni dane_dni = new();
                 //get pracownika
                 var nazwiskoimie = worksheet.Cell(poz.row, poz.col).GetValue<string>().Trim();
-                if(string.IsNullOrEmpty(nazwiskoimie))
+                if (string.IsNullOrEmpty(nazwiskoimie))
                 {
                     break;
                 }
@@ -230,107 +230,39 @@ namespace All_Readeer
                             break;
                         }
                         // get godziny pracy dnia
-                        for (int k = 1; k <= height; k++)
+                        for (int k = 0; k < height; k++)
                         {
                             Godz_Pracy godziny = new();
-                            var godzr = worksheet.Cell(3 + k, poz.col + 1 + j).GetValue<string>().Trim();
-
+                            var godzr = worksheet.Cell(poz.row + k, poz.col + 1 + j).GetValue<string>().Trim();
                             if (!string.IsNullOrEmpty(godzr) && godzr != "" && godzr.Length > 0)
                             {
-                                if (DateTime.TryParse(godzr, out DateTime parsedTime))
+                                try
                                 {
-                                    godziny.Godz_Rozpoczecia_Pracy = parsedTime.TimeOfDay;
+                                    godziny.Godz_Rozpoczecia_Pracy = Reader.Try_Get_Date(godzr);
                                 }
-                                else
+                                catch(Exception ex)
                                 {
-                                    if (DateTime.TryParse(godzr.Replace('.', ':'), out DateTime parsedTime2))
-                                    {
-                                        godziny.Godz_Rozpoczecia_Pracy = parsedTime2.TimeOfDay;
-                                    }
-                                    else
-                                    {
-                                        //here try to solve times like 07:59:60 xdd
-                                        if (godzr.Split(':').Count() == 3)
-                                        {
-                                            var parts = godzr.Split(':');
+                                    Program.error_logger.New_Error(godzr, "Godz_Rozpoczecia_Pracy", poz.col + 1 + j, poz.row + k, ex.Message);
+                                    throw new Exception(Program.error_logger.Get_Error_String());
+                                }
 
-                                            if (int.TryParse(parts[0], out int hours) &&
-                                                int.TryParse(parts[1], out int minutes) &&
-                                                int.TryParse(parts[2], out int seconds))
-                                            {
-                                                if (seconds >= 60)
-                                                {
-                                                    seconds -= 60;
-                                                    minutes += 1;
-                                                }
-                                                if (minutes >= 60)
-                                                {
-                                                    minutes -= 60;
-                                                    hours += 1;
-                                                }
-                                                hours %= 24;
-                                                godziny.Godz_Rozpoczecia_Pracy = new TimeSpan(hours, minutes, seconds);
-                                            }
-                                        }
-                                        else
-                                        {
-                                            Program.error_logger.New_Error(godzr, "Godz_Rozpoczecia_Pracy", poz.col + 1 + j, 3 + k, " Nieprawidłowy format godziny rozpoczęcia pracy");
-                                            Console.WriteLine(Program.error_logger.Get_Error_String());
-                                            throw new Exception(Program.error_logger.Get_Error_String());
-                                        }
-                                    }
-                                }
                             }
-                            var godzz = worksheet.Cell(3 + k, poz.col + 1 + j + 1).GetValue<string>().Trim();
+                            var godzz = worksheet.Cell(poz.row + k, poz.col + 1 + j + 1).GetValue<string>().Trim();
                             if (!string.IsNullOrEmpty(godzz) && godzz != "" && godzz.Length > 0)
                             {
-                                if (DateTime.TryParse(godzz, out DateTime parsedTime))
+                                try
                                 {
-                                    godziny.Godz_Zakonczenia_Pracy = parsedTime.TimeOfDay;
+                                    godziny.Godz_Zakonczenia_Pracy = Reader.Try_Get_Date(godzz);
                                 }
-                                else
+                                catch (Exception ex)
                                 {
-                                    if (DateTime.TryParse(godzz.Replace('.', ':'), out DateTime parsedTime2))
-                                    {
-                                        godziny.Godz_Zakonczenia_Pracy = parsedTime2.TimeOfDay;
-                                    }
-                                    else
-                                    {
-                                        //here try to solve times like 07:59:60 xdd
-                                        if (godzz.Split(':').Count() == 3)
-                                        {
-                                            var parts = godzz.Split(':');
-
-                                            if (int.TryParse(parts[0], out int hours) &&
-                                                int.TryParse(parts[1], out int minutes) &&
-                                                int.TryParse(parts[2], out int seconds))
-                                            {
-                                                if (seconds >= 60)
-                                                {
-                                                    seconds -= 60;
-                                                    minutes += 1;
-                                                }
-                                                if (minutes >= 60)
-                                                {
-                                                    minutes -= 60;
-                                                    hours += 1;
-                                                }
-                                                hours %= 24;
-                                                godziny.Godz_Zakonczenia_Pracy = new TimeSpan(hours, minutes, seconds);
-                                            }
-                                        }
-                                        else
-                                        {
-                                            Program.error_logger.New_Error(godzz, "Godz_Zakonczenia_Pracy", poz.col + 1 + j + 1, 3 + k, " Nieprawidłowy format godziny zakończenia pracy");
-                                            Console.WriteLine(Program.error_logger.Get_Error_String());
-                                            throw new Exception(Program.error_logger.Get_Error_String());
-                                        }
-                                    }
+                                    Program.error_logger.New_Error(godzz, "Godz_Zakonczenia_Pracy", poz.col + 1 + j + 1, poz.row + k, ex.Message);
+                                    throw new Exception(Program.error_logger.Get_Error_String());
                                 }
-                                if (godziny.Godz_Rozpoczecia_Pracy != TimeSpan.Zero && godziny.Godz_Zakonczenia_Pracy != TimeSpan.Zero)
-                                {
-                                    dane_dnia.godz_pracy.Add(godziny);
-                                }
+                            }
+                            if (godziny.Godz_Rozpoczecia_Pracy != TimeSpan.Zero && godziny.Godz_Zakonczenia_Pracy != TimeSpan.Zero)
+                            {
+                                dane_dnia.godz_pracy.Add(godziny);
                             }
                         }
                     }
@@ -419,6 +351,10 @@ namespace All_Readeer
                             tran.Rollback();
                             Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
                             throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
+                        }
+                        catch (FormatException)
+                        {
+                            continue;
                         }
                         catch (Exception ex)
                         {
