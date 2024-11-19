@@ -22,6 +22,10 @@ namespace All_Readeer
             public int miesiac { get; set; } = 0;
             public int Set_Data(string Wartosc)
             {
+                if (string.IsNullOrEmpty(Wartosc))
+                {
+                    return 1;
+                }
                 try
                 {
                     DateTime data;
@@ -46,7 +50,15 @@ namespace All_Readeer
                     {
                         miesiac = 1;
                     }
+                    else if (nazwa.ToLower() == "i")
+                    {
+                        miesiac = 1;
+                    }
                     else if (nazwa.ToLower() == "luty")
+                    {
+                        miesiac = 2;
+                    }
+                    else if (nazwa.ToLower() == "ii")
                     {
                         miesiac = 2;
                     }
@@ -54,7 +66,15 @@ namespace All_Readeer
                     {
                         miesiac = 3;
                     }
+                    else if (nazwa.ToLower() == "iii")
+                    {
+                        miesiac = 3;
+                    }
                     else if (nazwa.ToLower() == "kwiecień")
+                    {
+                        miesiac = 4;
+                    }
+                    else if (nazwa.ToLower() == "iv")
                     {
                         miesiac = 4;
                     }
@@ -62,7 +82,15 @@ namespace All_Readeer
                     {
                         miesiac = 5;
                     }
+                    else if (nazwa.ToLower() == "v")
+                    {
+                        miesiac = 5;
+                    }
                     else if (nazwa.ToLower() == "czerwiec")
+                    {
+                        miesiac = 6;
+                    }
+                    else if (nazwa.ToLower() == "vi")
                     {
                         miesiac = 6;
                     }
@@ -70,7 +98,15 @@ namespace All_Readeer
                     {
                         miesiac = 7;
                     }
+                    else if (nazwa.ToLower() == "vii")
+                    {
+                        miesiac = 7;
+                    }
                     else if (nazwa.ToLower() == "sierpień")
+                    {
+                        miesiac = 8;
+                    }
+                    else if (nazwa.ToLower() == "viii")
                     {
                         miesiac = 8;
                     }
@@ -78,7 +114,15 @@ namespace All_Readeer
                     {
                         miesiac = 9;
                     }
+                    else if (nazwa.ToLower() == "ix")
+                    {
+                        miesiac = 9;
+                    }
                     else if (nazwa.ToLower() == "październik")
+                    {
+                        miesiac = 10;
+                    }
+                    else if (nazwa.ToLower() == "x")
                     {
                         miesiac = 10;
                     }
@@ -86,7 +130,15 @@ namespace All_Readeer
                     {
                         miesiac = 11;
                     }
+                    else if (nazwa.ToLower() == "xi")
+                    {
+                        miesiac = 11;
+                    }
                     else if (nazwa.ToLower() == "grudzień")
+                    {
+                        miesiac = 12;
+                    }
+                    else if (nazwa.ToLower() == "xii")
                     {
                         miesiac = 12;
                     }
@@ -179,12 +231,14 @@ namespace All_Readeer
         private string Last_Mod_Osoba = "";
         private DateTime Last_Mod_Time = DateTime.Now;
         private string Optima_Connection_String = "";
+        private int Offset = 0;
         public void Set_Optima_ConnectionString(string NewConnectionString)
         {
             Optima_Connection_String = NewConnectionString;
         }
-        public void Process_Zakladka_For_Optima(IXLWorksheet worksheet, string last_Mod_Osoba, DateTime last_Mod_Time)
+        public void Process_Zakladka_For_Optima(IXLWorksheet worksheet, string last_Mod_Osoba, DateTime last_Mod_Time, int Typ_Zakladki)
         {
+            Offset = Typ_Zakladki;
             try
             {
                 Last_Mod_Osoba = last_Mod_Osoba;
@@ -223,7 +277,7 @@ namespace All_Readeer
         }
         private void Find_Karta(ref CurrentPosition pozycja, IXLWorksheet worksheet)
         {
-            pozycja.col = 2;
+            pozycja.col = 2 - Offset;
             bool found = false;
             try
             {
@@ -249,99 +303,193 @@ namespace All_Readeer
         private void Get_Header_Karta_Info(CurrentPosition StartKarty, IXLWorksheet worksheet, ref Karta_Pracy karta_pracy)
         {
             //wczytaj date
-            var dane = worksheet.Cell(StartKarty.row - 3, StartKarty.col + 12).GetValue<string>().Trim();
-            if (dane.EndsWith("r"))
+            var dane = worksheet.Cell(StartKarty.row - 3, StartKarty.col + 4).GetValue<string>().Trim().ToLower();
+            for (int i = 0; i < 12; i++)
             {
-                dane = dane.Substring(0, dane.Length - 1).Trim();
-            }
-
-            if (string.IsNullOrEmpty(dane))
-            {
-                Program.error_logger.New_Error(dane, "data", StartKarty.col + 12, StartKarty.row - 3, "Brak daty w pliku");
-                throw new Exception(Program.error_logger.Get_Error_String());
-            }
-            if (DateTime.TryParse(dane, out DateTime parsedData))
-            {
-                karta_pracy.miesiac= parsedData.Month;
-                karta_pracy.rok = parsedData.Year;
-            }
-            else
-            {
-                if (karta_pracy.Set_Data(dane) == 1)
+                if (string.IsNullOrEmpty(dane))
                 {
-                    if (dane.Split(" ").Length == 2)
+                    dane = worksheet.Cell(StartKarty.row - 3, StartKarty.col + 4 + i).GetValue<string>().Trim().ToLower();
+                }
+                else
+                {
+                    //here try to get data i rok
+                    if (dane.EndsWith("r"))
                     {
-                        var ndata = dane.Split(" ");
-                        if (ndata[0].ToLower() == "pażdziernik")
-                        {
-                            ndata[0] = "październik";
-                        }
-                        try
-                        {
-                            karta_pracy.Set_Miesiac(ndata[0]);
-                            karta_pracy.rok = int.Parse(Regex.Replace(ndata[1], @"\D", ""));
-                        }
-                        catch
-                        {
-                            karta_pracy.Set_Miesiac("Zle dane");
-                            karta_pracy.rok = int.Parse(Regex.Replace(ndata[1], @"\D", ""));
-                        }
-                        if (karta_pracy.miesiac == 0)
-                        {
-                            Program.error_logger.New_Error(dane, "data", StartKarty.col + 12, StartKarty.row - 3, "Zły format daty w pliku");
-                            throw new Exception(Program.error_logger.Get_Error_String());
-                        }
+                        dane = dane.Substring(0, dane.Length - 1).Trim();
+                    }
+                    if (dane.EndsWith("r."))
+                    {
+                        dane = dane.Substring(0, dane.Length - 2).Trim();
+                    }
+
+                    if (DateTime.TryParse(dane, out DateTime parsedData))
+                    {
+                        karta_pracy.miesiac = parsedData.Month;
+                        karta_pracy.rok = parsedData.Year;
                     }
                     else
                     {
-                        Program.error_logger.New_Error(dane, "data", StartKarty.col + 12, StartKarty.row - 3, "Zły format daty w pliku");
-                        throw new Exception(Program.error_logger.Get_Error_String());
+                        if (dane.Contains("pażdziernik"))
+                        {
+                            dane = dane.Replace("pażdziernik", "październik");
+                        }
+                        if (karta_pracy.Set_Data(dane) == 1)
+                        {
+                            if (dane.Split(" ").Length == 2)
+                            {
+                                var ndata = dane.Split(" ");
+                                try
+                                {
+                                    karta_pracy.Set_Miesiac(ndata[0]);
+                                    if (int.TryParse(Regex.Replace(ndata[1], @"\D", ""), out int rok))
+                                    {
+                                        karta_pracy.rok = rok;
+                                    }
+                                }
+                                catch{}
+                            }
+                            else if (dane.Split(" ").Length == 3)
+                            {
+                                var ndata = dane.Split(" ");
+                                try
+                                {
+                                    karta_pracy.Set_Miesiac(ndata[1]);
+                                    if (int.TryParse(ndata[2], out int rok))
+                                    {
+                                        karta_pracy.rok = rok;
+                                    }
+                                }
+                                catch{}
+                            }
+                            else
+                            {
+                                if(dane.Split(" ").Count() > 1)
+                                {
+                                    //wez 2 od tylu
+                                    var ndata = dane.Split(" ");
+                                    try
+                                    {
+                                        karta_pracy.Set_Miesiac(ndata[^2]);
+                                        if (int.TryParse(ndata[^1], out int rok))
+                                        {
+                                            karta_pracy.rok = rok;
+                                        }
+                                    }
+                                    catch{}
+                                }
+                            }
+                        }
+                    }
+                    if (karta_pracy.miesiac == 0 || karta_pracy.rok == 0)
+                    {
+                        dane = worksheet.Cell(StartKarty.row - 4, StartKarty.col + 4 + i - 1).GetValue<string>().Trim().ToLower();
+                        if (!string.IsNullOrEmpty(dane) && DateTime.TryParse(dane, out DateTime parsedData2))
+                        {
+                            karta_pracy.miesiac = parsedData2.Month;
+                            karta_pracy.rok = parsedData2.Year;
+                        }
+
+                    }
+
+                    if (karta_pracy.miesiac != 0 && karta_pracy.rok != 0)
+                    {
+                        break;
+                    }
+                }
+            }
+            if (karta_pracy.miesiac == 0 || karta_pracy.rok == 0)
+            {
+                Program.error_logger.New_Error(dane, "data", StartKarty.col + 11, StartKarty.row - 3, "Nie wykryto daty w pliku");
+                throw new Exception(Program.error_logger.Get_Error_String());
+            }
+
+
+            //wczytaj nazwisko i imie
+            string[] wordsToRemove = { "IMIĘ:", "IMIE:", "NAZWISKO:", "NAZWISKO", " IMIE", "IMIĘ" };
+            dane = worksheet.Cell(StartKarty.row - 2, StartKarty.col).GetValue<string>().Trim().Replace("  ", " ");
+            for (int i = 0; i < 6; i++)
+            {
+                foreach (var word in wordsToRemove)
+                {
+                    var pattern = $@"\b{Regex.Escape(word)}\b";
+                    dane = Regex.Replace(dane, pattern, "", RegexOptions.IgnoreCase);
+                }
+
+                dane = Regex.Replace(dane, @"\s+", " ").Trim();
+                if (dane.Contains("KARTA PRACY:"))
+                {
+                    dane = dane.Replace("KARTA PRACY:", "").Trim();
+                }
+                if (!string.IsNullOrEmpty(dane))
+                {
+                    break;
+                }
+                else
+                {
+                    dane = worksheet.Cell(StartKarty.row - 2, StartKarty.col + i).GetValue<string>().Trim().Replace("  ", " ");
+                }
+            }
+            if (string.IsNullOrEmpty(dane))
+            {
+                dane = worksheet.Cell(StartKarty.row - 3, StartKarty.col).GetValue<string>().Trim().Replace("  ", " ");
+                for (int i = 0; i < 6; i++)
+                {
+                    foreach (var word in wordsToRemove)
+                    {
+                        dane = dane.Replace(word, "", StringComparison.OrdinalIgnoreCase);
+                    }
+                    dane = Regex.Replace(dane, @"\s+", " ").Trim();
+                    if (dane.Contains("KARTA PRACY:"))
+                    {
+                        dane = dane.Replace("KARTA PRACY:", "").Trim();
+                    }
+                    if (!string.IsNullOrEmpty(dane))
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        dane = worksheet.Cell(StartKarty.row - 3, StartKarty.col + i).GetValue<string>().Trim().Replace("  ", " ");
                     }
                 }
             }
 
-            //wczytaj nazwisko i imie
-            dane = worksheet.Cell(StartKarty.row - 2, StartKarty.col).GetValue<string>().Trim().Replace("  ", " ");
+
             if (string.IsNullOrEmpty(dane))
             {
                 Program.error_logger.New_Error(dane, "nazwisko i imie", StartKarty.col, StartKarty.row - 2, "Nie wykryto nazwiska i imienia w pliku");
                 throw new Exception(Program.error_logger.Get_Error_String());
             }
-            if(dane.Contains("KARTA PRACY:"))
+            foreach (var word in wordsToRemove)
+            {
+                dane = dane.Replace(word, "", StringComparison.OrdinalIgnoreCase);
+            }
+            dane = Regex.Replace(dane, @"\s+", " ").Trim();
+            if (dane.Contains("KARTA PRACY:"))
             {
                 dane = dane.Replace("KARTA PRACY:", "").Trim();
             }
             if (string.IsNullOrEmpty(dane))
             {
-                dane = worksheet.Cell(StartKarty.row - 2, StartKarty.col + 1).GetValue<string>().Trim().Replace("  ", " ");
-                if (string.IsNullOrEmpty(dane))
-                {
-                    dane = worksheet.Cell(StartKarty.row - 2, StartKarty.col + 2).GetValue<string>().Trim().Replace("  ", " ");
-                    if (string.IsNullOrEmpty(dane))
-                    {
-                        Program.error_logger.New_Error(dane, "nazwisko i imie", StartKarty.col - 2, StartKarty.row, "Zły format pola nazwisko i imie");
-                        throw new Exception(Program.error_logger.Get_Error_String());
-                    }
-                    else
-                    {
-                        karta_pracy.pracownik.Nazwisko = dane.Trim().Split(' ')[0];
-                        karta_pracy.pracownik.Imie = dane.Trim().Split(' ')[1];
-                    }
-                }
-                else
+                Program.error_logger.New_Error(dane, "nazwisko i imie", StartKarty.col, StartKarty.row -2, "Zły format pola nazwisko i imie");
+                throw new Exception(Program.error_logger.Get_Error_String());
+            }
+            else
+            {
+                try
                 {
                     karta_pracy.pracownik.Nazwisko = dane.Trim().Split(' ')[0];
                     karta_pracy.pracownik.Imie = dane.Trim().Split(' ')[1];
                 }
-            }
-            else
-            {
-                karta_pracy.pracownik.Nazwisko = dane.Trim().Split(' ')[0];
-                karta_pracy.pracownik.Imie = dane.Trim().Split(' ')[1];
+                catch
+                {
+                    Program.error_logger.New_Error(dane, "nazwisko i imie", StartKarty.col, StartKarty.row - 2, "Zły format pola nazwisko i imie");
+                    throw new Exception(Program.error_logger.Get_Error_String());
+                }
             }
             if (karta_pracy.pracownik.Nazwisko == null || karta_pracy.pracownik.Imie == null)
             {
-                Program.error_logger.New_Error(dane, "nazwisko i imie", StartKarty.col - 2, StartKarty.row, "Zły format pola nazwisko i imie");
+                Program.error_logger.New_Error(dane, "nazwisko i imie", StartKarty.col, StartKarty.row -2, "Zły format pola nazwisko i imie");
                 throw new Exception(Program.error_logger.Get_Error_String());
             }
         }
@@ -448,103 +596,6 @@ namespace All_Readeer
         }
         private void Wpierdol_Obecnosci_do_Optimy(Karta_Pracy karta, SqlTransaction tran, SqlConnection connection)
         {
-            var sqlInsertNew = @"
-DECLARE @id int;
-
-                -- dodawaina pracownika do pracx i init pracpracdni
-IF((select DISTINCT COUNT(PRI_PraId) from cdn.Pracidx WHERE PRI_Imie1 = @PracownikImieInsert and PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Typ = 1) > 1)
-BEGIN
-	DECLARE @ErrorMessageC NVARCHAR(500) = 'Jest 2 pracowników w bazie o takim samym imieniu i nazwisku: ' +@PracownikImieInsert + ' ' +  @PracownikNazwiskoInsert;
-	THROW 50001, @ErrorMessageC, 1;
-END
-DECLARE @PRI_PraId INT = (select DISTINCT PRI_PraId from cdn.Pracidx WHERE PRI_Imie1 = @PracownikImieInsert and PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Typ = 1);
-IF @PRI_PraId IS NULL
-BEGIN
-	SET @PRI_PraId = (select DISTINCT PRI_PraId from cdn.Pracidx WHERE PRI_Imie1 = @PracownikNazwiskoInsert  and PRI_Nazwisko = @PracownikImieInsert and PRI_Typ = 1);
-	IF @PRI_PraId IS NULL
-	BEGIN
-		DECLARE @ErrorMessage NVARCHAR(500) = 'Brak takiego pracownika w bazie o imieniu i nazwisku: ' +@PracownikImieInsert + ' ' +  @PracownikNazwiskoInsert;
-		THROW 50000, @ErrorMessage, 1;
-	END
-END
-
-DECLARE @EXISTSPRACTEST INT = (SELECT PracKod.PRA_PraId FROM CDN.PracKod where PRA_Kod = @PRI_PraId)
-
-IF @EXISTSPRACTEST IS NULL
-BEGIN
-    INSERT INTO [CDN].[PracKod]
-            ([PRA_Kod]
-            ,[PRA_Archiwalny]
-            ,[PRA_Nadrzedny]
-            ,[PRA_EPEmail]
-            ,[PRA_EPTelefon]
-            ,[PRA_EPNrPokoju]
-            ,[PRA_EPDostep]
-            ,[PRA_HasloDoWydrukow])
-        VALUES
-            (@PRI_PraId
-            ,0
-            ,0
-            ,''
-            ,''
-            ,''
-            ,0
-            ,'')
-END
-
-DECLARE @PRA_PraId INT = (SELECT PracKod.PRA_PraId FROM CDN.PracKod where PRA_Kod = @PRI_PraId);
-
-DECLARE @EXISTSDZIEN DATETIME = (SELECT PracPracaDni.PPR_Data FROM cdn.PracPracaDni WHERE PPR_PraId = @PRA_PraId and PPR_Data = @DataInsert)
-IF @EXISTSDZIEN is null
-BEGIN
-    BEGIN TRY
-        INSERT INTO [CDN].[PracPracaDni]
-                    ([PPR_PraId]
-                    ,[PPR_Data]
-                    ,[PPR_TS_Zal]
-                    ,[PPR_TS_Mod]
-                    ,[PPR_OpeModKod]
-                    ,[PPR_OpeModNazwisko]
-                    ,[PPR_OpeZalKod]
-                    ,[PPR_OpeZalNazwisko]
-                    ,[PPR_Zrodlo])
-                VALUES
-                    (@PRI_PraId
-                    ,@DataInsert
-                    ,GETDATE()
-                    ,GETDATE()
-                    ,'ADMIN'
-                    ,'Administrator'
-                    ,'ADMIN'
-                    ,'Administrator'
-                    ,0)
-    END TRY
-    BEGIN CATCH
-    END CATCH
-END
-
-SET @id = (select PPR_PprId from cdn.PracPracaDni where CAST(PPR_Data as datetime) = @DataInsert and PPR_PraId = @PRI_PraId);
-
-INSERT INTO CDN.PracPracaDniGodz
-		(PGR_PprId,
-		PGR_Lp,
-		PGR_OdGodziny,
-		PGR_DoGodziny,
-		PGR_Strefa,
-		PGR_DzlId,
-		PGR_PrjId,
-		PGR_Uwagi,
-		PGR_OdbNadg)
-	VALUES
-		(@id,
-		1,
-		DATEADD(MINUTE, 0, @GodzOdDate),
-		DATEADD(MINUTE, -60 * (@CzasPrzepracowanyInsert - @PracaWgGrafikuInsert), @GodzDoDate),
-		@TypPracy,
-		1,
-		1,
-		'',
-		1);";
 
             foreach (var dane_Dni in karta.dane_dni)
             {
@@ -572,7 +623,7 @@ INSERT INTO CDN.PracPracaDniGodz
                         {
                             czy_next_dzien = true;
                             // insert godziny przed północą
-                            using (SqlCommand insertCmd = new SqlCommand(sqlInsertNew, connection, tran))
+                            using (SqlCommand insertCmd = new SqlCommand(Program.sqlQueryInsertObecnościDoOptimy, connection, tran))
                             {
                                 insertCmd.Parameters.AddWithValue("@DataInsert",WażnaData);
                                 DateTime baseDate = new DateTime(1899, 12, 30);
@@ -589,7 +640,7 @@ INSERT INTO CDN.PracPracaDniGodz
                                 insertCmd.ExecuteScalar();
                             }
                             // insert po północy
-                            using (SqlCommand insertCmd = new SqlCommand(sqlInsertNew, connection, tran))
+                            using (SqlCommand insertCmd = new SqlCommand(Program.sqlQueryInsertObecnościDoOptimy, connection, tran))
                             {
                                 var data = WażnaData.AddDays(1);
                                 insertCmd.Parameters.AddWithValue("@DataInsert", DateTime.ParseExact($"{data:yyyy-MM-dd}", "yyyy-MM-dd", CultureInfo.InvariantCulture));
@@ -609,10 +660,9 @@ INSERT INTO CDN.PracPracaDniGodz
                         }
                         else
                         {
-                            using (SqlCommand insertCmd = new SqlCommand(sqlInsertNew, connection, tran))
+                            using (SqlCommand insertCmd = new SqlCommand(Program.sqlQueryInsertObecnościDoOptimy, connection, tran))
                             {
                                 insertCmd.Parameters.AddWithValue("@DataInsert", WażnaData);
-
                                 DateTime dataBazowa = new DateTime(1899, 12, 30);
                                 DateTime godzOdDate = dataBazowa + startPodstawowy;
                                 DateTime godzDoDate = dataBazowa + endPodstawowy;
@@ -638,7 +688,7 @@ INSERT INTO CDN.PracPracaDniGodz
                         {
                             czy_next_dzien = true;
                             // insert godziny przed północą
-                            using (SqlCommand insertCmd = new SqlCommand(sqlInsertNew, connection, tran))
+                            using (SqlCommand insertCmd = new SqlCommand(Program.sqlQueryInsertObecnościDoOptimy, connection, tran))
                             {
                                 DateTime baseDate = new DateTime(1899, 12, 30);
                                 DateTime godzOdDate = baseDate + startNadl50;
@@ -658,7 +708,7 @@ INSERT INTO CDN.PracPracaDniGodz
                                 }
                             }
                             // insert po północy
-                            using (SqlCommand insertCmd = new SqlCommand(sqlInsertNew, connection, tran))
+                            using (SqlCommand insertCmd = new SqlCommand(Program.sqlQueryInsertObecnościDoOptimy, connection, tran))
                             {
                                 var data = WażnaData.AddDays(1);
                                 insertCmd.Parameters.AddWithValue("@DataInsert", DateTime.ParseExact($"{data:yyyy-MM-dd}", "yyyy-MM-dd", CultureInfo.InvariantCulture));
@@ -681,7 +731,7 @@ INSERT INTO CDN.PracPracaDniGodz
                         }
                         else
                         {
-                            using (SqlCommand insertCmd = new SqlCommand(sqlInsertNew, connection, tran))
+                            using (SqlCommand insertCmd = new SqlCommand(Program.sqlQueryInsertObecnościDoOptimy, connection, tran))
                             {
                                 insertCmd.Parameters.AddWithValue("@DataInsert", WażnaData);
 
@@ -713,7 +763,7 @@ INSERT INTO CDN.PracPracaDniGodz
                         if (endNadl100 < startNadl100)
                         {
                             // insert godziny przed północą
-                            using (SqlCommand insertCmd = new SqlCommand(sqlInsertNew, connection, tran))
+                            using (SqlCommand insertCmd = new SqlCommand(Program.sqlQueryInsertObecnościDoOptimy, connection, tran))
                             {
                                 insertCmd.Parameters.AddWithValue("@DataInsert", WażnaData);
                                 DateTime baseDate = new DateTime(1899, 12, 30);
@@ -733,7 +783,7 @@ INSERT INTO CDN.PracPracaDniGodz
                                 }
                             }
                             // insert po północy
-                            using (SqlCommand insertCmd = new SqlCommand(sqlInsertNew, connection, tran))
+                            using (SqlCommand insertCmd = new SqlCommand(Program.sqlQueryInsertObecnościDoOptimy, connection, tran))
                             {
                                 var data = WażnaData.AddDays(1);
                                 insertCmd.Parameters.AddWithValue("@DataInsert", DateTime.ParseExact($"{data:yyyy-MM-dd}", "yyyy-MM-dd", CultureInfo.InvariantCulture));
@@ -756,7 +806,7 @@ INSERT INTO CDN.PracPracaDniGodz
                         }
                         else
                         {
-                            using (SqlCommand insertCmd = new SqlCommand(sqlInsertNew, connection, tran))
+                            using (SqlCommand insertCmd = new SqlCommand(Program.sqlQueryInsertObecnościDoOptimy, connection, tran))
                             {
                                 insertCmd.Parameters.AddWithValue("@DataInsert", WażnaData);
 

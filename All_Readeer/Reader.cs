@@ -60,6 +60,25 @@ namespace All_Readeer
 
             throw new FormatException("Nieprawidłowy format godziny");
         }
+        public static int Get_Month_Number_From_String(string input)
+        {
+            string[] months = new string[]
+            {
+            "styczeń", "luty", "marzec", "kwiecień", "maj", "czerwiec",
+            "lipiec", "sierpień", "wrzesień", "październik", "listopad", "grudzień"
+            };
+            input = input.ToLower();
+
+            for (int i = 0; i < months.Length; i++)
+            {
+                if (input.Contains(months[i]))
+                {
+                    return i + 1;
+                }
+            }
+
+            return 0;
+        }
 
     }
 }

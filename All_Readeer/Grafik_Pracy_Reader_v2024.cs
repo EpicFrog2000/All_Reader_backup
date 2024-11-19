@@ -232,38 +232,42 @@ namespace All_Readeer
                         // get godziny pracy dnia
                         for (int k = 0; k < height; k++)
                         {
-                            Godz_Pracy godziny = new();
-                            var godzr = worksheet.Cell(poz.row + k, poz.col + 1 + j).GetValue<string>().Trim();
-                            if (!string.IsNullOrEmpty(godzr) && godzr != "" && godzr.Length > 0)
+                            try
                             {
-                                try
+                                Godz_Pracy godziny = new();
+                                var godzr = worksheet.Cell(poz.row + k, poz.col + 1 + j).GetValue<string>().Trim();
+                                if (!string.IsNullOrEmpty(godzr) && godzr != "" && godzr.Length > 0)
                                 {
-                                    godziny.Godz_Rozpoczecia_Pracy = Reader.Try_Get_Date(godzr);
-                                }
-                                catch(Exception ex)
-                                {
-                                    Program.error_logger.New_Error(godzr, "Godz_Rozpoczecia_Pracy", poz.col + 1 + j, poz.row + k, ex.Message);
-                                    throw new Exception(Program.error_logger.Get_Error_String());
-                                }
+                                    try
+                                    {
+                                        godziny.Godz_Rozpoczecia_Pracy = Reader.Try_Get_Date(godzr);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Program.error_logger.New_Error(godzr, "Godz_Rozpoczecia_Pracy", poz.col + 1 + j, poz.row + k, ex.Message);
+                                        throw new Exception(Program.error_logger.Get_Error_String());
+                                    }
 
-                            }
-                            var godzz = worksheet.Cell(poz.row + k, poz.col + 1 + j + 1).GetValue<string>().Trim();
-                            if (!string.IsNullOrEmpty(godzz) && godzz != "" && godzz.Length > 0)
-                            {
-                                try
-                                {
-                                    godziny.Godz_Zakonczenia_Pracy = Reader.Try_Get_Date(godzz);
                                 }
-                                catch (Exception ex)
+                                var godzz = worksheet.Cell(poz.row + k, poz.col + 1 + j + 1).GetValue<string>().Trim();
+                                if (!string.IsNullOrEmpty(godzz) && godzz != "" && godzz.Length > 0)
                                 {
-                                    Program.error_logger.New_Error(godzz, "Godz_Zakonczenia_Pracy", poz.col + 1 + j + 1, poz.row + k, ex.Message);
-                                    throw new Exception(Program.error_logger.Get_Error_String());
+                                    try
+                                    {
+                                        godziny.Godz_Zakonczenia_Pracy = Reader.Try_Get_Date(godzz);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Program.error_logger.New_Error(godzz, "Godz_Zakonczenia_Pracy", poz.col + 1 + j + 1, poz.row + k, ex.Message);
+                                        throw new Exception(Program.error_logger.Get_Error_String());
+                                    }
+                                }
+                                if (godziny.Godz_Rozpoczecia_Pracy != TimeSpan.Zero && godziny.Godz_Zakonczenia_Pracy != TimeSpan.Zero)
+                                {
+                                    dane_dnia.godz_pracy.Add(godziny);
                                 }
                             }
-                            if (godziny.Godz_Rozpoczecia_Pracy != TimeSpan.Zero && godziny.Godz_Zakonczenia_Pracy != TimeSpan.Zero)
-                            {
-                                dane_dnia.godz_pracy.Add(godziny);
-                            }
+                            catch { }
                         }
                     }
                     j += 2;

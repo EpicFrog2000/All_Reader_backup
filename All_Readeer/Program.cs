@@ -1,17 +1,20 @@
 ﻿using All_Readeer;
 using ClosedXML.Excel;
 using DocumentFormat.OpenXml.Bibliography;
+using DocumentFormat.OpenXml.Math;
+using DocumentFormat.OpenXml.Wordprocessing;
 using ExcelDataReader;
 using System.Data;
+using static All_Readeer.Grafik_Pracy_Reader;
 class Program
 {
-    private static string Files_Folder = "G:\\ITEGER\\staż\\obecności\\All_Reader\\";
+    private static string Files_Folder = "G:\\ITEGER\\staż\\obecności\\All_Reader\\Pliki pokaz";
     private static string Errors_File_Folder = "G:\\ITEGER\\staż\\obecności\\All_Reader\\Errors\\";
     private static string Bad_Files_Folder = "G:\\ITEGER\\staż\\obecności\\All_Reader\\Bad Files\\";
     private static string Optima_Conection_String = "Server=ITEGER-NT;Database=CDN_Wars_Test_3_;User Id=sa;Password=cdn;Encrypt=True;TrustServerCertificate=True;";
     public static Error_Logger error_logger = new();
-    public static string sqlQueryInsertObecnościDoOptimy = $@"
-                DECLARE @id int;
+    public static string sqlQueryInsertObecnościDoOptimy = @"
+DECLARE @id int;
 
                 -- dodawaina pracownika do pracx i init pracpracdni
 IF((select DISTINCT COUNT(PRI_PraId) from cdn.Pracidx WHERE PRI_Imie1 = @PracownikImieInsert and PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Typ = 1) > 1)
@@ -30,138 +33,83 @@ BEGIN
 	END
 END
 
-                DECLARE @EXISTSPRACTEST INT = (SELECT PracKod.PRA_PraId FROM CDN.PracKod where PRA_Kod = @PRI_PraId)
+DECLARE @EXISTSPRACTEST INT = (SELECT PracKod.PRA_PraId FROM CDN.PracKod where PRA_Kod = @PRI_PraId)
 
-                IF @EXISTSPRACTEST IS NULL
-                BEGIN
-                    INSERT INTO [CDN].[PracKod]
-                            ([PRA_Kod]
-                            ,[PRA_Archiwalny]
-                            ,[PRA_Nadrzedny]
-                            ,[PRA_EPEmail]
-                            ,[PRA_EPTelefon]
-                            ,[PRA_EPNrPokoju]
-                            ,[PRA_EPDostep]
-                            ,[PRA_HasloDoWydrukow])
-                        VALUES
-                            (@PRI_PraId
-                            ,0
-                            ,0
-                            ,''
-                            ,''
-                            ,''
-                            ,0
-                            ,'')
-                END
+IF @EXISTSPRACTEST IS NULL
+BEGIN
+    INSERT INTO [CDN].[PracKod]
+            ([PRA_Kod]
+            ,[PRA_Archiwalny]
+            ,[PRA_Nadrzedny]
+            ,[PRA_EPEmail]
+            ,[PRA_EPTelefon]
+            ,[PRA_EPNrPokoju]
+            ,[PRA_EPDostep]
+            ,[PRA_HasloDoWydrukow])
+        VALUES
+            (@PRI_PraId
+            ,0
+            ,0
+            ,''
+            ,''
+            ,''
+            ,0
+            ,'')
+END
 
-                DECLARE @PRA_PraId INT = (SELECT PracKod.PRA_PraId FROM CDN.PracKod where PRA_Kod = @PRI_PraId);
+DECLARE @PRA_PraId INT = (SELECT PracKod.PRA_PraId FROM CDN.PracKod where PRA_Kod = @PRI_PraId);
 
-                DECLARE @EXISTSDZIEN DATETIME = (SELECT PracPracaDni.PPR_Data FROM cdn.PracPracaDni WHERE PPR_PraId = @PRA_PraId and PPR_Data = @DataInsert)
-                IF @EXISTSDZIEN is null
-                BEGIN
-                    BEGIN TRY
-                        INSERT INTO [CDN].[PracPracaDni]
-                                    ([PPR_PraId]
-                                    ,[PPR_Data]
-                                    ,[PPR_TS_Zal]
-                                    ,[PPR_TS_Mod]
-                                    ,[PPR_OpeModKod]
-                                    ,[PPR_OpeModNazwisko]
-                                    ,[PPR_OpeZalKod]
-                                    ,[PPR_OpeZalNazwisko]
-                                    ,[PPR_Zrodlo])
-                                VALUES
-                                    (@PRI_PraId
-                                    ,@DataInsert
-                                    ,GETDATE()
-                                    ,GETDATE()
-                                    ,'ADMIN'
-                                    ,'Administrator'
-                                    ,'ADMIN'
-                                    ,'Administrator'
-                                    ,0)
-                    END TRY
-                    BEGIN CATCH
-                    END CATCH
-                END
+DECLARE @EXISTSDZIEN DATETIME = (SELECT PracPracaDni.PPR_Data FROM cdn.PracPracaDni WHERE PPR_PraId = @PRA_PraId and PPR_Data = @DataInsert)
+IF @EXISTSDZIEN is null
+BEGIN
+    BEGIN TRY
+        INSERT INTO [CDN].[PracPracaDni]
+                    ([PPR_PraId]
+                    ,[PPR_Data]
+                    ,[PPR_TS_Zal]
+                    ,[PPR_TS_Mod]
+                    ,[PPR_OpeModKod]
+                    ,[PPR_OpeModNazwisko]
+                    ,[PPR_OpeZalKod]
+                    ,[PPR_OpeZalNazwisko]
+                    ,[PPR_Zrodlo])
+                VALUES
+                    (@PRI_PraId
+                    ,@DataInsert
+                    ,GETDATE()
+                    ,GETDATE()
+                    ,'ADMIN'
+                    ,'Administrator'
+                    ,'ADMIN'
+                    ,'Administrator'
+                    ,0)
+    END TRY
+    BEGIN CATCH
+    END CATCH
+END
 
-                SET @id = (select PPR_PprId from cdn.PracPracaDni where CAST(PPR_Data as datetime) = @DataInsert and PPR_PraId = @PRI_PraId);
+SET @id = (select PPR_PprId from cdn.PracPracaDni where CAST(PPR_Data as datetime) = @DataInsert and PPR_PraId = @PRI_PraId);
 
-                -- DODANIE GODZIN W NORMIE
-                INSERT INTO CDN.PracPracaDniGodz
-		                (PGR_PprId,
-		                PGR_Lp,
-		                PGR_OdGodziny,
-		                PGR_DoGodziny,
-		                PGR_Strefa,
-		                PGR_DzlId,
-		                PGR_PrjId,
-		                PGR_Uwagi,
-		                PGR_OdbNadg)
-	                VALUES
-		                (@id,
-		                1,
-		                DATEADD(MINUTE, 0, @GodzOdDate),
-		                DATEADD(MINUTE, -60 * (@CzasPrzepracowanyInsert - @PracaWgGrafikuInsert), @GodzDoDate),
-		                2,
-		                1,
-		                1,
-		                '',
-		                1);
-
-                -- DODANIE NADGODZIN
-                IF(@CzasPrzepracowanyInsert > @PracaWgGrafikuInsert)
-	                BEGIN
-
-	                IF(@Godz_dod_50 > 0)
-	                BEGIN
-		                INSERT INTO CDN.PracPracaDniGodz
-				                    (PGR_PprId,
-				                    PGR_Lp,
-				                    PGR_OdGodziny,
-				                    PGR_DoGodziny,
-				                    PGR_Strefa,
-				                    PGR_DzlId,
-				                    PGR_PrjId,
-				                    PGR_Uwagi,
-				                    PGR_OdbNadg)
-			                    VALUES
-				                    (@id,
-				                    1,
-				                    DATEADD(MINUTE, -60 * (@CzasPrzepracowanyInsert - @PracaWgGrafikuInsert), @GodzDoDate),
-				                    DATEADD(MINUTE, 60 * @Godz_dod_50, DATEADD(MINUTE, -60 * (@CzasPrzepracowanyInsert - @PracaWgGrafikuInsert), @GodzDoDate)),
-				                    4,
-				                    1,
-				                    1,
-				                    '',
-				                    4);
-		                SET @CzasPrzepracowanyInsert = @CzasPrzepracowanyInsert - @Godz_dod_50;
-	                END
-
-	                IF(@CzasPrzepracowanyInsert > @PracaWgGrafikuInsert)
-	                BEGIN
-		                INSERT INTO CDN.PracPracaDniGodz
-				                    (PGR_PprId,
-				                    PGR_Lp,
-				                    PGR_OdGodziny,
-				                    PGR_DoGodziny,
-				                    PGR_Strefa,
-				                    PGR_DzlId,
-				                    PGR_PrjId,
-				                    PGR_Uwagi,
-				                    PGR_OdbNadg)
-			                    VALUES
-				                    (@id,
-				                    1,
-				                    DATEADD(MINUTE, -60 * (@CzasPrzepracowanyInsert - @PracaWgGrafikuInsert), @GodzDoDate),
-				                    @GodzDoDate,
-				                    4,
-				                    1,
-				                    1,
-				                    '',
-				                    4);
-	                END
-                END";
+INSERT INTO CDN.PracPracaDniGodz
+		(PGR_PprId,
+		PGR_Lp,
+		PGR_OdGodziny,
+		PGR_DoGodziny,
+		PGR_Strefa,
+		PGR_DzlId,
+		PGR_PrjId,
+		PGR_Uwagi,
+		PGR_OdbNadg)
+	VALUES
+		(@id,
+		1,
+		DATEADD(MINUTE, 0, @GodzOdDate),
+		DATEADD(MINUTE, -60 * (@CzasPrzepracowanyInsert - @PracaWgGrafikuInsert), @GodzDoDate),
+		@TypPracy,
+		1,
+		1,
+		'',
+		1);";
     public static string sqlQueryInsertNieObecnoŚciDoOptimy = @$"
 IF((select DISTINCT COUNT(PRI_PraId) from cdn.Pracidx WHERE PRI_Imie1 = @PracownikImieInsert and PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Typ = 1) > 1)
 BEGIN
@@ -399,20 +347,6 @@ END";
     // co znaczy ob. w grafikach pracy v2 -> dałem nieobecnosc
     // 2 prac o tej samej nazwie
     // prac ktorych nie ma w bazie
-    // dodać Godz_dod_50 do kart pracy
-
-
-
-    //-------------------------------------------------------------------------------
-    //Plik: osadzeni panie - Warszawa - karty pracy.xlsx
-    //Nazwa zakladki: Buchaj Sylwia
-    //Nr Zakladki: 5
-    //Kolumna: 14
-    //Rzad: 3
-    //Wartość w komórce: ': Październik 2024'
-    //Poprawna wartość jaka powinna być: data
-    //Dodatkowa wiadomość: Zły format daty w pliku
-    //-------------------------------------------------------------------------------
 
     // TODO RACZEJ NIE TRZEBA
     // dodać support dla Zachód - zespół utrzymania czystości - Szczecin - karty pracy.xlsx bo są kurwa w kostke rubika zrobione
@@ -422,10 +356,6 @@ END";
     // TODO OBY NIE
     // Wyszyścic ten zjebany pierdolony śmierdzący gówno kurwa kod żygać mi się chce
     // TODO fix nieobecnosci przerywane weekendami i nowymi miesiacami itp JEŚLI SIĘ DA a raczej nie i nie no w sumie to nie no raczej nie mhm nie
-
-
-
-
 
     public static void ZrobToWieszCoNoWieszOCoMiChodzi()
     {
@@ -486,7 +416,7 @@ END";
                         {
                             Karta_Pracy_Reader_v2 karta_Pracy_Reader_V2 = new();
                             karta_Pracy_Reader_V2.Set_Optima_ConnectionString(Optima_Conection_String);
-                            karta_Pracy_Reader_V2.Process_Zakladka_For_Optima(zakladka, Last_Mod_Osoba, Last_Mod_Time);
+                            karta_Pracy_Reader_V2.Process_Zakladka_For_Optima(zakladka, Last_Mod_Osoba, Last_Mod_Time, 0);
                         }
                         catch
                         {
@@ -498,9 +428,9 @@ END";
                     {
                         try
                         {
-                            Karta_Pracy_Reader karta_Pracy_Reader = new();
-                            karta_Pracy_Reader.Set_Optima_ConnectionString(Optima_Conection_String);
-                            karta_Pracy_Reader.Process_Zakladka_For_Optima(zakladka, Last_Mod_Osoba, Last_Mod_Time);
+                            Karta_Pracy_Reader_v2 karta_Pracy_Reader_V2 = new();
+                            karta_Pracy_Reader_V2.Set_Optima_ConnectionString(Optima_Conection_String);
+                            karta_Pracy_Reader_V2.Process_Zakladka_For_Optima(zakladka, Last_Mod_Osoba, Last_Mod_Time, 1);
                         }
                         catch
                         {
