@@ -148,8 +148,6 @@ namespace All_Readeer
                     }
                 }
             }
-
-
         }
         private class Dane_Dnia
         {
@@ -160,6 +158,8 @@ namespace All_Readeer
             public decimal liczba_godz_przepracowanych { get; set; } = 0;
             public decimal Godz_nadl_platne_z_dod_50 { get; set; } = 0;
             public decimal Godz_nadl_platne_z_dod_100 { get; set; } = 0;
+            public decimal Godz_Odbior { get; set; } = 0;
+            public DateTime Dzien_Odbior { get; set; } = DateTime.MinValue;
         }
         private class CurrentPosition
         {
@@ -513,11 +513,40 @@ namespace All_Readeer
                     throw new Exception(Program.error_logger.Get_Error_String());
                 }
                 var Cell_Value = "";
+
+                // try get odb nadgodzin
+                try
+                {
+                    Cell_Value = worksheet.Cell(StartKarty.row, StartKarty.col + 5).GetValue<string>().Trim();
+                    if (!string.IsNullOrEmpty(Cell_Value))
+                    {
+                        if (decimal.TryParse(Cell_Value, out decimal ilosc))
+                        {
+                            if (ilosc != 0)
+                            {
+                                dzien.Godz_Odbior = ilosc;
+                                karta_pracy.dane_dni.Add(dzien);
+                            }
+                        }
+                        else
+                        {
+                            Program.error_logger.New_Error(Cell_Value, "liczba godzin odbioru za prace w nadgodz", StartKarty.col + 5, StartKarty.row, "Niepoprawnie wpisane dane");
+                            throw new Exception(Program.error_logger.Get_Error_String());
+                        }
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+
+
+
                 //try get nieobecność:
                 try
                 {
-                    Cell_Value = worksheet.Cell(StartKarty.row, StartKarty.col + 3).GetValue<string>();
-                    if (!string.IsNullOrEmpty(Cell_Value.Trim()))
+                    Cell_Value = worksheet.Cell(StartKarty.row, StartKarty.col + 3).GetValue<string>().Trim();
+                    if (!string.IsNullOrEmpty(Cell_Value))
                     {
                         Nieobecnosc nieobecnosc = new();
                         if (RodzajNieobecnosci.TryParse(Cell_Value.ToUpper(), out RodzajNieobecnosci Rnieobecnosc))
@@ -539,12 +568,14 @@ namespace All_Readeer
                         continue;
                     }
                 }
-                catch (Exception ex)
+                catch
                 {
-                    throw new Exception(ex.Message);
+                    throw;
                 }
+
                 // godz rozpoczecia
-                try{
+                try
+                {
                     Cell_Value = worksheet.Cell(StartKarty.row, StartKarty.col + 1).GetValue<string>().Trim();
                     if (!string.IsNullOrEmpty(Cell_Value))
                     {
@@ -584,8 +615,6 @@ namespace All_Readeer
                 {
                     dzien.Godz_nadl_platne_z_dod_100 = decimal.Parse(Cell_Value);
                 }
-
-
                 if (dzien.godz_rozp_pracy != TimeSpan.Zero && dzien.godz_zakoncz_pracy != TimeSpan.Zero)
                 {
                     karta_pracy.dane_dni.Add(dzien);
@@ -928,7 +957,6 @@ namespace All_Readeer
         {
             return rodzaj switch
             {
-
                 RodzajNieobecnosci.UO => "Urlop okolicznościowy",
                 RodzajNieobecnosci.ZL => "Zwolnienie chorobowe/F",
                 RodzajNieobecnosci.ZY => "Zwolnienie chorobowe/wyp.w drodze/F",
@@ -1013,13 +1041,25 @@ namespace All_Readeer
                 {
                     connection.Open();
                     SqlTransaction tran = connection.BeginTransaction();
-                    Wpierdol_Obecnosci_do_Optimy(karta, tran, connection);
-                    Wjeb_Nieobecnosci_do_Optimy(karta.ListaNieobecnosci, tran, connection);
-                    tran.Commit();
+
+                    Dodaj_Te_No_Całe_Te_Eeeeee_A_No_Godz_Odbior(karta, tran, connection);
                     Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine($"Poprawnie dodawno nieobecnosci z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
+                    Console.WriteLine($"Poprawnie dodawno odbiory nadgodzin z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
+                    Console.ForegroundColor = ConsoleColor.White;
+
+                    Wpierdol_Obecnosci_do_Optimy(karta, tran, connection);
+                    Console.ForegroundColor = ConsoleColor.Green;
                     Console.WriteLine($"Poprawnie dodawno obecnosci z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
                     Console.ForegroundColor = ConsoleColor.White;
+
+                    Wjeb_Nieobecnosci_do_Optimy(karta.ListaNieobecnosci, tran, connection);
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine($"Poprawnie dodawno nieobecnosci z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
+                    Console.ForegroundColor = ConsoleColor.White;
+
+
+
+                    tran.Commit();
                     connection.Close();
                 }
             }
@@ -1076,6 +1116,145 @@ namespace All_Readeer
                 new TimeSpan((int)endNadl50.TotalHours % 24, endNadl50.Minutes, endNadl50.Seconds),
                 new TimeSpan((int)startNadl100.TotalHours % 24, startNadl100.Minutes, startNadl100.Seconds),
                 new TimeSpan((int)endNadl100.TotalHours % 24, endNadl100.Minutes, endNadl100.Seconds));
+        }
+        private void Dodaj_Te_No_Całe_Te_Eeeeee_A_No_Godz_Odbior(Karta_Pracy karta, SqlTransaction tran, SqlConnection connection)
+        {
+            var sqlInsertOdbNadg = @"DECLARE @id int;
+IF((select DISTINCT COUNT(PRI_PraId) from cdn.Pracidx WHERE PRI_Imie1 = @PracownikImieInsert and PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Typ = 1) > 1)
+BEGIN
+	DECLARE @ErrorMessageC NVARCHAR(500) = 'Jest 2 pracowników w bazie o takim samym imieniu i nazwisku: ' +@PracownikImieInsert + ' ' +  @PracownikNazwiskoInsert;
+	THROW 50001, @ErrorMessageC, 1;
+END
+DECLARE @PRI_PraId INT = (select DISTINCT PRI_PraId from cdn.Pracidx WHERE PRI_Imie1 = @PracownikImieInsert and PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Typ = 1);
+IF @PRI_PraId IS NULL
+BEGIN
+	SET @PRI_PraId = (select DISTINCT PRI_PraId from cdn.Pracidx WHERE PRI_Imie1 = @PracownikNazwiskoInsert  and PRI_Nazwisko = @PracownikImieInsert and PRI_Typ = 1);
+	IF @PRI_PraId IS NULL
+	BEGIN
+		DECLARE @ErrorMessage NVARCHAR(500) = 'Brak takiego pracownika w bazie o imieniu i nazwisku: ' +@PracownikImieInsert + ' ' +  @PracownikNazwiskoInsert;
+		THROW 50000, @ErrorMessage, 1;
+	END
+END
+
+DECLARE @EXISTSPRACTEST INT = (SELECT PracKod.PRA_PraId FROM CDN.PracKod where PRA_Kod = @PRI_PraId)
+
+IF @EXISTSPRACTEST IS NULL
+BEGIN
+    INSERT INTO [CDN].[PracKod]
+            ([PRA_Kod]
+            ,[PRA_Archiwalny]
+            ,[PRA_Nadrzedny]
+            ,[PRA_EPEmail]
+            ,[PRA_EPTelefon]
+            ,[PRA_EPNrPokoju]
+            ,[PRA_EPDostep]
+            ,[PRA_HasloDoWydrukow])
+        VALUES
+            (@PRI_PraId
+            ,0
+            ,0
+            ,''
+            ,''
+            ,''
+            ,0
+            ,'')
+END
+
+DECLARE @PRA_PraId INT = (SELECT PracKod.PRA_PraId FROM CDN.PracKod where PRA_Kod = @PRI_PraId);
+
+DECLARE @EXISTSDZIEN DATETIME = (SELECT PracPracaDni.PPR_Data FROM cdn.PracPracaDni WHERE PPR_PraId = @PRA_PraId and PPR_Data = @DataInsert)
+IF @EXISTSDZIEN is null
+BEGIN
+    BEGIN TRY
+        INSERT INTO [CDN].[PracPracaDni]
+                    ([PPR_PraId]
+                    ,[PPR_Data]
+                    ,[PPR_TS_Zal]
+                    ,[PPR_TS_Mod]
+                    ,[PPR_OpeModKod]
+                    ,[PPR_OpeModNazwisko]
+                    ,[PPR_OpeZalKod]
+                    ,[PPR_OpeZalNazwisko]
+                    ,[PPR_Zrodlo])
+                VALUES
+                    (@PRI_PraId
+                    ,@DataInsert
+                    ,GETDATE()
+                    ,GETDATE()
+                    ,'ADMIN'
+                    ,'Administrator'
+                    ,'ADMIN'
+                    ,'Administrator'
+                    ,0)
+    END TRY
+    BEGIN CATCH
+    END CATCH
+END
+
+SET @id = (select PPR_PprId from cdn.PracPracaDni where CAST(PPR_Data as datetime) = @DataInsert and PPR_PraId = @PRI_PraId);
+
+INSERT INTO CDN.PracPracaDniGodz
+		(PGR_PprId,
+		PGR_Lp,
+		PGR_OdGodziny,
+		PGR_DoGodziny,
+		PGR_Strefa,
+		PGR_DzlId,
+		PGR_PrjId,
+		PGR_Uwagi,
+		PGR_OdbNadg)
+	VALUES
+		(@id,
+		1,
+		DATEADD(MINUTE, 0, @GodzOdDate),
+		DATEADD(MINUTE, 0, @GodzDoDate),
+		@TypPracy,
+		1,
+		1,
+		'',
+		@TypNadg);";
+            foreach (var dane_Dni in karta.dane_dni)
+            {
+                try
+                {
+                    if (dane_Dni.Godz_Odbior > 0)
+                    {
+                        var Ilosc_Godzin = dane_Dni.Godz_Odbior;
+                        TimeSpan startGodz = TimeSpan.FromHours(8);
+                        TimeSpan endGodz = TimeSpan.FromHours(8) + TimeSpan.FromHours((double)dane_Dni.Godz_Odbior);
+                        using (SqlCommand insertCmd = new SqlCommand(sqlInsertOdbNadg, connection, tran))
+                        {
+                            insertCmd.Parameters.AddWithValue("@DataInsert", DateTime.Parse($"{karta.rok}-{karta.miesiac:D2}-{dane_Dni.dzien:D2}"));
+                            DateTime dataBazowa = new DateTime(1899, 12, 30);
+                            DateTime godzOdDate = dataBazowa + startGodz;
+                            DateTime godzDoDate = dataBazowa + endGodz;
+                            insertCmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = godzOdDate;
+                            insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
+                            insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", karta.pracownik.Nazwisko);
+                            insertCmd.Parameters.AddWithValue("@PracownikImieInsert", karta.pracownik.Imie);
+                            insertCmd.Parameters.AddWithValue("@TypPracy", 2); // podstawowy
+                            insertCmd.Parameters.AddWithValue("@TypNadg", 4); // W.PŁ
+                            insertCmd.ExecuteScalar();
+                        }
+                    }
+                }
+                catch (SqlException ex)
+                {
+                    tran.Rollback();
+                    Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
+                    throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
+                }
+                catch (FormatException)
+                {
+                    continue;
+                }
+                catch (Exception ex)
+                {
+                    tran.Rollback();
+                    Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
+                    throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
+                }
+            }
         }
     }
 }

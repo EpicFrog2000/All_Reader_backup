@@ -8,7 +8,7 @@ using System.Data;
 using static All_Readeer.Grafik_Pracy_Reader;
 class Program
 {
-    private static string Files_Folder = "G:\\ITEGER\\staż\\obecności\\All_Reader\\Pliki pokaz";
+    private static string Files_Folder = "G:\\ITEGER\\staż\\obecności\\All_Reader\\";
     private static string Errors_File_Folder = "G:\\ITEGER\\staż\\obecności\\All_Reader\\Errors\\";
     private static string Bad_Files_Folder = "G:\\ITEGER\\staż\\obecności\\All_Reader\\Bad Files\\";
     private static string Optima_Conection_String = "Server=ITEGER-NT;Database=CDN_Wars_Test_3_;User Id=sa;Password=cdn;Encrypt=True;TrustServerCertificate=True;";
@@ -356,6 +356,62 @@ END";
     // TODO OBY NIE
     // Wyszyścic ten zjebany pierdolony śmierdzący gówno kurwa kod żygać mi się chce
     // TODO fix nieobecnosci przerywane weekendami i nowymi miesiacami itp JEŚLI SIĘ DA a raczej nie i nie no w sumie to nie no raczej nie mhm nie
+
+
+    //UWAGI:
+    // nie wszystkie kody są opisane np. UŻ, ob.
+    // Ja na ten moment tak sobie zrobiłem:
+    /*RodzajNieobecnosci.UO => "Urlop okolicznościowy",
+    RodzajNieobecnosci.ZL => "Zwolnienie chorobowe/F",
+    RodzajNieobecnosci.ZY => "Zwolnienie chorobowe/wyp.w drodze/F",
+    RodzajNieobecnosci.ZS => "Zwolnienie chorobowe/wyp.przy pracy/F",
+    RodzajNieobecnosci.ZN => "Zwolnienie chorobowe/bez prawa do zas.",
+    RodzajNieobecnosci.ZP => "Zwolnienie chorobowe/pozbawiony prawa",
+    RodzajNieobecnosci.UR => "Urlop rehabilitacyjny",
+    RodzajNieobecnosci.ZR => "Urlop rehabilitacyjny/wypadek w drodze..",
+    RodzajNieobecnosci.ZD => "Urlop rehabilitacyjny/wypadek przy pracy",
+    RodzajNieobecnosci.UM => "Urlop macierzyński",
+    RodzajNieobecnosci.UC => "Urlop ojcowski",
+    RodzajNieobecnosci.OP => "Urlop opiekuńczy (zasiłek)",
+    RodzajNieobecnosci.UY => "Urlop wychowawczy (121)",
+    RodzajNieobecnosci.UW => "Urlop wypoczynkowy",
+    RodzajNieobecnosci.NU => "Nieobecność usprawiedliwiona (151)",
+    RodzajNieobecnosci.NN => "Nieobecność nieusprawiedliwiona (152)",
+    RodzajNieobecnosci.UL => "Służba wojskowa",
+    RodzajNieobecnosci.DR => "Urlop rodzicielski",
+    RodzajNieobecnosci.DM => "Urlop macierzyński dodatkowy",
+    RodzajNieobecnosci.PP => "Dni wolne na poszukiwanie pracy",
+    RodzajNieobecnosci.UK => "Dni wolne z tyt. krwiodawstwa",
+    RodzajNieobecnosci.IK => "Covid19",
+    _ => "Nieobecność (B2B)"*/
+    // Przyczyny:
+    /*
+    RodzajNieobecnosci.ZL => 1,        // Zwolnienie lekarskie
+    RodzajNieobecnosci.DM => 2,        // Urlop macierzyński
+    RodzajNieobecnosci.DR => 13,        // Urlop opiekuńczy
+    RodzajNieobecnosci.NB => 1,        // Zwolnienie lekarskie
+    RodzajNieobecnosci.NN => 5,        // Nieobecność nieusprawiedliwiona
+    RodzajNieobecnosci.UC => 21,       // Urlop opiekuńczy
+    RodzajNieobecnosci.UD => 21,       // Urlop opiekuńczy
+    RodzajNieobecnosci.UJ => 10,       // Służba wojskowa
+    RodzajNieobecnosci.UL => 10,       // Służba wojskowa
+    RodzajNieobecnosci.UM => 2,       // Urlop macierzyński
+    RodzajNieobecnosci.UO => 4,       // Urlop okolicznościowy
+    RodzajNieobecnosci.UN => 3,       // Urlop rehabilitacyjny
+    RodzajNieobecnosci.UR => 3,       // Urlop rehabilitacyjny
+    RodzajNieobecnosci.ZC => 21,       // Urlop opiekuńczy
+    RodzajNieobecnosci.ZD => 21,       // Urlop opiekuńczy
+    RodzajNieobecnosci.ZK => 21,       // Urlop opiekuńczy
+    RodzajNieobecnosci.ZN => 1,       // Zwolnienie lekarskie
+    RodzajNieobecnosci.ZR => 3,       // Urlop rehabilitacyjny
+    RodzajNieobecnosci.ZZ => 1,       // Zwolnienie lekarskie
+    _ => 9                             // Nie dotyczy dla pozostałych przypadków*/
+
+    // co znaczy ob. w grafikach pracy z przed 2024 -> dałem nieobecnosc
+    // Pracownicy którzy mają te same imie i nazwisko -> ciężko mi je połączyć gdyż często dział/zespół/stanowisko czy inne nie zleją sie z danymi w bazie
+    // Mam wielu pracowników których nie ma w bazie ciężko rozróżnić czy nie ma go w bazie czy jest źle wpisany
+    //
+
 
     public static void ZrobToWieszCoNoWieszOCoMiChodzi()
     {
