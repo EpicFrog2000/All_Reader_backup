@@ -5,7 +5,7 @@ using System.Globalization;
 
 namespace All_Readeer
 {
-    internal class Grafik_Pracy_Reader_v2024
+    internal static class Grafik_Pracy_Reader_v2024
     {
         private class Pracownik
         {
@@ -95,31 +95,28 @@ namespace All_Readeer
             public TimeSpan Godz_Rozpoczecia_Pracy = TimeSpan.Zero;
             public TimeSpan Godz_Zakonczenia_Pracy = TimeSpan.Zero;
         }
-        private class CurrentPosition
+        private class Current_Position
         {
             public int row { get; set; } = 1;
             public int col { get; set; } = 1;
         }
-        private string Optima_Connection_String = "";
-        public void Process_Zakladka_For_Optima(IXLWorksheet worksheet, string last_Mod_Osoba, DateTime last_Mod_Time)
+        public static void Process_Zakladka_For_Optima(IXLWorksheet worksheet)
         {
-            Grafik grafik = new();
             try
             {
-                grafik.nazwa_pliku = Program.error_logger.Nazwa_Pliku;
-                grafik.nr_zakladki = Program.error_logger.Nr_Zakladki;
-                Get_Header_Karta_Info(worksheet, ref grafik);
-                Get_Dane_Dni(worksheet, ref grafik);
-            }
-            catch(Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-                throw;
-            }
+                var Lista_Pozycji_Grafików_Z_Zakladki = Find_Grafiki(worksheet);
+                List<Grafik> grafiki = new();
+                foreach (var pozycja in Lista_Pozycji_Grafików_Z_Zakladki)
+                {
+                    Grafik grafik = new();
+                    grafik.nazwa_pliku = Program.error_logger.Nazwa_Pliku;
+                    grafik.nr_zakladki = Program.error_logger.Nr_Zakladki;
+                    Get_Header_Karta_Info(pozycja ,worksheet, ref grafik);
+                    Get_Dane_Dni(pozycja, worksheet, ref grafik);
+                    grafiki.Add(grafik);
+                }
 
-            try
-            {
-                Wpierdol_Plan_do_Optimy(grafik);
+                Dodaj_Plan_do_Optimy(grafiki);
             }
             catch(Exception ex)
             {
@@ -127,22 +124,47 @@ namespace All_Readeer
                 throw;
             }
         }
-        public void Set_Optima_ConnectionString(string NewConnectionString)
+        private static List<Current_Position> Find_Grafiki(IXLWorksheet worksheet)
         {
-            if (string.IsNullOrEmpty(NewConnectionString))
+            List<Current_Position> Pozycje = new();
+            int Limiter = 1000;
+            int counter = 0;
+            foreach (var cell in worksheet.CellsUsed())
             {
-                Program.error_logger.New_Custom_Error("Error: Empty Connection string in gv2024");
-                Console.WriteLine("Error: Empty Connection string in gv2024");
-                throw new Exception("Error: Empty Connection string in gv2024");
+                try
+                {
+                    if (cell.HasFormula && !cell.Address.ToString()!.Equals(cell.FormulaA1))
+                    {
+                        counter++;
+                        if(counter > Limiter)
+                        {
+                            break;
+                        }
+                        continue;
+                    }
+
+                    if (cell.Value.ToString().Contains("GRAFIK PRACY"))
+                    {
+                        Pozycje.Add(new Current_Position()
+                        {
+                            row = cell.Address.RowNumber,
+                            col = cell.Address.ColumnNumber
+                        });
+                    }
+                }
+                catch
+                {
+                    continue;
+                }
             }
-            Optima_Connection_String = NewConnectionString;
+            return Pozycje;
         }
-        private void Get_Header_Karta_Info(IXLWorksheet worksheet, ref Grafik grafik)
+        private static void Get_Header_Karta_Info(Current_Position pozycja, IXLWorksheet worksheet, ref Grafik grafik)
         {
-            var dane = worksheet.Cell(1, 1).GetValue<string>().Trim();
+            var dane = worksheet.Cell(pozycja.row, pozycja.col).GetFormattedString().Trim();
             if (string.IsNullOrEmpty(dane))
             {
-                Program.error_logger.New_Error(dane, "Tytułu Grafiku", 1, 1, "Brak Tytułu Grafiku");
+                Program.error_logger.New_Error(dane, "Tytułu Grafiku", pozycja.row, pozycja.col, "Brak Tytułu Grafiku");
                 throw new Exception(Program.error_logger.Get_Error_String());
             }
             else
@@ -150,7 +172,7 @@ namespace All_Readeer
                 grafik.Set_Miesiac(dane.Split(' ')[3].Trim());
                 if (grafik.miesiac == 0)
                 {
-                    Program.error_logger.New_Error(dane, "Miesiac", 1, 1, "Źle wpisany miesiąc");
+                    Program.error_logger.New_Error(dane, "Miesiac", pozycja.row, pozycja.col, "Źle wpisany miesiąc");
                     throw new Exception(Program.error_logger.Get_Error_String());
                 }
                 if (int.TryParse(dane.Split(' ')[5].Trim(), out int parsedYear))
@@ -159,24 +181,24 @@ namespace All_Readeer
                 }
                 else
                 {
-                    Program.error_logger.New_Error(dane, "Rok", 1, 1, "Źle wpisany rok");
+                    Program.error_logger.New_Error(dane, "Rok", pozycja.row, pozycja.col, "Źle wpisany rok");
                     throw new Exception(Program.error_logger.Get_Error_String());
                 }
                 if (grafik.rok == 0)
                 {
-                    Program.error_logger.New_Error(dane, "Rok", 1, 1, "Źle wpisany rok");
+                    Program.error_logger.New_Error(dane, "Rok", pozycja.row, pozycja.col, "Źle wpisany rok");
                     throw new Exception(Program.error_logger.Get_Error_String());
                 }
             }
         }
-        private void Get_Dane_Dni(IXLWorksheet worksheet, ref Grafik grafik)
+        private static void Get_Dane_Dni(Current_Position pozycja, IXLWorksheet worksheet, ref Grafik grafik)
         {
-            CurrentPosition poz = new() { col = 1, row = 4 };
+            pozycja.row += 3;
             while (true)
             {
                 Dane_Dni dane_dni = new();
                 //get pracownika
-                var nazwiskoimie = worksheet.Cell(poz.row, poz.col).GetValue<string>().Trim();
+                var nazwiskoimie = worksheet.Cell(pozycja.row, pozycja.col).GetFormattedString().Trim();
                 if (string.IsNullOrEmpty(nazwiskoimie))
                 {
                     break;
@@ -186,9 +208,9 @@ namespace All_Readeer
                     dane_dni.pracownik.Nazwisko = nazwiskoimie.Split(" ")[0];
                     dane_dni.pracownik.Imie = nazwiskoimie.Split(" ")[1];
                 }
-                catch (Exception ex)
+                catch
                 {
-                    Program.error_logger.New_Error(nazwiskoimie, "Nazwisko Imie", poz.col, poz.row, "Źle wpisane nazwisko i imie " + ex.Message);
+                    Program.error_logger.New_Error(nazwiskoimie, "Nazwisko Imie", pozycja.col, pozycja.row, "Źle wpisane nazwisko i imie. Wartość w komórce powinna być: Nazwisko Imie ");
                     throw new Exception(Program.error_logger.Get_Error_String());
                 }
 
@@ -197,7 +219,7 @@ namespace All_Readeer
                 while (true)
                 {
                     height++;
-                    var dane = worksheet.Cell(poz.row + height, poz.col).GetValue<string>().Trim();
+                    var dane = worksheet.Cell(pozycja.row + height, pozycja.col).GetFormattedString().Trim();
                     if (!string.IsNullOrEmpty(dane))
                     {
                         break;
@@ -209,7 +231,7 @@ namespace All_Readeer
                 {
                     Dane_Dnia dane_dnia = new();
                     //get dzien nr
-                    var dziennr = worksheet.Cell(3, poz.col + 1 + j).GetValue<string>().Trim();
+                    var dziennr = worksheet.Cell(3, pozycja.col + 1 + j).GetFormattedString().Trim();
                     if (!string.IsNullOrEmpty(dziennr))
                     {
                         if (int.TryParse(dziennr, out int parsedDzien))
@@ -222,7 +244,7 @@ namespace All_Readeer
                         }
                         else
                         {
-                            Program.error_logger.New_Error(dziennr, "dzien", poz.col, 5, "Błędny nr dnia");
+                            Program.error_logger.New_Error(dziennr, "dzien", pozycja.col, 5, "Błędny nr dnia");
                             throw new Exception(Program.error_logger.Get_Error_String());
                         }
                         if (dane_dnia.dzien > 31 || dane_dnia.dzien == 0)
@@ -232,139 +254,189 @@ namespace All_Readeer
                         // get godziny pracy dnia
                         for (int k = 0; k < height; k++)
                         {
-                            try
+                            Godz_Pracy godziny = new();
+                            var godzr = worksheet.Cell(pozycja.row + k, pozycja.col + 1 + j).GetFormattedString().Trim();
+                            if (!string.IsNullOrEmpty(godzr) && godzr != "" && godzr.Length > 0)
                             {
-                                Godz_Pracy godziny = new();
-                                var godzr = worksheet.Cell(poz.row + k, poz.col + 1 + j).GetValue<string>().Trim();
-                                if (!string.IsNullOrEmpty(godzr) && godzr != "" && godzr.Length > 0)
+                                try
                                 {
-                                    try
-                                    {
-                                        godziny.Godz_Rozpoczecia_Pracy = Reader.Try_Get_Date(godzr);
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Program.error_logger.New_Error(godzr, "Godz_Rozpoczecia_Pracy", poz.col + 1 + j, poz.row + k, ex.Message);
-                                        throw new Exception(Program.error_logger.Get_Error_String());
-                                    }
+                                    godziny.Godz_Rozpoczecia_Pracy = Reader.Try_Get_Date(godzr);
+                                }
+                                catch
+                                {
+                                    Program.error_logger.New_Error(godzr, "Godz Rozpoczecia Pracy", pozycja.col + 1 + j, pozycja.row + k, "Błędnie wpisany czas. Powinno być w formacie np. '08:00'");
+                                    throw new Exception(Program.error_logger.Get_Error_String());
+                                }
 
-                                }
-                                var godzz = worksheet.Cell(poz.row + k, poz.col + 1 + j + 1).GetValue<string>().Trim();
-                                if (!string.IsNullOrEmpty(godzz) && godzz != "" && godzz.Length > 0)
+                            }
+                            var godzz = worksheet.Cell(pozycja.row + k, pozycja.col + 1 + j + 1).GetFormattedString().Trim();
+                            if (!string.IsNullOrEmpty(godzz) && godzz != "" && godzz.Length > 0)
+                            {
+                                try
                                 {
-                                    try
-                                    {
-                                        godziny.Godz_Zakonczenia_Pracy = Reader.Try_Get_Date(godzz);
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Program.error_logger.New_Error(godzz, "Godz_Zakonczenia_Pracy", poz.col + 1 + j + 1, poz.row + k, ex.Message);
-                                        throw new Exception(Program.error_logger.Get_Error_String());
-                                    }
+                                    godziny.Godz_Zakonczenia_Pracy = Reader.Try_Get_Date(godzz);
                                 }
-                                if (godziny.Godz_Rozpoczecia_Pracy != TimeSpan.Zero && godziny.Godz_Zakonczenia_Pracy != TimeSpan.Zero)
+                                catch
                                 {
-                                    dane_dnia.godz_pracy.Add(godziny);
+                                    Program.error_logger.New_Error(godzz, "Godz Zakonczenia Pracy", pozycja.col + 1 + j + 1, pozycja.row + k, "Błędnie wpisany czas. Powinno być w formacie np. '08:00'");
+                                    throw new Exception(Program.error_logger.Get_Error_String());
                                 }
                             }
-                            catch { }
+                            if (godziny.Godz_Rozpoczecia_Pracy != TimeSpan.Zero && godziny.Godz_Zakonczenia_Pracy != TimeSpan.Zero)
+                            {
+                                dane_dnia.godz_pracy.Add(godziny);
+                            }
                         }
                     }
                     j += 2;
                     dane_dni.dane_dnia.Add(dane_dnia);
                 }
                 grafik.dane_dni.Add(dane_dni);
-                poz.row += height+1;
+                pozycja.row += height+1;
             }
         }
-        private void Wpierdol_Plan_do_Optimy(Grafik grafik)
+        private static void Dodaj_Plan_do_Optimy(List<Grafik> grafiki)
         {
-            using (SqlConnection connection = new SqlConnection(Optima_Connection_String))
+            using (SqlConnection connection = new SqlConnection(Program.Optima_Conection_String))
             {
                 connection.Open();
                 SqlTransaction tran = connection.BeginTransaction();
-                foreach (var dane_Dni in grafik.dane_dni)
+                foreach (var grafik in grafiki)
                 {
-                    foreach (var dzien in dane_Dni.dane_dnia)
+                    foreach (var dane_Dni in grafik.dane_dni)
                     {
-                        try
+                        foreach (var dzien in dane_Dni.dane_dnia)
                         {
-                            foreach (var godziny in dzien.godz_pracy)
+                            try
                             {
-                                // jak praca po północy to na next dzien przeniesc
-                                if (godziny.Godz_Zakonczenia_Pracy < godziny.Godz_Rozpoczecia_Pracy)
+                                foreach (var godziny in dzien.godz_pracy)
                                 {
-                                    // insert godziny przed północą
-                                    using (SqlCommand insertCmd = new SqlCommand(Program.sqlQueryInsertPlanDoOptimy, connection, tran))
+                                    // jak praca po północy to na next dzien przeniesc
+                                    if (godziny.Godz_Zakonczenia_Pracy < godziny.Godz_Rozpoczecia_Pracy)
                                     {
-                                        insertCmd.Parameters.AddWithValue("@DataInsert", DateTime.ParseExact($"{grafik.rok}-{grafik.miesiac:D2}-{dzien.dzien:D2}", "yyyy-MM-dd", CultureInfo.InvariantCulture));
-                                        DateTime baseDate = new DateTime(1899, 12, 30);
-                                        DateTime godzOdDate = baseDate + godziny.Godz_Rozpoczecia_Pracy;
-                                        DateTime godzDoDate = baseDate + TimeSpan.FromHours(24);
-                                        insertCmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = godzOdDate;
-                                        insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
-                                        double czasPrzepracowanyInsert = (TimeSpan.FromHours(24) - godziny.Godz_Rozpoczecia_Pracy).TotalHours;
-                                        insertCmd.Parameters.AddWithValue("@CzasPrzepracowanyInsert", czasPrzepracowanyInsert);
-                                        insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", czasPrzepracowanyInsert);
-                                        insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", dane_Dni.pracownik.Nazwisko);
-                                        insertCmd.Parameters.AddWithValue("@PracownikImieInsert", dane_Dni.pracownik.Imie);
-                                        insertCmd.Parameters.AddWithValue("@Godz_dod_50", 0);
-                                        insertCmd.Parameters.AddWithValue("@Godz_dod_100", 0);
-                                        insertCmd.ExecuteScalar();
+                                        // insert godziny przed północą
+                                        using (SqlCommand insertCmd = new SqlCommand(Program.sqlQueryInsertPlanDoOptimy, connection, tran))
+                                        {
+                                            insertCmd.Parameters.AddWithValue("@DataInsert", DateTime.ParseExact($"{grafik.rok}-{grafik.miesiac:D2}-{dzien.dzien:D2}", "yyyy-MM-dd", CultureInfo.InvariantCulture));
+                                            DateTime baseDate = new DateTime(1899, 12, 30);
+                                            DateTime godzOdDate = baseDate + godziny.Godz_Rozpoczecia_Pracy;
+                                            DateTime godzDoDate = baseDate + TimeSpan.FromHours(24);
+                                            insertCmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = godzOdDate;
+                                            insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
+                                            double czasPrzepracowanyInsert = (TimeSpan.FromHours(24) - godziny.Godz_Rozpoczecia_Pracy).TotalHours;
+                                            insertCmd.Parameters.AddWithValue("@CzasPrzepracowanyInsert", czasPrzepracowanyInsert);
+                                            insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", czasPrzepracowanyInsert);
+                                            insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", dane_Dni.pracownik.Nazwisko);
+                                            insertCmd.Parameters.AddWithValue("@PracownikImieInsert", dane_Dni.pracownik.Imie);
+                                            insertCmd.Parameters.AddWithValue("@Godz_dod_50", 0);
+                                            insertCmd.Parameters.AddWithValue("@Godz_dod_100", 0);
+                                            if (Program.error_logger.Last_Mod_Osoba.Length > 20)
+                                            {
+                                                insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 20));
+                                            }
+                                            else
+                                            {
+                                                insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba);
+                                            }
+                                            if (Program.error_logger.Last_Mod_Osoba.Length > 50)
+                                            {
+                                                insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 50));
+                                            }
+                                            else
+                                            {
+                                                insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba);
+                                            }
+                                            insertCmd.Parameters.AddWithValue("@DataMod", Program.error_logger.Last_Mod_Time);
+                                            insertCmd.ExecuteScalar();
+                                        }
+                                        // insert po północy
+                                        using (SqlCommand insertCmd = new SqlCommand(Program.sqlQueryInsertPlanDoOptimy, connection, tran))
+                                        {
+                                            var data = new DateTime(grafik.rok, grafik.miesiac, dzien.dzien).AddDays(1);
+                                            insertCmd.Parameters.AddWithValue("@DataInsert", DateTime.ParseExact($"{data:yyyy-MM-dd}", "yyyy-MM-dd", CultureInfo.InvariantCulture));
+                                            DateTime baseDate = new DateTime(1899, 12, 30);
+                                            DateTime godzOdDate = baseDate + TimeSpan.FromHours(0);
+                                            DateTime godzDoDate = baseDate + godziny.Godz_Zakonczenia_Pracy;
+                                            insertCmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = godzOdDate;
+                                            insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
+                                            double czasPrzepracowanyInsert = godziny.Godz_Zakonczenia_Pracy.TotalHours;
+                                            insertCmd.Parameters.AddWithValue("@CzasPrzepracowanyInsert", czasPrzepracowanyInsert);
+                                            insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", czasPrzepracowanyInsert);
+                                            insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", dane_Dni.pracownik.Nazwisko);
+                                            insertCmd.Parameters.AddWithValue("@PracownikImieInsert", dane_Dni.pracownik.Imie);
+                                            insertCmd.Parameters.AddWithValue("@Godz_dod_50", 0);
+                                            insertCmd.Parameters.AddWithValue("@Godz_dod_100", 0);
+                                            if (Program.error_logger.Last_Mod_Osoba.Length > 20)
+                                            {
+                                                insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 20));
+                                            }
+                                            else
+                                            {
+                                                insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba);
+                                            }
+                                            if (Program.error_logger.Last_Mod_Osoba.Length > 50)
+                                            {
+                                                insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 50));
+                                            }
+                                            else
+                                            {
+                                                insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba);
+                                            }
+                                            insertCmd.Parameters.AddWithValue("@DataMod", Program.error_logger.Last_Mod_Time);
+                                            insertCmd.ExecuteScalar();
+                                        }
                                     }
-                                    // insert po północy
-                                    using (SqlCommand insertCmd = new SqlCommand(Program.sqlQueryInsertPlanDoOptimy, connection, tran))
+                                    else
                                     {
-                                        var data = new DateTime(grafik.rok, grafik.miesiac, dzien.dzien).AddDays(1);
-                                        insertCmd.Parameters.AddWithValue("@DataInsert", DateTime.ParseExact($"{data:yyyy-MM-dd}", "yyyy-MM-dd", CultureInfo.InvariantCulture));
-                                        DateTime baseDate = new DateTime(1899, 12, 30);
-                                        DateTime godzOdDate = baseDate + TimeSpan.FromHours(0);
-                                        DateTime godzDoDate = baseDate + godziny.Godz_Zakonczenia_Pracy;
-                                        insertCmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = godzOdDate;
-                                        insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
-                                        double czasPrzepracowanyInsert = godziny.Godz_Zakonczenia_Pracy.TotalHours;
-                                        insertCmd.Parameters.AddWithValue("@CzasPrzepracowanyInsert", czasPrzepracowanyInsert);
-                                        insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", czasPrzepracowanyInsert);
-                                        insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", dane_Dni.pracownik.Nazwisko);
-                                        insertCmd.Parameters.AddWithValue("@PracownikImieInsert", dane_Dni.pracownik.Imie);
-                                        insertCmd.Parameters.AddWithValue("@Godz_dod_50", 0);
-                                        insertCmd.Parameters.AddWithValue("@Godz_dod_100", 0);
-                                        insertCmd.ExecuteScalar();
-                                    }
-                                }
-                                else
-                                {
-                                    using (SqlCommand insertCmd = new SqlCommand(Program.sqlQueryInsertPlanDoOptimy, connection, tran))
-                                    {
-                                        insertCmd.Parameters.AddWithValue("@DataInsert", DateTime.ParseExact($"{grafik.rok}-{grafik.miesiac:D2}-{dzien.dzien:D2}", "yyyy-MM-dd", CultureInfo.InvariantCulture));
-                                        insertCmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = ("1899-12-30 " + godziny.Godz_Rozpoczecia_Pracy.ToString());
-                                        insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = ("1899-12-30 " + godziny.Godz_Zakonczenia_Pracy.ToString());
-                                        insertCmd.Parameters.AddWithValue("@CzasPrzepracowanyInsert", (godziny.Godz_Zakonczenia_Pracy - godziny.Godz_Rozpoczecia_Pracy).TotalHours);
-                                        insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", (godziny.Godz_Zakonczenia_Pracy - godziny.Godz_Rozpoczecia_Pracy).TotalHours);
-                                        insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", dane_Dni.pracownik.Nazwisko);
-                                        insertCmd.Parameters.AddWithValue("@PracownikImieInsert", dane_Dni.pracownik.Imie);
-                                        insertCmd.Parameters.AddWithValue("@Godz_dod_50", 0);
-                                        insertCmd.Parameters.AddWithValue("@Godz_dod_100", 0);
-                                        insertCmd.ExecuteScalar();
+                                        using (SqlCommand insertCmd = new SqlCommand(Program.sqlQueryInsertPlanDoOptimy, connection, tran))
+                                        {
+                                            insertCmd.Parameters.AddWithValue("@DataInsert", DateTime.ParseExact($"{grafik.rok}-{grafik.miesiac:D2}-{dzien.dzien:D2}", "yyyy-MM-dd", CultureInfo.InvariantCulture));
+                                            insertCmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = ("1899-12-30 " + godziny.Godz_Rozpoczecia_Pracy.ToString());
+                                            insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = ("1899-12-30 " + godziny.Godz_Zakonczenia_Pracy.ToString());
+                                            insertCmd.Parameters.AddWithValue("@CzasPrzepracowanyInsert", (godziny.Godz_Zakonczenia_Pracy - godziny.Godz_Rozpoczecia_Pracy).TotalHours);
+                                            insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", (godziny.Godz_Zakonczenia_Pracy - godziny.Godz_Rozpoczecia_Pracy).TotalHours);
+                                            insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", dane_Dni.pracownik.Nazwisko);
+                                            insertCmd.Parameters.AddWithValue("@PracownikImieInsert", dane_Dni.pracownik.Imie);
+                                            insertCmd.Parameters.AddWithValue("@Godz_dod_50", 0);
+                                            insertCmd.Parameters.AddWithValue("@Godz_dod_100", 0);
+                                            if (Program.error_logger.Last_Mod_Osoba.Length > 20)
+                                            {
+                                                insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 20));
+                                            }
+                                            else
+                                            {
+                                                insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba);
+                                            }
+                                            if (Program.error_logger.Last_Mod_Osoba.Length > 50)
+                                            {
+                                                insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 50));
+                                            }
+                                            else
+                                            {
+                                                insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba);
+                                            }
+                                            insertCmd.Parameters.AddWithValue("@DataMod", Program.error_logger.Last_Mod_Time);
+                                            insertCmd.ExecuteScalar();
+                                        }
                                     }
                                 }
                             }
-                        }
-                        catch (SqlException ex)
-                        {
-                            tran.Rollback();
-                            Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
-                            throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
-                        }
-                        catch (FormatException)
-                        {
-                            continue;
-                        }
-                        catch (Exception ex)
-                        {
-                            tran.Rollback();
-                            Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
-                            throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
+                            catch (SqlException ex)
+                            {
+                                tran.Rollback();
+                                Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
+                                throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}" + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
+                            }
+                            catch (FormatException)
+                            {
+                                continue;
+                            }
+                            catch (Exception ex)
+                            {
+                                tran.Rollback();
+                                Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
+                                throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}" + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
+                            }
                         }
                     }
                 }

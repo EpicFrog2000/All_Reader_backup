@@ -11,6 +11,27 @@ namespace All_Readeer
     {
         public static TimeSpan Try_Get_Date(string cellValue)
         {
+            if (cellValue.Contains(".") && !cellValue.Contains(":"))
+            {
+                cellValue = cellValue.Replace(".", ":");
+            }
+
+            if (cellValue.Contains(",") && !cellValue.Contains(":"))
+            {
+                cellValue = cellValue.Replace(",", ":");
+            }
+
+
+            if (cellValue.Contains(";") && !cellValue.Contains(":"))
+            {
+                cellValue = cellValue.Replace(";", ":");
+            }
+
+            if (!cellValue.Contains(':'))
+            {
+                cellValue += ":00";
+            }
+
             if (TimeSpan.TryParse(cellValue, out TimeSpan time))
             {
                 return time;
@@ -19,16 +40,6 @@ namespace All_Readeer
             if (DateTime.TryParse(cellValue, out DateTime dateTime))
             {
                 return dateTime.TimeOfDay;
-            }
-
-            if (TimeSpan.TryParse(cellValue.Replace(".", ":"), out TimeSpan timeWithColon))
-            {
-                return timeWithColon;
-            }
-
-            if (TimeSpan.TryParse(cellValue.Replace(";", ":"), out TimeSpan timeafterC))
-            {
-                return timeWithColon;
             }
 
             var parts = cellValue.Split(':');
@@ -60,25 +71,5 @@ namespace All_Readeer
 
             throw new FormatException("Nieprawidłowy format godziny");
         }
-        public static int Get_Month_Number_From_String(string input)
-        {
-            string[] months = new string[]
-            {
-            "styczeń", "luty", "marzec", "kwiecień", "maj", "czerwiec",
-            "lipiec", "sierpień", "wrzesień", "październik", "listopad", "grudzień"
-            };
-            input = input.ToLower();
-
-            for (int i = 0; i < months.Length; i++)
-            {
-                if (input.Contains(months[i]))
-                {
-                    return i + 1;
-                }
-            }
-
-            return 0;
-        }
-
     }
 }

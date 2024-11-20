@@ -1,12 +1,14 @@
 ﻿using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.Data.SqlClient;
+using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace All_Readeer
 {
-    internal class Karta_Pracy_Reader_v2
+    internal static class Karta_Pracy_Reader_v2
     {
         private class Pracownik
         {
@@ -161,7 +163,7 @@ namespace All_Readeer
             public decimal Godz_Odbior { get; set; } = 0;
             public DateTime Dzien_Odbior { get; set; } = DateTime.MinValue;
         }
-        private class CurrentPosition
+        private class Current_Position
         {
             public int row { get; set; } = 1;
             public int col { get; set; } = 1;
@@ -228,35 +230,22 @@ namespace All_Readeer
             public int dzien = 0;
             public RodzajNieobecnosci rodzaj_absencji = 0;
         }
-        private string Last_Mod_Osoba = "";
-        private DateTime Last_Mod_Time = DateTime.Now;
-        private string Optima_Connection_String = "";
-        private int Offset = 0;
-        public void Set_Optima_ConnectionString(string NewConnectionString)
+        public static void Process_Zakladka_For_Optima(IXLWorksheet worksheet)
         {
-            Optima_Connection_String = NewConnectionString;
-        }
-        public void Process_Zakladka_For_Optima(IXLWorksheet worksheet, string last_Mod_Osoba, DateTime last_Mod_Time, int Typ_Zakladki)
-        {
-            Offset = Typ_Zakladki;
             try
             {
-                Last_Mod_Osoba = last_Mod_Osoba;
-                Last_Mod_Time = last_Mod_Time;
                 List<Karta_Pracy> karty_pracy = [];
-                CurrentPosition pozycja = new();
-                Find_Karta(ref pozycja, worksheet);
-                Karta_Pracy karta_pracy = new();
-                karta_pracy.nazwa_pliku = Program.error_logger.Nazwa_Pliku;
-                karta_pracy.nr_zakladki = Program.error_logger.Nr_Zakladki;
-                Nieobecnosc nieobecnosc = new();
-                nieobecnosc.nazwa_pliku = Program.error_logger.Nazwa_Pliku;
-                nieobecnosc.nr_zakladki = Program.error_logger.Nr_Zakladki;
-                Get_Header_Karta_Info(pozycja, worksheet, ref karta_pracy);
-
-                Get_Dane_Dni(pozycja, worksheet, ref karta_pracy);
-                karty_pracy.Add(karta_pracy);
-                if(karty_pracy.Count > 0)
+                var tabelki = Find_Karty(worksheet);
+                foreach(var tabelka in tabelki)
+                {
+                    Karta_Pracy karta_pracy = new();
+                    karta_pracy.nazwa_pliku = Program.error_logger.Nazwa_Pliku;
+                    karta_pracy.nr_zakladki = Program.error_logger.Nr_Zakladki;
+                    Get_Header_Karta_Info(tabelka, worksheet, ref karta_pracy);
+                    Get_Dane_Dni(tabelka, worksheet, ref karta_pracy);
+                    karty_pracy.Add(karta_pracy);
+                }
+                if (karty_pracy.Count > 0)
                 {
                     foreach (var karta in karty_pracy)
                     {
@@ -270,45 +259,55 @@ namespace All_Readeer
                         }
                     }
                 }
-            }catch(Exception ex){
+            }
+            catch(Exception ex){
                 Console.WriteLine(ex.Message);
                 throw;
             }
         }
-        private void Find_Karta(ref CurrentPosition pozycja, IXLWorksheet worksheet)
+        private static List<Current_Position> Find_Karty(IXLWorksheet worksheet)
         {
-            pozycja.col = 2 - Offset;
-            bool found = false;
-            try
+            List<Current_Position> starty = new();
+            int Limiter = 1000;
+            int counter = 0;
+            foreach (var cell in worksheet.CellsUsed())
             {
-                foreach (var cell in worksheet.Column(pozycja.col).CellsUsed())
+                try
                 {
-                    if (cell.GetValue<string>().Equals("Dzień", StringComparison.OrdinalIgnoreCase))
+                    if (cell.HasFormula && !cell.Address.ToString()!.Equals(cell.FormulaA1))
                     {
-                        pozycja.row = cell.Address.RowNumber;
-                        found = true;
-                        return;
+                        counter++;
+                        if (counter > Limiter)
+                        {
+                            break;
+                        }
+                        continue;
+                    }
+                    if (cell.Value.ToString().Contains("Dzień"))
+                    {
+                        starty.Add(new Current_Position()
+                        {
+                            row = cell.Address.RowNumber,
+                            col = cell.Address.ColumnNumber
+                        });
                     }
                 }
-                if (!found)
+                catch
                 {
-                    throw new Exception("Nie znaleziono słowa 'Dzień' w kolumnie.");
+                    continue;
                 }
             }
-            catch
-            {
-                throw;
-            }
+            return starty;
         }
-        private void Get_Header_Karta_Info(CurrentPosition StartKarty, IXLWorksheet worksheet, ref Karta_Pracy karta_pracy)
+        private static void Get_Header_Karta_Info(Current_Position StartKarty, IXLWorksheet worksheet, ref Karta_Pracy karta_pracy)
         {
             //wczytaj date
-            var dane = worksheet.Cell(StartKarty.row - 3, StartKarty.col + 4).GetValue<string>().Trim().ToLower();
+            var dane = worksheet.Cell(StartKarty.row - 3, StartKarty.col + 4).GetFormattedString().Trim().ToLower();
             for (int i = 0; i < 12; i++)
             {
                 if (string.IsNullOrEmpty(dane))
                 {
-                    dane = worksheet.Cell(StartKarty.row - 3, StartKarty.col + 4 + i).GetValue<string>().Trim().ToLower();
+                    dane = worksheet.Cell(StartKarty.row - 3, StartKarty.col + 4 + i).GetFormattedString().Trim().ToLower();
                 }
                 else
                 {
@@ -322,7 +321,8 @@ namespace All_Readeer
                         dane = dane.Substring(0, dane.Length - 2).Trim();
                     }
 
-                    if (DateTime.TryParse(dane, out DateTime parsedData))
+                    string[] dateFormats = { "dd.MM.yyyy" };
+                    if (DateTime.TryParseExact(dane, dateFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedData))
                     {
                         karta_pracy.miesiac = parsedData.Month;
                         karta_pracy.rok = parsedData.Year;
@@ -346,7 +346,7 @@ namespace All_Readeer
                                         karta_pracy.rok = rok;
                                     }
                                 }
-                                catch{}
+                                catch { }
                             }
                             else if (dane.Split(" ").Length == 3)
                             {
@@ -359,11 +359,11 @@ namespace All_Readeer
                                         karta_pracy.rok = rok;
                                     }
                                 }
-                                catch{}
+                                catch { }
                             }
                             else
                             {
-                                if(dane.Split(" ").Count() > 1)
+                                if (dane.Split(" ").Count() > 1)
                                 {
                                     //wez 2 od tylu
                                     var ndata = dane.Split(" ");
@@ -375,20 +375,19 @@ namespace All_Readeer
                                             karta_pracy.rok = rok;
                                         }
                                     }
-                                    catch{}
+                                    catch { }
                                 }
                             }
                         }
                     }
                     if (karta_pracy.miesiac == 0 || karta_pracy.rok == 0)
                     {
-                        dane = worksheet.Cell(StartKarty.row - 4, StartKarty.col + 4 + i - 1).GetValue<string>().Trim().ToLower();
-                        if (!string.IsNullOrEmpty(dane) && DateTime.TryParse(dane, out DateTime parsedData2))
+                        dane = worksheet.Cell(StartKarty.row - 4, StartKarty.col + 4 + i - 1).GetFormattedString().Trim().ToLower();
+                        if (!string.IsNullOrEmpty(dane) && DateTime.TryParseExact(dane, dateFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedData2))
                         {
                             karta_pracy.miesiac = parsedData2.Month;
                             karta_pracy.rok = parsedData2.Year;
                         }
-
                     }
 
                     if (karta_pracy.miesiac != 0 && karta_pracy.rok != 0)
@@ -399,45 +398,22 @@ namespace All_Readeer
             }
             if (karta_pracy.miesiac == 0 || karta_pracy.rok == 0)
             {
-                Program.error_logger.New_Error(dane, "data", StartKarty.col + 11, StartKarty.row - 3, "Nie wykryto daty w pliku");
+                Program.error_logger.New_Error(dane, "data", StartKarty.col + 11, StartKarty.row - 3, $"Nie wykryto daty w pliku. Oczekiwana dat między kolumna[{StartKarty.col + 4}] rząd[{StartKarty.row - 3}] a kolumna[{StartKarty.col + 4 + 11}] rząd[{StartKarty.row - 3}]");
                 throw new Exception(Program.error_logger.Get_Error_String());
             }
 
-
             //wczytaj nazwisko i imie
-            string[] wordsToRemove = { "IMIĘ:", "IMIE:", "NAZWISKO:", "NAZWISKO", " IMIE", "IMIĘ" };
-            dane = worksheet.Cell(StartKarty.row - 2, StartKarty.col).GetValue<string>().Trim().Replace("  ", " ");
-            for (int i = 0; i < 6; i++)
             {
-                foreach (var word in wordsToRemove)
-                {
-                    var pattern = $@"\b{Regex.Escape(word)}\b";
-                    dane = Regex.Replace(dane, pattern, "", RegexOptions.IgnoreCase);
-                }
-
-                dane = Regex.Replace(dane, @"\s+", " ").Trim();
-                if (dane.Contains("KARTA PRACY:"))
-                {
-                    dane = dane.Replace("KARTA PRACY:", "").Trim();
-                }
-                if (!string.IsNullOrEmpty(dane))
-                {
-                    break;
-                }
-                else
-                {
-                    dane = worksheet.Cell(StartKarty.row - 2, StartKarty.col + i).GetValue<string>().Trim().Replace("  ", " ");
-                }
-            }
-            if (string.IsNullOrEmpty(dane))
-            {
-                dane = worksheet.Cell(StartKarty.row - 3, StartKarty.col).GetValue<string>().Trim().Replace("  ", " ");
+                string[] wordsToRemove = { "IMIĘ:", "IMIE:", "NAZWISKO:", "NAZWISKO", " IMIE", "IMIĘ" };
+                dane = worksheet.Cell(StartKarty.row - 2, StartKarty.col).GetFormattedString().Trim().Replace("  ", " ");
                 for (int i = 0; i < 6; i++)
                 {
                     foreach (var word in wordsToRemove)
                     {
-                        dane = dane.Replace(word, "", StringComparison.OrdinalIgnoreCase);
+                        var pattern = $@"\b{Regex.Escape(word)}\b";
+                        dane = Regex.Replace(dane, pattern, "", RegexOptions.IgnoreCase);
                     }
+
                     dane = Regex.Replace(dane, @"\s+", " ").Trim();
                     if (dane.Contains("KARTA PRACY:"))
                     {
@@ -449,54 +425,71 @@ namespace All_Readeer
                     }
                     else
                     {
-                        dane = worksheet.Cell(StartKarty.row - 3, StartKarty.col + i).GetValue<string>().Trim().Replace("  ", " ");
+                        dane = worksheet.Cell(StartKarty.row - 2, StartKarty.col + i).GetFormattedString().Trim().Replace("  ", " ");
                     }
                 }
-            }
-
-
-            if (string.IsNullOrEmpty(dane))
-            {
-                Program.error_logger.New_Error(dane, "nazwisko i imie", StartKarty.col, StartKarty.row - 2, "Nie wykryto nazwiska i imienia w pliku");
-                throw new Exception(Program.error_logger.Get_Error_String());
-            }
-            foreach (var word in wordsToRemove)
-            {
-                dane = dane.Replace(word, "", StringComparison.OrdinalIgnoreCase);
-            }
-            dane = Regex.Replace(dane, @"\s+", " ").Trim();
-            if (dane.Contains("KARTA PRACY:"))
-            {
-                dane = dane.Replace("KARTA PRACY:", "").Trim();
-            }
-            if (string.IsNullOrEmpty(dane))
-            {
-                Program.error_logger.New_Error(dane, "nazwisko i imie", StartKarty.col, StartKarty.row -2, "Zły format pola nazwisko i imie");
-                throw new Exception(Program.error_logger.Get_Error_String());
-            }
-            else
-            {
-                try
+                if (string.IsNullOrEmpty(dane))
                 {
-                    karta_pracy.pracownik.Nazwisko = dane.Trim().Split(' ')[0];
-                    karta_pracy.pracownik.Imie = dane.Trim().Split(' ')[1];
+                    dane = worksheet.Cell(StartKarty.row - 3, StartKarty.col).GetFormattedString().Trim().Replace("  ", " ");
+                    for (int i = 0; i < 6; i++)
+                    {
+                        foreach (var word in wordsToRemove)
+                        {
+                            dane = dane.Replace(word, "", StringComparison.OrdinalIgnoreCase);
+                        }
+                        dane = Regex.Replace(dane, @"\s+", " ").Trim();
+                        if (dane.Contains("KARTA PRACY:"))
+                        {
+                            dane = dane.Replace("KARTA PRACY:", "").Trim();
+                        }
+                        if (!string.IsNullOrEmpty(dane))
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            dane = worksheet.Cell(StartKarty.row - 3, StartKarty.col + i).GetFormattedString().Trim().Replace("  ", " ");
+                        }
+                    }
                 }
-                catch
+                foreach (var word in wordsToRemove)
                 {
-                    Program.error_logger.New_Error(dane, "nazwisko i imie", StartKarty.col, StartKarty.row - 2, "Zły format pola nazwisko i imie");
+                    dane = dane.Replace(word, "", StringComparison.OrdinalIgnoreCase);
+                }
+                dane = Regex.Replace(dane, @"\s+", " ").Trim();
+                if (dane.Contains("KARTA PRACY:"))
+                {
+                    dane = dane.Replace("KARTA PRACY:", "").Trim();
+                }
+                if (string.IsNullOrEmpty(dane))
+                {
+                    Program.error_logger.New_Error(dane, "nazwisko i imie", StartKarty.col, StartKarty.row - 2, $"Nie znaleziono pola z nazwiskiem i imieniem między kolumna[{StartKarty.col}] rząd[{StartKarty.row - 2}] a kolumna[{StartKarty.col + 5}] rząd[{StartKarty.row - 2}]");
+                    throw new Exception(Program.error_logger.Get_Error_String());
+                }
+                else
+                {
+                    try
+                    {
+                        karta_pracy.pracownik.Nazwisko = dane.Trim().Split(' ')[0];
+                        karta_pracy.pracownik.Imie = dane.Trim().Split(' ')[1];
+                    }
+                    catch
+                    {
+                        Program.error_logger.New_Error(dane, "nazwisko i imie", StartKarty.col, StartKarty.row - 2, "Zły format pola nazwisko i imie. Powinno być: KARTA PRACY: Nazwisko Imie");
+                        throw new Exception(Program.error_logger.Get_Error_String());
+                    }
+                }
+                if (karta_pracy.pracownik.Nazwisko == null || karta_pracy.pracownik.Imie == null)
+                {
+                    Program.error_logger.New_Error(dane, "nazwisko i imie", StartKarty.col, StartKarty.row - 2, "Zły format pola nazwisko i imie. Powinno być: KARTA PRACY: Nazwisko Imie");
                     throw new Exception(Program.error_logger.Get_Error_String());
                 }
             }
-            if (karta_pracy.pracownik.Nazwisko == null || karta_pracy.pracownik.Imie == null)
-            {
-                Program.error_logger.New_Error(dane, "nazwisko i imie", StartKarty.col, StartKarty.row -2, "Zły format pola nazwisko i imie");
-                throw new Exception(Program.error_logger.Get_Error_String());
-            }
         }
-        private void Get_Dane_Dni(CurrentPosition StartKarty, IXLWorksheet worksheet, ref Karta_Pracy karta_pracy)
+        private static void Get_Dane_Dni(Current_Position StartKarty, IXLWorksheet worksheet, ref Karta_Pracy karta_pracy)
         {
             StartKarty.row += 3;
-            var NrDnia = worksheet.Cell(StartKarty.row, StartKarty.col).GetValue<string>().Trim();
+            var NrDnia = worksheet.Cell(StartKarty.row, StartKarty.col).GetFormattedString().Trim();
             while (!string.IsNullOrEmpty(NrDnia))
             {
                 Dane_Dnia dzien = new();
@@ -530,7 +523,7 @@ namespace All_Readeer
                         }
                         else
                         {
-                            Program.error_logger.New_Error(Cell_Value, "liczba godzin odbioru za prace w nadgodz", StartKarty.col + 5, StartKarty.row, "Niepoprawnie wpisane dane");
+                            Program.error_logger.New_Error(Cell_Value, "liczba godzin odbioru za prace w nadgodz", StartKarty.col + 5, StartKarty.row, "Niepoprawnie wpisana liczba");
                             throw new Exception(Program.error_logger.Get_Error_String());
                         }
                     }
@@ -540,12 +533,10 @@ namespace All_Readeer
                     throw;
                 }
 
-
-
                 //try get nieobecność:
                 try
                 {
-                    Cell_Value = worksheet.Cell(StartKarty.row, StartKarty.col + 3).GetValue<string>().Trim();
+                    Cell_Value = worksheet.Cell(StartKarty.row, StartKarty.col + 3).GetFormattedString().Trim();
                     if (!string.IsNullOrEmpty(Cell_Value))
                     {
                         Nieobecnosc nieobecnosc = new();
@@ -556,6 +547,8 @@ namespace All_Readeer
                             nieobecnosc.rok = karta_pracy.rok;
                             nieobecnosc.miesiac = karta_pracy.miesiac;
                             nieobecnosc.dzien = dzien.dzien;
+                            nieobecnosc.nazwa_pliku = Program.error_logger.Nazwa_Pliku;
+                            nieobecnosc.nr_zakladki = Program.error_logger.Nr_Zakladki;
                         }
                         else
                         {
@@ -564,7 +557,7 @@ namespace All_Readeer
                         }
                         karta_pracy.ListaNieobecnosci.Add(nieobecnosc);
                         StartKarty.row++;
-                        NrDnia = worksheet.Cell(StartKarty.row, StartKarty.col).GetValue<string>().Trim();
+                        NrDnia = worksheet.Cell(StartKarty.row, StartKarty.col).GetFormattedString().Trim();
                         continue;
                     }
                 }
@@ -576,56 +569,72 @@ namespace All_Readeer
                 // godz rozpoczecia
                 try
                 {
-                    Cell_Value = worksheet.Cell(StartKarty.row, StartKarty.col + 1).GetValue<string>().Trim();
+                    Cell_Value = worksheet.Cell(StartKarty.row, StartKarty.col + 1).GetFormattedString().Trim();
                     if (!string.IsNullOrEmpty(Cell_Value))
                     {
                         dzien.godz_rozp_pracy = Reader.Try_Get_Date(Cell_Value);
                     }
                 }
-                catch(Exception ex)
+                catch
                 {
-                    Program.error_logger.New_Error(Cell_Value, "Godzina_Rozpoczęcia_Pracy", StartKarty.col + 1, StartKarty.row, ex.Message);
+                    Program.error_logger.New_Error(Cell_Value, "Godzina Rozpoczęcia Pracy", StartKarty.col + 1, StartKarty.row, "Powinna byc godzina w formacie np. 08:00");
                     throw new Exception(Program.error_logger.Get_Error_String());
                 }
 
                 // godz zakonczenia
                 try
                 {
-                    Cell_Value = worksheet.Cell(StartKarty.row, StartKarty.col + 2).GetValue<string>().Trim();
+                    Cell_Value = worksheet.Cell(StartKarty.row, StartKarty.col + 2).GetFormattedString().Trim();
                     if (!string.IsNullOrEmpty(Cell_Value))
                     {
                         dzien.godz_zakoncz_pracy = Reader.Try_Get_Date(Cell_Value);
                     }
                 }
-                catch(Exception ex)
+                catch
                 {
-                    Program.error_logger.New_Error(Cell_Value, "Godzina_Rozpoczęcia_Pracy", StartKarty.col + 1, StartKarty.row, ex.Message);
+                    Program.error_logger.New_Error(Cell_Value, "Godzina Zakończenia Pracy", StartKarty.col + 1, StartKarty.row, "Powinna byc godzina w formacie np. 08:00");
                     throw new Exception(Program.error_logger.Get_Error_String());
                 }
 
                 //get godz_nad 50
-                Cell_Value = worksheet.Cell(StartKarty.row, StartKarty.col + 9).GetValue<string>().Trim();
+                Cell_Value = worksheet.Cell(StartKarty.row, StartKarty.col + 9).GetFormattedString().Trim();
                 if (!string.IsNullOrEmpty(Cell_Value))
                 {
-                    dzien.Godz_nadl_platne_z_dod_50 = decimal.Parse(Cell_Value);
+                    if (decimal.TryParse(Cell_Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var godzNadlPlatne))
+                    {
+                        dzien.Godz_nadl_platne_z_dod_50 = godzNadlPlatne;
+                    }
+                    else
+                    {
+                        Program.error_logger.New_Error(Cell_Value, "Liczba godzin z dodatkiem 50%", StartKarty.col + 1, StartKarty.row, "Niepoprawny format w polu");
+                        throw new Exception(Program.error_logger.Get_Error_String());
+                    }
                 }
                 //get godz_nad 100
-                Cell_Value = worksheet.Cell(StartKarty.row, StartKarty.col + 10).GetValue<string>().Trim();
+                Cell_Value = worksheet.Cell(StartKarty.row, StartKarty.col + 10).GetFormattedString().Trim();
                 if (!string.IsNullOrEmpty(Cell_Value))
                 {
-                    dzien.Godz_nadl_platne_z_dod_100 = decimal.Parse(Cell_Value);
+                    if (decimal.TryParse(Cell_Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var godzNadlPlatne))
+                    {
+                        dzien.Godz_nadl_platne_z_dod_100 = godzNadlPlatne;
+                    }
+                    else
+                    {
+                        Program.error_logger.New_Error(Cell_Value, "Liczba godzin z dodatkiem 100%", StartKarty.col + 1, StartKarty.row, "Niepoprawny format w polu");
+                        throw new Exception(Program.error_logger.Get_Error_String());
+                    }
                 }
+
                 if (dzien.godz_rozp_pracy != TimeSpan.Zero && dzien.godz_zakoncz_pracy != TimeSpan.Zero)
                 {
                     karta_pracy.dane_dni.Add(dzien);
                 }
                 StartKarty.row++;
-                NrDnia = worksheet.Cell(StartKarty.row, StartKarty.col).GetValue<string>().Trim();
+                NrDnia = worksheet.Cell(StartKarty.row, StartKarty.col).GetFormattedString().Trim();
             }
         }
-        private void Wpierdol_Obecnosci_do_Optimy(Karta_Pracy karta, SqlTransaction tran, SqlConnection connection)
+        private static void Dodaj_Obecnosci_do_Optimy(Karta_Pracy karta, SqlTransaction tran, SqlConnection connection)
         {
-
             foreach (var dane_Dni in karta.dane_dni)
             {
                 try
@@ -641,8 +650,7 @@ namespace All_Readeer
                     {
                         czasPrzepracowany = (dane_Dni.godz_zakoncz_pracy - dane_Dni.godz_rozp_pracy).TotalHours;
                     }
-                    double czasPodstawowy = czasPrzepracowany - (double)(dane_Dni.Godz_nadl_platne_z_dod_50 + dane_Dni.Godz_nadl_platne_z_dod_100);
-
+                    double czasPodstawowy = czasPrzepracowany - ((double)(dane_Dni.Godz_nadl_platne_z_dod_50 + dane_Dni.Godz_nadl_platne_z_dod_100));
                     bool czy_next_dzien = false;
 
                     // zrob to co ponizej ale dla wszystkich 3 xdd
@@ -666,6 +674,23 @@ namespace All_Readeer
                                 insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", karta.pracownik.Nazwisko);
                                 insertCmd.Parameters.AddWithValue("@PracownikImieInsert", karta.pracownik.Imie);
                                 insertCmd.Parameters.AddWithValue("@TypPracy", 2); // podstawowy
+                                if (Program.error_logger.Last_Mod_Osoba.Length > 20)
+                                {
+                                    insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 20));
+                                }
+                                else
+                                {
+                                    insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba);
+                                }
+                                if (Program.error_logger.Last_Mod_Osoba.Length > 50)
+                                {
+                                    insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 50));
+                                }
+                                else
+                                {
+                                    insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba);
+                                }
+                                insertCmd.Parameters.AddWithValue("@DataMod", Program.error_logger.Last_Mod_Time);
                                 insertCmd.ExecuteScalar();
                             }
                             // insert po północy
@@ -684,6 +709,23 @@ namespace All_Readeer
                                 insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", karta.pracownik.Nazwisko);
                                 insertCmd.Parameters.AddWithValue("@PracownikImieInsert", karta.pracownik.Imie);
                                 insertCmd.Parameters.AddWithValue("@TypPracy", 2); // podstawowy
+                                if (Program.error_logger.Last_Mod_Osoba.Length > 20)
+                                {
+                                    insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 20));
+                                }
+                                else
+                                {
+                                    insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba);
+                                }
+                                if (Program.error_logger.Last_Mod_Osoba.Length > 50)
+                                {
+                                    insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 50));
+                                }
+                                else
+                                {
+                                    insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba);
+                                }
+                                insertCmd.Parameters.AddWithValue("@DataMod", Program.error_logger.Last_Mod_Time);
                                 insertCmd.ExecuteScalar();
                             }
                         }
@@ -702,6 +744,23 @@ namespace All_Readeer
                                 insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", karta.pracownik.Nazwisko);
                                 insertCmd.Parameters.AddWithValue("@PracownikImieInsert", karta.pracownik.Imie);
                                 insertCmd.Parameters.AddWithValue("@TypPracy", 2); // podstawowy
+                                if (Program.error_logger.Last_Mod_Osoba.Length > 20)
+                                {
+                                    insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 20));
+                                }
+                                else
+                                {
+                                    insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba);
+                                }
+                                if (Program.error_logger.Last_Mod_Osoba.Length > 50)
+                                {
+                                    insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 50));
+                                }
+                                else
+                                {
+                                    insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba);
+                                }
+                                insertCmd.Parameters.AddWithValue("@DataMod", Program.error_logger.Last_Mod_Time);
                                 insertCmd.ExecuteScalar();
                             }
                         }
@@ -733,6 +792,23 @@ namespace All_Readeer
                                     insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", karta.pracownik.Nazwisko);
                                     insertCmd.Parameters.AddWithValue("@PracownikImieInsert", karta.pracownik.Imie);
                                     insertCmd.Parameters.AddWithValue("@TypPracy", 8); // 50%
+                                    if (Program.error_logger.Last_Mod_Osoba.Length > 20)
+                                    {
+                                        insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 20));
+                                    }
+                                    else
+                                    {
+                                        insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba);
+                                    }
+                                    if (Program.error_logger.Last_Mod_Osoba.Length > 50)
+                                    {
+                                        insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 50));
+                                    }
+                                    else
+                                    {
+                                        insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba);
+                                    }
+                                    insertCmd.Parameters.AddWithValue("@DataMod", Program.error_logger.Last_Mod_Time);
                                     insertCmd.ExecuteScalar();
                                 }
                             }
@@ -754,6 +830,23 @@ namespace All_Readeer
                                     insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", karta.pracownik.Nazwisko);
                                     insertCmd.Parameters.AddWithValue("@PracownikImieInsert", karta.pracownik.Imie);
                                     insertCmd.Parameters.AddWithValue("@TypPracy", 8); // 50%
+                                    if (Program.error_logger.Last_Mod_Osoba.Length > 20)
+                                    {
+                                        insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 20));
+                                    }
+                                    else
+                                    {
+                                        insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba);
+                                    }
+                                    if (Program.error_logger.Last_Mod_Osoba.Length > 50)
+                                    {
+                                        insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 50));
+                                    }
+                                    else
+                                    {
+                                        insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba);
+                                    }
+                                    insertCmd.Parameters.AddWithValue("@DataMod", Program.error_logger.Last_Mod_Time);
                                     insertCmd.ExecuteScalar();
                                 }
                             }
@@ -776,6 +869,23 @@ namespace All_Readeer
                                     insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", karta.pracownik.Nazwisko);
                                     insertCmd.Parameters.AddWithValue("@PracownikImieInsert", karta.pracownik.Imie);
                                     insertCmd.Parameters.AddWithValue("@TypPracy", 8); // 50%
+                                    if (Program.error_logger.Last_Mod_Osoba.Length > 20)
+                                    {
+                                        insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 20));
+                                    }
+                                    else
+                                    {
+                                        insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba);
+                                    }
+                                    if (Program.error_logger.Last_Mod_Osoba.Length > 50)
+                                    {
+                                        insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 50));
+                                    }
+                                    else
+                                    {
+                                        insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba);
+                                    }
+                                    insertCmd.Parameters.AddWithValue("@DataMod", Program.error_logger.Last_Mod_Time);
                                     insertCmd.ExecuteScalar();
                                 }
                             }
@@ -808,6 +918,23 @@ namespace All_Readeer
                                     insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", karta.pracownik.Nazwisko);
                                     insertCmd.Parameters.AddWithValue("@PracownikImieInsert", karta.pracownik.Imie);
                                     insertCmd.Parameters.AddWithValue("@TypPracy", 6); // 100%
+                                    if (Program.error_logger.Last_Mod_Osoba.Length > 20)
+                                    {
+                                        insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 20));
+                                    }
+                                    else
+                                    {
+                                        insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba);
+                                    }
+                                    if (Program.error_logger.Last_Mod_Osoba.Length > 50)
+                                    {
+                                        insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 50));
+                                    }
+                                    else
+                                    {
+                                        insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba);
+                                    }
+                                    insertCmd.Parameters.AddWithValue("@DataMod", Program.error_logger.Last_Mod_Time);
                                     insertCmd.ExecuteScalar();
                                 }
                             }
@@ -829,6 +956,23 @@ namespace All_Readeer
                                     insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", karta.pracownik.Nazwisko);
                                     insertCmd.Parameters.AddWithValue("@PracownikImieInsert", karta.pracownik.Imie);
                                     insertCmd.Parameters.AddWithValue("@TypPracy", 6); // 100%
+                                    if (Program.error_logger.Last_Mod_Osoba.Length > 20)
+                                    {
+                                        insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 20));
+                                    }
+                                    else
+                                    {
+                                        insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba);
+                                    }
+                                    if (Program.error_logger.Last_Mod_Osoba.Length > 50)
+                                    {
+                                        insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 50));
+                                    }
+                                    else
+                                    {
+                                        insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba);
+                                    }
+                                    insertCmd.Parameters.AddWithValue("@DataMod", Program.error_logger.Last_Mod_Time);
                                     insertCmd.ExecuteScalar();
                                 }
                             }
@@ -851,19 +995,34 @@ namespace All_Readeer
                                     insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", karta.pracownik.Nazwisko);
                                     insertCmd.Parameters.AddWithValue("@PracownikImieInsert", karta.pracownik.Imie);
                                     insertCmd.Parameters.AddWithValue("@TypPracy", 6); // 100%
+                                    if (Program.error_logger.Last_Mod_Osoba.Length > 20)
+                                    {
+                                        insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 20));
+                                    }
+                                    else
+                                    {
+                                        insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba);
+                                    }
+                                    if (Program.error_logger.Last_Mod_Osoba.Length > 50)
+                                    {
+                                        insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 50));
+                                    }
+                                    else
+                                    {
+                                        insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba);
+                                    }
+                                    insertCmd.Parameters.AddWithValue("@DataMod", Program.error_logger.Last_Mod_Time);
                                     insertCmd.ExecuteScalar();
                                 }
                             }
                         }
                     }
-
-
                 }
                 catch (SqlException ex)
                 {
                     tran.Rollback();
-                    Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
-                    throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
+                    Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
+                    throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}" + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
                 }
                 catch (FormatException)
                 {
@@ -872,12 +1031,12 @@ namespace All_Readeer
                 catch (Exception ex)
                 {
                     tran.Rollback();
-                    Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
-                    throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
+                    Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
+                    throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}" + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
                 }
             }
         }
-        private void Wjeb_Nieobecnosci_do_Optimy(List<Nieobecnosc> ListaNieobecności, SqlTransaction tran, SqlConnection connection)
+        private static void Dodaj_Nieobecnosci_do_Optimy(List<Nieobecnosc> ListaNieobecności, SqlTransaction tran, SqlConnection connection)
         {
             List<List<Nieobecnosc>> Nieobecnosci = Podziel_Niobecnosci_Na_Osobne(ListaNieobecności);
             foreach (var ListaNieo in Nieobecnosci)
@@ -910,31 +1069,31 @@ namespace All_Readeer
                         insertCmd.Parameters.Add("@DataOd", SqlDbType.DateTime).Value = dataniobecnoscistart;
                         insertCmd.Parameters.Add("@BaseDate", SqlDbType.DateTime).Value = dataBazowa;
                         insertCmd.Parameters.Add("@DataDo", SqlDbType.DateTime).Value = dataniobecnosciend;
-                        if (Last_Mod_Osoba.Length > 20)
+                        if (Program.error_logger.Last_Mod_Osoba.Length > 20)
                         {
-                            insertCmd.Parameters.AddWithValue("@ImieMod", Last_Mod_Osoba.Substring(0, 20));
+                            insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 20));
                         }
                         else
                         {
-                            insertCmd.Parameters.AddWithValue("@ImieMod", Last_Mod_Osoba);
+                            insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba);
                         }
-                        if (Last_Mod_Osoba.Length > 50)
+                        if (Program.error_logger.Last_Mod_Osoba.Length > 50)
                         {
-                            insertCmd.Parameters.AddWithValue("@NazwiskoMod", Last_Mod_Osoba.Substring(0, 50));
+                            insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 50));
                         }
                         else
                         {
-                            insertCmd.Parameters.AddWithValue("@NazwiskoMod", Last_Mod_Osoba);
+                            insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba);
                         }
-                        insertCmd.Parameters.AddWithValue("@DataMod", Last_Mod_Time);
+                        insertCmd.Parameters.AddWithValue("@DataMod", Program.error_logger.Last_Mod_Time);
                         insertCmd.ExecuteScalar();
                     }
                 }
                 catch (SqlException ex)
                 {
                     tran.Rollback();
-                    Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
-                    throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
+                    Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
+                    throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}" + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
                 }
                 catch (FormatException)
                 {
@@ -947,13 +1106,13 @@ namespace All_Readeer
                     {
                         throw;
                     }
-                    Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
-                    throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
+                    Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
+                    throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}" + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
                 }
             }
 
         }
-        private string Dopasuj_Nieobecnosc(RodzajNieobecnosci rodzaj)
+        private static string Dopasuj_Nieobecnosc(RodzajNieobecnosci rodzaj)
         {
             return rodzaj switch
             {
@@ -982,7 +1141,7 @@ namespace All_Readeer
                 _ => "Nieobecność (B2B)"
             };
         }
-        private int Dopasuj_Przyczyne(RodzajNieobecnosci rodzaj)
+        private static int Dopasuj_Przyczyne(RodzajNieobecnosci rodzaj)
         {
             return rodzaj switch
             {
@@ -1008,7 +1167,7 @@ namespace All_Readeer
                 _ => 9                             // Nie dotyczy dla pozostałych przypadków
             };
         }
-        private List<List<Nieobecnosc>> Podziel_Niobecnosci_Na_Osobne(List<Nieobecnosc> listaNieobecnosci)
+        private static List<List<Nieobecnosc>> Podziel_Niobecnosci_Na_Osobne(List<Nieobecnosc> listaNieobecnosci)
         {
             List<List<Nieobecnosc>> listaOsobnychNieobecnosci = new();
             List<Nieobecnosc> currentGroup = new();
@@ -1033,31 +1192,29 @@ namespace All_Readeer
 
             return listaOsobnychNieobecnosci;
         }
-        private void Dodaj_Dane_Do_Optimy(Karta_Pracy karta)
+        private static void Dodaj_Dane_Do_Optimy(Karta_Pracy karta)
         {
             try
             {
-                using (SqlConnection connection = new SqlConnection(Optima_Connection_String))
+                using (SqlConnection connection = new SqlConnection(Program.Optima_Conection_String))
                 {
                     connection.Open();
                     SqlTransaction tran = connection.BeginTransaction();
 
-                    Dodaj_Te_No_Całe_Te_Eeeeee_A_No_Godz_Odbior(karta, tran, connection);
+                    Dodaj_Godz_Odbior_Do_Optimy(karta, tran, connection);
                     Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine($"Poprawnie dodawno odbiory nadgodzin z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
+                    Console.WriteLine($"Poprawnie dodawno odbiory nadgodzin z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
                     Console.ForegroundColor = ConsoleColor.White;
 
-                    Wpierdol_Obecnosci_do_Optimy(karta, tran, connection);
+                    Dodaj_Obecnosci_do_Optimy(karta, tran, connection);
                     Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine($"Poprawnie dodawno obecnosci z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
+                    Console.WriteLine($"Poprawnie dodawno obecnosci z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
                     Console.ForegroundColor = ConsoleColor.White;
 
-                    Wjeb_Nieobecnosci_do_Optimy(karta.ListaNieobecnosci, tran, connection);
+                    Dodaj_Nieobecnosci_do_Optimy(karta.ListaNieobecnosci, tran, connection);
                     Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine($"Poprawnie dodawno nieobecnosci z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
+                    Console.WriteLine($"Poprawnie dodawno nieobecnosci z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
                     Console.ForegroundColor = ConsoleColor.White;
-
-
 
                     tran.Commit();
                     connection.Close();
@@ -1068,7 +1225,7 @@ namespace All_Readeer
                 throw;
             }
         }
-        private int Ile_Dni_Roboczych(List<Nieobecnosc> listaNieobecnosci)
+        private static int Ile_Dni_Roboczych(List<Nieobecnosc> listaNieobecnosci)
         {
             int total = 0;
             foreach (var nieobecnosc in listaNieobecnosci)
@@ -1081,7 +1238,7 @@ namespace All_Readeer
             }
             return total;
         }
-        private (TimeSpan, TimeSpan, TimeSpan, TimeSpan, TimeSpan, TimeSpan) Oblicz_Czas_Z_Dodatkiem(Dane_Dnia dane_Dni)
+        private static (TimeSpan, TimeSpan, TimeSpan, TimeSpan, TimeSpan, TimeSpan) Oblicz_Czas_Z_Dodatkiem(Dane_Dnia dane_Dni)
         {
             TimeSpan godzRozpPracy = dane_Dni.godz_rozp_pracy;
             TimeSpan godzZakonczPracy = dane_Dni.godz_zakoncz_pracy;
@@ -1117,7 +1274,7 @@ namespace All_Readeer
                 new TimeSpan((int)startNadl100.TotalHours % 24, startNadl100.Minutes, startNadl100.Seconds),
                 new TimeSpan((int)endNadl100.TotalHours % 24, endNadl100.Minutes, endNadl100.Seconds));
         }
-        private void Dodaj_Te_No_Całe_Te_Eeeeee_A_No_Godz_Odbior(Karta_Pracy karta, SqlTransaction tran, SqlConnection connection)
+        private static void Dodaj_Godz_Odbior_Do_Optimy(Karta_Pracy karta, SqlTransaction tran, SqlConnection connection)
         {
             var sqlInsertOdbNadg = @"DECLARE @id int;
 IF((select DISTINCT COUNT(PRI_PraId) from cdn.Pracidx WHERE PRI_Imie1 = @PracownikImieInsert and PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Typ = 1) > 1)
@@ -1234,6 +1391,23 @@ INSERT INTO CDN.PracPracaDniGodz
                             insertCmd.Parameters.AddWithValue("@PracownikImieInsert", karta.pracownik.Imie);
                             insertCmd.Parameters.AddWithValue("@TypPracy", 2); // podstawowy
                             insertCmd.Parameters.AddWithValue("@TypNadg", 4); // W.PŁ
+                            if (Program.error_logger.Last_Mod_Osoba.Length > 20)
+                            {
+                                insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 20));
+                            }
+                            else
+                            {
+                                insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba);
+                            }
+                            if (Program.error_logger.Last_Mod_Osoba.Length > 50)
+                            {
+                                insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 50));
+                            }
+                            else
+                            {
+                                insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba);
+                            }
+                            insertCmd.Parameters.AddWithValue("@DataMod", Program.error_logger.Last_Mod_Time);
                             insertCmd.ExecuteScalar();
                         }
                     }
@@ -1241,8 +1415,8 @@ INSERT INTO CDN.PracPracaDniGodz
                 catch (SqlException ex)
                 {
                     tran.Rollback();
-                    Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
-                    throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
+                    Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
+                    throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}" + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
                 }
                 catch (FormatException)
                 {
@@ -1251,8 +1425,8 @@ INSERT INTO CDN.PracPracaDniGodz
                 catch (Exception ex)
                 {
                     tran.Rollback();
-                    Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
-                    throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
+                    Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
+                    throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}" + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
                 }
             }
         }

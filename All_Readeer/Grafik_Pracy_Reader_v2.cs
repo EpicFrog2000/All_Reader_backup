@@ -1,12 +1,14 @@
 ﻿using ClosedXML.Excel;
 using Microsoft.Data.SqlClient;
+using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics.Metrics;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace All_Readeer
 {
-    internal class Grafik_Pracy_Reader_v2
+    internal static class Grafik_Pracy_Reader_v2
     {
         private class Pracownik
         {
@@ -21,6 +23,7 @@ namespace All_Readeer
             public int miesiac { get; set; } = 0;
             public List<Dane_Dni> dane_dni = [];
             public List<Legenda> legenda = [];
+            public List<Nieobecnosci> ListaNieobecnosci= [];
             public void Set_Miesiac(string wartosc)
             {
 
@@ -97,7 +100,7 @@ namespace All_Readeer
             public string kod = "";
             public string opis = "";
         }
-        private class CurrentPosition
+        private class Current_Position
         {
             public int row { get; set; } = 1;
             public int col { get; set; } = 1;
@@ -111,31 +114,24 @@ namespace All_Readeer
             public string nazwa_pliku = "";
             public int nr_zakladki = 0;
         }
-        private string Last_Mod_Osoba = "";
-        private DateTime Last_Mod_Time = DateTime.Now;
-        private string Optima_Connection_String = "";
-        public void Set_Optima_ConnectionString(string NewConnectionString)
-        {
-            if (string.IsNullOrEmpty(NewConnectionString))
-            {
-                Program.error_logger.New_Custom_Error("Error: Empty Connection string in gv2");
-                Console.WriteLine("Error: Empty Connection string in gv2");
-                throw new Exception("Error: Empty Connection string in gv2");
-            }
-            Optima_Connection_String = NewConnectionString;
-        }
-        public void Process_Zakladka_For_Optima(IXLWorksheet worksheet, string last_Mod_Osoba, DateTime last_Mod_Time)
+        public static void Process_Zakladka_For_Optima(IXLWorksheet worksheet)
         {
             try
             {
-                Grafik grafik = new Grafik();
-                grafik.nazwa_pliku = Program.error_logger.Nazwa_Pliku;
-                grafik.nr_zakladki = Program.error_logger.Nr_Zakladki;
-                Get_Header_Karta_Info(worksheet, ref grafik);
-                Get_Dane_Dni(worksheet, ref grafik);
-                Get_Legenda(worksheet, ref grafik);
-                List <Nieobecnosci> ListNieobecnosci = Get_Nieobecności_Z_Grafiku(grafik);
-                Dodaj_Dane_Do_Optimy(grafik, ListNieobecnosci);
+                var Pozycje = Find_Grafiki(worksheet);
+                List<Grafik> Grafiki_W_Zakladce = new();
+                foreach (var pozycja in Pozycje)
+                {
+                    Grafik grafik = new Grafik();
+                    grafik.nazwa_pliku = Program.error_logger.Nazwa_Pliku;
+                    grafik.nr_zakladki = Program.error_logger.Nr_Zakladki;
+                    Get_Header_Karta_Info(pozycja , worksheet, ref grafik);
+                    Get_Dane_Dni(pozycja, worksheet, ref grafik);
+                    Get_Legenda(pozycja, worksheet, ref grafik);
+                    grafik.ListaNieobecnosci = Get_Nieobecności_Z_Grafiku(grafik);
+                    Grafiki_W_Zakladce.Add(grafik);
+                }
+                Dodaj_Dane_Do_Optimy(Grafiki_W_Zakladce);
             }
             catch(Exception ex)
             {
@@ -143,9 +139,8 @@ namespace All_Readeer
                 throw;
             }
         }
-        private List<Nieobecnosci> Get_Nieobecności_Z_Grafiku(Grafik grafik)
+        private static List<Nieobecnosci> Get_Nieobecności_Z_Grafiku(Grafik grafik)
         {
-            //get planowane nieobecnosci z grafiku
             List<Nieobecnosci> ListNieobecnosci = new();
             foreach (var dane_dni in grafik.dane_dni)
             {
@@ -170,127 +165,172 @@ namespace All_Readeer
             }
             return ListNieobecnosci;
         }
-        private void Get_Header_Karta_Info(IXLWorksheet worksheet, ref Grafik grafik)
+        private static void Get_Header_Karta_Info(Current_Position pozycja, IXLWorksheet worksheet, ref Grafik grafik)
         {
-            var dane = worksheet.Cell(3, 1).GetValue<string>().Trim();
+            var dane = worksheet.Cell(pozycja.row, pozycja.col).GetFormattedString().Trim();
             dane = Regex.Replace(dane, @"\s{2,}", " ");
             if (string.IsNullOrEmpty(dane))
             {
-                Program.error_logger.New_Error(dane, "Tytułu Grafiku", 3, 1, "Brak Tytułu Grafiku");
+                Program.error_logger.New_Error(dane, "Tytułu Grafiku", pozycja.col, pozycja.row, "Brak Tytułu Grafiku");
                 throw new Exception(Program.error_logger.Get_Error_String());
             }
-            bool isParsed = int.TryParse(dane.Split(' ')[7], out int rok);
-            if (!isParsed)
+
+            if (int.TryParse(dane.Split(' ')[7], out int rok))
             {
-                Program.error_logger.New_Error(dane, "Data Grafiku", 3, 1, "Błąd czytania daty");
+                grafik.rok = rok;
+                grafik.Set_Miesiac(dane.Split(' ')[6]);
+            }
+            else
+            {
+                Program.error_logger.New_Error(dane, "Data Grafiku", pozycja.col, pozycja.row, "Niepoprawny format daty. Powinna być data w formacie np. '30.12.2024'");
                 throw new Exception(Program.error_logger.Get_Error_String());
             }
-            grafik.rok = rok;
-            grafik.Set_Miesiac(dane.Split(' ')[6]);
+
             if(grafik.miesiac == 0)
             {
-                Program.error_logger.New_Error(dane.Split(' ')[6], "Data Grafiku miesiac", 3, 1, "Błąd czytania miesiaca");
+                Program.error_logger.New_Error(dane.Split(' ')[6], "Data Grafiku miesiac", pozycja.col, pozycja.row, "Błąd czytania miesiaca");
+                throw new Exception(Program.error_logger.Get_Error_String());
+            }
+            if (grafik.rok == 0)
+            {
+                Program.error_logger.New_Error(dane.Split(' ')[6], "Data Grafiku miesiac", pozycja.col, pozycja.row, "Błąd czytania roku");
                 throw new Exception(Program.error_logger.Get_Error_String());
             }
         }
-        private void Get_Dane_Dni(IXLWorksheet worksheet, ref Grafik grafik)
+        private static List<Current_Position> Find_Grafiki(IXLWorksheet worksheet)
         {
-            CurrentPosition pozycja = new()
+            List<Current_Position> Pozycje = new();
+            int Limiter = 1000;
+            int counter = 0;
+            foreach (var cell in worksheet.CellsUsed())
             {
-                row = 6,
-                col = 1
-            };
-            while (true)
-            {
-                pozycja.col = 1;
                 try
                 {
-                    var nazwiskoiimie = worksheet.Cell(pozycja.row, pozycja.col).GetValue<string>().Trim();
-                    var NEXTnazwiskoiimie = worksheet.Cell(pozycja.row+1, pozycja.col).GetValue<string>().Trim();
-                    if(string.IsNullOrEmpty(nazwiskoiimie) && string.IsNullOrEmpty(NEXTnazwiskoiimie)){
-                        break;
-                    }
-                    if (!string.IsNullOrEmpty(nazwiskoiimie.Trim()) && nazwiskoiimie.Trim().Split(' ').Length < 3)
+                    if (cell.HasFormula && !cell.Address.ToString()!.Equals(cell.FormulaA1))
                     {
-                        Dane_Dni dane_dni = new();
+                        counter++;
+                        if (counter > Limiter)
+                        {
+                            break;
+                        }
+                        continue;
+                    }
+
+                    if (cell.Value.ToString().Contains("GRAFIK PRACY"))
+                    {
+                        Pozycje.Add(new Current_Position()
+                        {
+                            row = cell.Address.RowNumber,
+                            col = cell.Address.ColumnNumber
+                        });
+                    }
+                }
+                catch
+                {
+                    continue;
+                }
+            }
+            return Pozycje;
+        }
+        private static void Get_Dane_Dni(Current_Position pozycja, IXLWorksheet worksheet, ref Grafik grafik)
+        {
+            pozycja.row += 3;
+            while (true)
+            {
+
+                pozycja.col = 1;
+                var nazwiskoiimie = worksheet.Cell(pozycja.row, pozycja.col).GetFormattedString().Trim();
+
+                // jeśli 3 next row puste to wypierdalaj
+                if(string.IsNullOrEmpty(nazwiskoiimie) && string.IsNullOrEmpty(worksheet.Cell(pozycja.row + 1, pozycja.col).GetFormattedString().Trim()) && string.IsNullOrEmpty(worksheet.Cell(pozycja.row + 2, pozycja.col).GetFormattedString().Trim())){
+                    break;
+                }
+                if (!string.IsNullOrEmpty(nazwiskoiimie.Trim()) && nazwiskoiimie.Trim().Split(' ').Length < 3)
+                {
+                    Dane_Dni dane_dni = new();
+                    try
+                    {
                         dane_dni.pracownik.Nazwisko = nazwiskoiimie.Split(' ')[0].Trim();
                         dane_dni.pracownik.Imie = nazwiskoiimie.Split(' ')[1].Trim();
-                        pozycja.col = 3;
-                        while (true)
+                    }
+                    catch
+                    {
+                        Program.error_logger.New_Error(nazwiskoiimie, "Nazwisko Imie", pozycja.col, pozycja.row, "Niepoprawnie wpisane nazwisko i ime. Powinno być w formacie np. 'Nazwisko Imie'");
+                        throw new Exception(Program.error_logger.Get_Error_String());
+                    }
+
+                    pozycja.col = 3;
+                    while (true)
+                    {
+                        Dane_Dnia dane_dnia = new();
+                        var nrDnia = worksheet.Cell(5, pozycja.col).GetFormattedString().Trim();
+                        if (!string.IsNullOrEmpty(nrDnia.Trim()))
                         {
-                            Dane_Dnia dane_dnia = new();
-                            var nrDnia = worksheet.Cell(5, pozycja.col).GetValue<string>().Trim();
-                            if (!string.IsNullOrEmpty(nrDnia.Trim()))
+                            if (int.TryParse(nrDnia, out int parsedDzien))
                             {
-                                if (int.TryParse(nrDnia, out int parsedDzien))
-                                {
-                                    dane_dnia.dzien = parsedDzien;
-                                }
-                                else if (DateTime.TryParse(nrDnia, out DateTime Data))
-                                {
-                                    dane_dnia.dzien = Data.Day;
-                                }
-                                else
-                                {
-                                    Program.error_logger.New_Error(nrDnia, "dzien", pozycja.col, 5, "Błędny nr dnia");
-                                    throw new Exception(Program.error_logger.Get_Error_String());
-                                }
-                                if(dane_dnia.dzien > 31 || dane_dnia.dzien == 0)
-                                {
-                                    break;
-                                }
+                                dane_dnia.dzien = parsedDzien;
+                            }
+                            else if (DateTime.TryParse(nrDnia, out DateTime Data))
+                            {
+                                dane_dnia.dzien = Data.Day;
                             }
                             else
                             {
-                                break;
+                                Program.error_logger.New_Error(nrDnia, "dzien", pozycja.col, 5, "Błędny nr dnia");
+                                throw new Exception(Program.error_logger.Get_Error_String());
                             }
-                            var kodzik = worksheet.Cell(pozycja.row, pozycja.col).GetValue<string>().Trim();
-                            if (!string.IsNullOrEmpty(kodzik))
-                            {
-                                dane_dnia.kod = kodzik;
-                                if (dane_dnia.kod.Contains('.'))
-                                {
-                                    dane_dnia.kod = dane_dnia.kod.Split('.')[0].Trim();
-                                }
-                                if(dane_dnia.kod == null)
-                                {
-                                    Program.error_logger.New_Error(kodzik, "Kod Aktywnosci Dnia", pozycja.col, pozycja.row, "Blędny kod aktywności dnia, wystąpił null w komórce");
-                                    throw new Exception(Program.error_logger.Get_Error_String());
-                                }
-                                else
-                                {
-                                    dane_dni.dane_dnia.Add(dane_dnia);
-                                }
-                            }
-                            pozycja.col++;
-                            if(pozycja.col >= 31)
+                            if(dane_dnia.dzien > 31 || dane_dnia.dzien == 0)
                             {
                                 break;
                             }
                         }
-                        grafik.dane_dni.Add(dane_dni);
+                        else
+                        {
+                            break;
+                        }
+                        var kodzik = worksheet.Cell(pozycja.row, pozycja.col).GetFormattedString().Trim();
+                        if (!string.IsNullOrEmpty(kodzik))
+                        {
+                            dane_dnia.kod = kodzik;
+                            if (dane_dnia.kod.Contains('.'))
+                            {
+                                dane_dnia.kod = dane_dnia.kod.Split('.')[0].Trim();
+                            }
+                            if(dane_dnia.kod == null)
+                            {
+                                Program.error_logger.New_Error(kodzik, "Kod Aktywnosci Dnia", pozycja.col, pozycja.row, "Blędny kod aktywności dnia, wystąpił null w komórce");
+                                throw new Exception(Program.error_logger.Get_Error_String());
+                            }
+                            else
+                            {
+                                dane_dni.dane_dnia.Add(dane_dnia);
+                            }
+                        }
+                        pozycja.col++;
+                        if(pozycja.col >= 31)
+                        {
+                            break;
+                        }
                     }
-                    pozycja.row++;
+                    grafik.dane_dni.Add(dane_dni);
                 }
-                catch
-                {
-                    throw;
-                }
+                pozycja.row++;
             }
         }
-        private void Get_Legenda(IXLWorksheet worksheet, ref Grafik grafik)
+        private static void Get_Legenda(Current_Position pozycja, IXLWorksheet worksheet, ref Grafik grafik)
         {
             int idcounter = 0;
-            CurrentPosition poz = new(){row = 21,col = 4};
+            pozycja.row += 18;
+            pozycja.col += 3;
             while (true)
             {
                 try
                 {
-                    if (poz.row > 100)
+                    if (pozycja.row > 100)
                     {
                         break;
                     }
-                    var dane = worksheet.Cell(poz.row, poz.col).GetValue<string>().Trim();
+                    var dane = worksheet.Cell(pozycja.row, pozycja.col).GetFormattedString().Trim();
                     if (!string.IsNullOrEmpty(dane))
                     {
                         idcounter++;
@@ -310,7 +350,7 @@ namespace All_Readeer
                         }
                         if (legenda.kod == null)
                         {
-                            Program.error_logger.New_Error(dane, "Linijka w legendie", poz.col, poz.row, "Program nie potrafi odczytać tej legendy. Wystąpił null. Zły format.");
+                            Program.error_logger.New_Error(dane, "Linijka w legendie", pozycja.col, pozycja.row, "Program nie potrafi odczytać tej legendy. Wystąpił null. Zły format.");
                             var e = new Exception(Program.error_logger.Get_Error_String());
                             e.Data["kod"] = 69420;
                             throw e;
@@ -319,7 +359,7 @@ namespace All_Readeer
                         legenda.opis = dane;
                         grafik.legenda.Add(legenda);
                     }
-                    poz.row++;
+                    pozycja.row++;
                 }
                 catch (Exception ex)
                 {
@@ -332,7 +372,7 @@ namespace All_Readeer
                 }
             }
         }
-        private void Wpierdol_Plan_do_Optimy(Grafik grafik, SqlConnection connection, SqlTransaction tran)
+        private static void Dodaj_Plan_do_Optimy(Grafik grafik, SqlConnection connection, SqlTransaction tran)
         {
             foreach (var dane_Dni in grafik.dane_dni)
             {
@@ -397,14 +437,31 @@ namespace All_Readeer
                             insertCmd.Parameters.AddWithValue("@PracownikImieInsert", dane_Dni.pracownik.Imie);
                             insertCmd.Parameters.AddWithValue("@Godz_dod_50", 0);
                             insertCmd.Parameters.AddWithValue("@Godz_dod_100", 0);
+                            if (Program.error_logger.Last_Mod_Osoba.Length > 20)
+                            {
+                                insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 20));
+                            }
+                            else
+                            {
+                                insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba);
+                            }
+                            if (Program.error_logger.Last_Mod_Osoba.Length > 50)
+                            {
+                                insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 50));
+                            }
+                            else
+                            {
+                                insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba);
+                            }
+                            insertCmd.Parameters.AddWithValue("@DataMod", Program.error_logger.Last_Mod_Time);
                             insertCmd.ExecuteScalar();
                         }
                     }
                     catch (SqlException ex)
                     {
                         tran.Rollback();
-                        Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
-                        throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
+                        Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
+                        throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}" + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
                     }
                     catch (FormatException)
                     {
@@ -417,13 +474,13 @@ namespace All_Readeer
                         {
                             throw;
                         }
-                        Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
-                        throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
+                        Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
+                        throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}" + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
                     }
                 }
             }
         }
-        private void Wjeb_Nieobecnosci_do_Optimy(List<Nieobecnosci> ListaNieobecności, SqlTransaction tran, SqlConnection connection)
+        private static void Dodaj_Nieobecnosci_do_Optimy(List<Nieobecnosci> ListaNieobecności, SqlTransaction tran, SqlConnection connection)
         {
             List<List<Nieobecnosci>> Nieobecnosci = Podziel_Niobecnosci_Na_Osobne(ListaNieobecności);
             foreach (var ListaNieo in Nieobecnosci)
@@ -446,31 +503,31 @@ namespace All_Readeer
                         insertCmd.Parameters.Add("@DataOd", SqlDbType.DateTime).Value = dataniobecnoscistart;
                         insertCmd.Parameters.Add("@BaseDate", SqlDbType.DateTime).Value = dataBazowa;
                         insertCmd.Parameters.Add("@DataDo", SqlDbType.DateTime).Value = dataniobecnosciend;
-                        if (Last_Mod_Osoba.Length > 20)
+                        if (Program.error_logger.Last_Mod_Osoba.Length > 20)
                         {
-                            insertCmd.Parameters.AddWithValue("@ImieMod", Last_Mod_Osoba.Substring(0, 20));
+                            insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 20));
                         }
                         else
                         {
-                            insertCmd.Parameters.AddWithValue("@ImieMod", Last_Mod_Osoba);
+                            insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba);
                         }
-                        if (Last_Mod_Osoba.Length > 50)
+                        if (Program.error_logger.Last_Mod_Osoba.Length > 50)
                         {
-                            insertCmd.Parameters.AddWithValue("@NazwiskoMod", Last_Mod_Osoba.Substring(0, 50));
+                            insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 50));
                         }
                         else
                         {
-                            insertCmd.Parameters.AddWithValue("@NazwiskoMod", Last_Mod_Osoba);
+                            insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba);
                         }
-                        insertCmd.Parameters.AddWithValue("@DataMod", Last_Mod_Time);
+                        insertCmd.Parameters.AddWithValue("@DataMod", Program.error_logger.Last_Mod_Time);
                         insertCmd.ExecuteScalar();
                     }
                 }
                 catch (SqlException ex)
                 {
                     tran.Rollback();
-                    Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
-                    throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
+                    Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
+                    throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}" + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
                 }
                 catch (FormatException)
                 {
@@ -479,27 +536,30 @@ namespace All_Readeer
                 catch (Exception ex)
                 {
                     tran.Rollback();
-                    Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
-                    throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
+                    Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
+                    throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}" + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
                 }
             }
 
         }
-        private void Dodaj_Dane_Do_Optimy(Grafik grafik, List<Nieobecnosci> ListaNieobecności)
+        private static void Dodaj_Dane_Do_Optimy(List<Grafik>ListaGrafików)
         {
             try
             {
-                using (SqlConnection connection = new SqlConnection(Optima_Connection_String))
+                using (SqlConnection connection = new SqlConnection(Program.Optima_Conection_String))
                 {
                     connection.Open();
                     SqlTransaction tran = connection.BeginTransaction();
-                    Wjeb_Nieobecnosci_do_Optimy(ListaNieobecności, tran, connection);
-                    Wpierdol_Plan_do_Optimy(grafik, connection, tran);
-                    tran.Commit();
+                    foreach (var grafik in ListaGrafików)
+                    {
+                        Dodaj_Nieobecnosci_do_Optimy(grafik.ListaNieobecnosci, tran, connection);
+                        Dodaj_Plan_do_Optimy(grafik, connection, tran);
+                    }
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.WriteLine($"Poprawnie dodawno planowane nieobecnosci z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
                     Console.WriteLine($"Poprawnie dodawno plan z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
                     Console.ForegroundColor = ConsoleColor.White;
+                    tran.Commit();
                     connection.Close();
                 }
             }
@@ -508,7 +568,7 @@ namespace All_Readeer
                 throw;
             }
         }
-        private int Ile_Dni_Roboczych(List<Nieobecnosci> listaNieobecnosci)
+        private static int Ile_Dni_Roboczych(List<Nieobecnosci> listaNieobecnosci)
         {
             int total = 0;
             foreach (var nieobecnosc in listaNieobecnosci)
@@ -521,7 +581,7 @@ namespace All_Readeer
             }
             return total;
         }
-        private List<List<Nieobecnosci>> Podziel_Niobecnosci_Na_Osobne(List<Nieobecnosci> listaNieobecnosci)
+        private static List<List<Nieobecnosci>> Podziel_Niobecnosci_Na_Osobne(List<Nieobecnosci> listaNieobecnosci)
         {
             List<List<Nieobecnosci>> listaOsobnychNieobecnosci = new();
             List<Nieobecnosci> currentGroup = new();

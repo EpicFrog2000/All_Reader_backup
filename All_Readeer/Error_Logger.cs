@@ -26,9 +26,8 @@
 
         // Dodatkowa wiadomośc na koncu errora w pliku
         private string OptionalMsg = "";
-
-        //Czas wykrycia błędu
-        private DateTime Data_Czas_Wykrycia_Bledu;
+        public string Last_Mod_Osoba = "";
+        public DateTime Last_Mod_Time = DateTime.Now;
 
         /// <summary>
         /// Tworzy wiadomość z podanych parametrów i dodaje wiadomość o błędzie do pliku z errorami.
@@ -39,7 +38,6 @@
             Wartosc_Pola = wartoscPola!;
             Kolumna = kolumna;
             Rzad = rzad;
-            Data_Czas_Wykrycia_Bledu = DateTime.Now;
             OptionalMsg = optionalmsg!;
             Append_Error_To_File();
         }

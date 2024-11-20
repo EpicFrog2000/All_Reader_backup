@@ -1,17 +1,13 @@
 ﻿using All_Readeer;
 using ClosedXML.Excel;
-using DocumentFormat.OpenXml.Bibliography;
-using DocumentFormat.OpenXml.Math;
-using DocumentFormat.OpenXml.Wordprocessing;
 using ExcelDataReader;
 using System.Data;
-using static All_Readeer.Grafik_Pracy_Reader;
 class Program
 {
-    private static string Files_Folder = "G:\\ITEGER\\staż\\obecności\\All_Reader\\";
+    private static string Files_Folder = "G:\\ITEGER\\staż\\obecności\\All_Reader\\Wszystkie Pliki";
     private static string Errors_File_Folder = "G:\\ITEGER\\staż\\obecności\\All_Reader\\Errors\\";
     private static string Bad_Files_Folder = "G:\\ITEGER\\staż\\obecności\\All_Reader\\Bad Files\\";
-    private static string Optima_Conection_String = "Server=ITEGER-NT;Database=CDN_Wars_Test_3_;User Id=sa;Password=cdn;Encrypt=True;TrustServerCertificate=True;";
+    public static string Optima_Conection_String = "Server=ITEGER-NT;Database=CDN_Wars_Test_3_;User Id=sa;Password=cdn;Encrypt=True;TrustServerCertificate=True;";
     public static Error_Logger error_logger = new();
     public static string sqlQueryInsertObecnościDoOptimy = @"
 DECLARE @id int;
@@ -76,12 +72,12 @@ BEGIN
                 VALUES
                     (@PRI_PraId
                     ,@DataInsert
-                    ,GETDATE()
-                    ,GETDATE()
-                    ,'ADMIN'
-                    ,'Administrator'
-                    ,'ADMIN'
-                    ,'Administrator'
+                    ,@DataMod
+                    ,@DataMod
+                    ,@ImieMod
+                    ,@NazwiskoMod
+                    ,@ImieMod
+                    ,@NazwiskoMod
                     ,0)
     END TRY
     BEGIN CATCH
@@ -250,12 +246,12 @@ INSERT INTO [CDN].[PracPlanDni]
 VALUES
         (@PRI_PraId
         ,@DataInsert
-        ,GETDATE()
-        ,GETDATE()
-        ,'ADMIN'
-        ,'Administrator'
-        ,'ADMIN'
-        ,'Administrator'
+        ,@DataMod
+        ,@DataMod
+        ,@ImieMod
+        ,@NazwiskoMod
+        ,@ImieMod
+        ,@NazwiskoMod
         ,0
         ,3)
 END TRY
@@ -337,29 +333,26 @@ END";
 
     public static void Main()
     {
+        error_logger.Set_Error_File_Path(Errors_File_Folder);
         Check_Foldery();
         //Wpierdol do while(true){} jeśli to tyle
-        ZrobToWieszCoNoWieszOCoMiChodzi();
+        Do_The_Thing();
     }
-
+    /// <section>
     // TODO MUST now or later
-    // Upgrade dodawania zwolnien/urlopów/nieobecnosci
+    // Upgrade dodawania zwolnien/urlopów/nieobecnosci z grafików v2 bo do nich nie mam w sumie ządnego kodu wiec wszystko co jest nierozpoznane daje jako nieobecność
     // co znaczy ob. w grafikach pracy v2 -> dałem nieobecnosc
     // 2 prac o tej samej nazwie
     // prac ktorych nie ma w bazie
 
     // TODO RACZEJ NIE TRZEBA
-    // dodać support dla Zachód - zespół utrzymania czystości - Szczecin - karty pracy.xlsx bo są kurwa w kostke rubika zrobione
-    // grafik v2024 SPRAWDZ KILKA GRAFIKOW POD SOBĄ np Centru - Terespol - grafiki ALbo możliwe że nie trzeba
-    // TODO Nieobecności w grafik v2024 jeśli takie będą
-
+    // Nieobecności w grafik v2024 jeśli takie będą
+    // Lepsze rozpoznawanie typów grafików
     // TODO OBY NIE
     // Wyszyścic ten zjebany pierdolony śmierdzący gówno kurwa kod żygać mi się chce
-    // TODO fix nieobecnosci przerywane weekendami i nowymi miesiacami itp JEŚLI SIĘ DA a raczej nie i nie no w sumie to nie no raczej nie mhm nie
-
+    // fix nieobecnosci przerywane weekendami i nowymi miesiacami itp JEŚLI SIĘ DA a raczej nie i nie no w sumie to nie no raczej nie mhm nie
 
     //UWAGI:
-    // nie wszystkie kody są opisane np. UŻ, ob.
     // Ja na ten moment tak sobie zrobiłem:
     /*RodzajNieobecnosci.UO => "Urlop okolicznościowy",
     RodzajNieobecnosci.ZL => "Zwolnienie chorobowe/F",
@@ -407,13 +400,15 @@ END";
     RodzajNieobecnosci.ZZ => 1,       // Zwolnienie lekarskie
     _ => 9                             // Nie dotyczy dla pozostałych przypadków*/
 
-    // co znaczy ob. w grafikach pracy z przed 2024 -> dałem nieobecnosc
-    // Pracownicy którzy mają te same imie i nazwisko -> ciężko mi je połączyć gdyż często dział/zespół/stanowisko czy inne nie zleją sie z danymi w bazie
+    // co znaczy ob. w grafikach pracy z przed 2024 -> dałem nieobecnosc B2B na ten moment
+    // czy UŻ powinienem traktować jako UZ (Urlop na żądanie) czy coś innego
+    // Pracownicy którzy mają te same imie i nazwisko -> ciężko mi je połączyć gdyż często dział/zespół/stanowisko czy inne nie zleją sie dokładnie z danymi w bazie
     // Mam wielu pracowników których nie ma w bazie ciężko rozróżnić czy nie ma go w bazie czy jest źle wpisany
     //
+    /// </section>
 
 
-    public static void ZrobToWieszCoNoWieszOCoMiChodzi()
+    public static void Do_The_Thing()
     {
         string[] filePaths = Directory.GetFiles(Files_Folder);
         if (filePaths.Length == 0) {
@@ -421,7 +416,6 @@ END";
             return;
         }
 
-        error_logger.Set_Error_File_Path(Errors_File_Folder);
         foreach (string current_filePath in filePaths)
         {
             string filePath = current_filePath;
@@ -448,31 +442,33 @@ END";
             if (Last_Mod_Osoba == "Error") {
                 error_logger.New_Custom_Error($"Error reading file {filePath}, could not reed metatata");
             }
+            error_logger.Last_Mod_Osoba = Last_Mod_Osoba;
+            error_logger.Last_Mod_Time = Last_Mod_Time;
 
             int ilosc_zakladek = 0;
             using (var workbook = new XLWorkbook(filePath))
             {
-                Kurwa_Usun_Ukryte_Karty_XD(workbook);
+                Usun_Ukryte_Karty(workbook);
                 ilosc_zakladek = workbook.Worksheets.Count;
                 for (int i = 1; i <= ilosc_zakladek; i++)
                 {
                     error_logger.Nr_Zakladki = i;
-
                     var zakladka = workbook.Worksheet(i);
                     error_logger.Nazwa_Zakladki = zakladka.Name;
-                    var typ_pliku = Kurwa_tego_no_wez_zobacz_ktory_rodzaj_zakladki_to_jest_mordzia_co(zakladka);
+
+                    var typ_pliku = Get_Typ_Zakladki(zakladka);
                     if (typ_pliku == 0)
                     {
-                        error_logger.New_Custom_Error("Nie rozpoznano tego rodzaju zakladki: " + error_logger.Nazwa_Pliku + "nr zakladki: " + error_logger.Nr_Zakladki);
+                        Copy_Bad_Sheet_To_Files_Folder(filePath, error_logger.Nr_Zakladki);
+                        error_logger.New_Custom_Error("Nie rozpoznano tego rodzaju zakladki: " + error_logger.Nazwa_Pliku + " nr zakladki: " + error_logger.Nr_Zakladki + " Porada: Sprawdź czy nagłówki są uzupełnione lub tabelka nie jest przesunięta");
+                        Console.WriteLine("Nie rozpoznano tego rodzaju zakladki: " + error_logger.Nazwa_Pliku + " nr zakladki: " + error_logger.Nr_Zakladki + " Porada: Sprawdź czy nagłówki są uzupełnione lub tabelka nie jest przesunięta");
                         continue;
                     }
                     else if (typ_pliku == 1)
                     {
                         try
                         {
-                            Karta_Pracy_Reader_v2 karta_Pracy_Reader_V2 = new();
-                            karta_Pracy_Reader_V2.Set_Optima_ConnectionString(Optima_Conection_String);
-                            karta_Pracy_Reader_V2.Process_Zakladka_For_Optima(zakladka, Last_Mod_Osoba, Last_Mod_Time, 0);
+                            Karta_Pracy_Reader_v2.Process_Zakladka_For_Optima(zakladka);
                         }
                         catch
                         {
@@ -484,9 +480,7 @@ END";
                     {
                         try
                         {
-                            Karta_Pracy_Reader_v2 karta_Pracy_Reader_V2 = new();
-                            karta_Pracy_Reader_V2.Set_Optima_ConnectionString(Optima_Conection_String);
-                            karta_Pracy_Reader_V2.Process_Zakladka_For_Optima(zakladka, Last_Mod_Osoba, Last_Mod_Time, 1);
+                            Grafik_Pracy_Reader_v2.Process_Zakladka_For_Optima(zakladka);
                         }
                         catch
                         {
@@ -498,23 +492,7 @@ END";
                     {
                         try
                         {
-                            Grafik_Pracy_Reader_v2 grafik_Pracy_Reader_V2 = new();
-                            grafik_Pracy_Reader_V2.Set_Optima_ConnectionString(Optima_Conection_String);
-                            grafik_Pracy_Reader_V2.Process_Zakladka_For_Optima(zakladka, Last_Mod_Osoba, Last_Mod_Time);
-                        }
-                        catch
-                        {
-                            Copy_Bad_Sheet_To_Files_Folder(filePath, error_logger.Nr_Zakladki);
-                            continue;
-                        }
-                    }
-                    else if (typ_pliku == 4)
-                    {
-                        try
-                        {
-                            Grafik_Pracy_Reader_v2024 grafik_Pracy_Reader_v2024 = new();
-                            grafik_Pracy_Reader_v2024.Set_Optima_ConnectionString(Optima_Conection_String);
-                            grafik_Pracy_Reader_v2024.Process_Zakladka_For_Optima(zakladka, Last_Mod_Osoba, Last_Mod_Time);
+                            Grafik_Pracy_Reader_v2024.Process_Zakladka_For_Optima(zakladka);
                         }
                         catch
                         {
@@ -526,53 +504,33 @@ END";
             }
         }
     }
-    public static int Kurwa_tego_no_wez_zobacz_ktory_rodzaj_zakladki_to_jest_mordzia_co(IXLWorksheet workshit)
+    private static int Get_Typ_Zakladki(IXLWorksheet workshit)
     {
-        try
+        foreach (var cell in workshit.CellsUsed()) // karta v2
         {
-            var dane = workshit.Cell(6, 1).GetValue<string>().Trim();
-            if (dane == "Dzień") //karta v1
+            try
             {
-                return 2;
+                var cellValue = cell.GetString();
+                if (cellValue.Contains("Dzień"))
+                {
+                    return 1;
+                }
             }
+            catch { }
         }
-        catch { Console.Write(""); }
-        try
+
+        var cellValue3_1 = workshit.Cell(3, 1).Value.ToString();
+        if (cellValue3_1.Trim().Contains("GRAFIK PRACY")) // grafik v2
         {
-            var dane = workshit.Cell(6, 2).GetValue<string>().Trim(); // TODO dodać support dla Zachód - zespół utrzymania czystości - Szczecin - karty pracy.xlsx bo obok siebie i pod są karty xdd
-            if (dane == "Dzień") //karta v2
-            {
-                return 1;
-            }
+            return 2;
         }
-        catch { Console.Write(""); }
-        try
+
+        var cellValue1_1 = workshit.Cell(1, 1).Value.ToString();
+        if (cellValue1_1.Trim().Contains("GRAFIK PRACY")) // grafik v2024
         {
-            var dane = workshit.Cell(9, 2).GetValue<string>().Trim();
-            if (dane == "Dzień") //karta v2 ale jest kurwa niżej xdd
-            {
-                return 1;
-            }
+            return 3;
         }
-        catch { Console.Write(""); }
-        try
-        {
-            var dane = workshit.Cell(3, 1).GetValue<string>().Trim();
-            if (dane.Contains("GRAFIK PRACY")) // grafik v2
-            {
-                return 3;
-            }
-        }
-        catch { Console.Write(""); }
-        try
-        {
-            var dane = workshit.Cell(1, 1).GetValue<string>().Trim(); // grafik v2024 //TODO SPRAWDZ KILKA GRAFIKOW POD SOBĄ i sprawdz multiples of LICZBA GODZIN
-            if (dane.Contains("GRAFIK PRACY"))
-            {
-                return 4;
-            }
-        }
-        catch { Console.Write(""); }
+
         return 0;
     }
     private static (string, DateTime) Get_File_Meta_Info(string File_Path)
@@ -637,7 +595,7 @@ END";
             Console.WriteLine($"Error occurred: {ex.Message} in {newFilePath}");
         }
     }
-    private static void Kurwa_Usun_Ukryte_Karty_XD(XLWorkbook workbook)
+    private static void Usun_Ukryte_Karty(XLWorkbook workbook)
     {
         var hiddenSheets = new List<IXLWorksheet>();
         foreach (var sheet in workbook.Worksheets)
@@ -657,6 +615,7 @@ END";
     {
         if (!Directory.Exists(Files_Folder))
         {
+            error_logger.New_Custom_Error("Brak folderu z plikami excel");
             Console.WriteLine("Brak folderu z plikami excel");
             return;
         }
@@ -695,18 +654,14 @@ END";
         }
         catch
         {
-            //Console.WriteLine($"Plik to nie arkusz xlsx: {filePath}.");
+            //Plik to nie arkusz xlsx
             return false;
         }
         return true;
     }
     public static void ConvertToXlsx(string inputFilePath, string outputFilePath)
     {
-        if (!File.Exists(inputFilePath))
-            throw new FileNotFoundException($"Plik {inputFilePath} nie istnieje.");
-
         System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
-
         DataSet dataSet;
         using (var stream = File.Open(inputFilePath, FileMode.Open, FileAccess.Read))
         using (var reader = ExcelReaderFactory.CreateReader(stream))
@@ -745,8 +700,6 @@ END";
                 }
             }
         }
-
-
         workbook.SaveAs(outputFilePath);
         var (o, d) = Get_File_Meta_Info(inputFilePath);
         workbook.Properties.LastModifiedBy = o;
