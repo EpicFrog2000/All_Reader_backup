@@ -438,6 +438,7 @@ END";
                 catch (Exception ex)
                 {
                     //Console.WriteLine(ex.Message);
+                    MoveFile(filePath);
                     continue;
                 }
             }
@@ -521,32 +522,26 @@ END";
                     }
                 }
             }
-            try
+            MoveFile(filePath);
+        }
+    }
+
+    private static void MoveFile(string filePath)
+    {
+        try
+        {
+            string destinationPath = Path.Combine(Processed_Files_Folder, Path.GetFileName(filePath));
+
+            if (File.Exists(destinationPath))
             {
-                string destinationPath = Path.Combine(Processed_Files_Folder, Path.GetFileName(filePath));
-                if (File.Exists(destinationPath))
-                {
-                    File.Delete(destinationPath);
-                }
-                File.Move(filePath, destinationPath);
+                File.Delete(destinationPath);
             }
-            catch (Exception e)
-            {
-                error_logger.New_Custom_Error(e.Message + " Plik: " + filePath);
-            }
-            try
-            {
-                string destinationPath = Path.Combine(Processed_Files_Folder, Path.GetFileName(current_filePath));
-                if (File.Exists(destinationPath))
-                {
-                    File.Delete(destinationPath);
-                }
-                File.Move(current_filePath, destinationPath);
-            }
-            catch (Exception e)
-            {
-                error_logger.New_Custom_Error(e.Message + " Plik: " + filePath);
-            }
+
+            File.Move(filePath, destinationPath);
+        }
+        catch (Exception e)
+        {
+            //error_logger.New_Custom_Error(e.Message + " Plik: " + filePath);
         }
     }
     private static int Get_Typ_Zakladki(IXLWorksheet workshit)
