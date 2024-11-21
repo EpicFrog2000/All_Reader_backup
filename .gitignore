@@ -1,0 +1,8 @@
+# Ignoruj foldery debug i release
+/All_Readeer/obj/Release/
+/All_Readeer/obj/Debug/
+/All_Readeer/obj/publish/
+/All_Readeer/bin/Release/
+/All_Readeer/bin/Debug/
+/All_Readeer/obj/Release/net8.0/win-x86/R2R/All_Readeer.r2r.dll
+/All_Readeer/bin/Release/net8.0/publish/win-x86/All_Readeer.exe

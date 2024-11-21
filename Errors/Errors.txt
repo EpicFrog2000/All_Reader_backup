@@ -1,0 +1,11 @@
+-------------------------------------------------------------------------------
+Plik: Centrala - zespół finansowy - karty pracy.xlsx
+Nazwa zakladki: Polkowska Małgorzata
+Nr Zakladki: 3
+Kolumna: 13
+Rzad: 3
+Wartość w komórce: ''
+Poprawna wartość jaka powinna być: data
+Dodatkowa wiadomość: Nie wykryto daty w pliku. Oczekiwana dat między kolumna[6] rząd[3] a kolumna[17] rząd[3]
+-------------------------------------------------------------------------------
+
