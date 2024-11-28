@@ -1,0 +1,3 @@
+G:\ITEGER\staż\obecności\WARS Reader\All_Readeer.pdb
+G:\ITEGER\staż\obecności\WARS Reader\Microsoft.Data.SqlClient.SNI.dll
+G:\ITEGER\staż\obecności\WARS Reader\All_Readeer.exe
