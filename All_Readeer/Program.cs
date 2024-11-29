@@ -7,10 +7,7 @@ using System.Text.Json;
 class Program
 {
     public static string Optima_Conection_String = "Server=ITEGER-NT;Database=CDN_Wars_Test_3_;User Id=sa;Password=cdn;Encrypt=True;TrustServerCertificate=True;";
-    public static string Files_Folder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Files");
-    public static string Errors_File_Folder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Errors");
-    public static string Bad_Files_Folder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Bad Files");
-    public static string Processed_Files_Folder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Processed Files");
+    public static List<string> Files_Folders = [];
     public static Error_Logger error_logger = new();
     public static string sqlQueryInsertObecnościDoOptimy = @"
 DECLARE @id int;
@@ -335,101 +332,59 @@ END
 END";
     public static void Main()
     {
-        error_logger.Set_Error_File_Path(Errors_File_Folder);
-        Check_Foldery();
+        Check_Base_Files(); // sprawdz czy istnieje plik config, jesli nie to go inicjalizuje
         GetConfigFromFile();
-        error_logger.Set_Error_File_Path(Errors_File_Folder);
         while (true)
         {
-            Thread.Sleep(3000);
-            var folders = Directory.GetDirectories(Files_Folder);
-            if (folders.Count() == 0)
+            foreach(var Big_Folder in Files_Folders)
             {
-                Console.Clear();
-                Console.WriteLine($"Nie znaleziono żadnych folderów w: {Files_Folder}");
-            }
-            else
-            {
-                foreach (var folder in folders)
+                string[] folders;
+                try
                 {
-                    Do_The_Thing(folder);
+                    folders = Directory.GetDirectories(Big_Folder);
+                }
+                catch
+                {
+                    error_logger.Set_Error_File_Path(Path.Combine(AppDomain.CurrentDomain.BaseDirectory));
+                    error_logger.New_Custom_Error($"Nie znaleziono folderu {Big_Folder}");
+                    Console.WriteLine($"Nie znaleziono folderu {Big_Folder}");
+                    continue;
+                }
+                if (folders.Count() == 0)
+                {
+                    Console.WriteLine($"Nie znaleziono żadnych folderów w: {Big_Folder}");
+                }
+                else
+                {
+                    foreach(var folder in folders)
+                    {
+                        Check_Foldery_Processing(folder); // sprawdz czy istnieją odpowiednie podfoldery, jesli nie to je inicjalizuje
+                        error_logger.Set_Error_File_Path(Path.Combine(folder, "Errors"));
+                        error_logger.Current_Processed_Files_Folder = Path.Combine(folder, "Processed_Files");
+                        error_logger.Current_Bad_Files_Folder = Path.Combine(folder, "Bad_Files");
+                        try
+                        {
+                            Do_The_Thing(folder);
+                        }
+                        catch(Exception ex)
+                        {
+                            error_logger.Set_Error_File_Path(Path.Combine(AppDomain.CurrentDomain.BaseDirectory));
+                            error_logger.New_Custom_Error($"{ex.Message}");
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine($"{ex.Message}");
+                            Console.ForegroundColor = ConsoleColor.White;
+                            continue;
+                        }
+                    }
                 }
             }
+            Thread.Sleep(3000);
         }
     }
-    /// <section>
-    // TODO MUST now or later
-    // Upgrade dodawania zwolnien/urlopów/nieobecnosci z grafików v2 bo do nich nie mam w sumie ządnego kodu wiec wszystko co jest nierozpoznane daje jako nieobecność
-    // co znaczy ob. w grafikach pracy v2 -> dałem nieobecnosc
-    // 2 prac o tej samej nazwie
-    // prac ktorych nie ma w bazie
-
-    // TODO RACZEJ NIE TRZEBA
-    // Nieobecności w grafik v2024 jeśli takie będą
-    // Lepsze rozpoznawanie typów grafików
-    // TODO OBY NIE
-    // Wyszyścic ten zjebany pierdolony śmierdzący gówno kurwa kod żygać mi się chce
-    // fix nieobecnosci przerywane weekendami i nowymi miesiacami itp JEŚLI SIĘ DA a raczej nie i nie no w sumie to nie no raczej nie mhm nie
-
-    //UWAGI:
-    // Ja na ten moment tak sobie zrobiłem:
-    /*RodzajNieobecnosci.UO => "Urlop okolicznościowy",
-    RodzajNieobecnosci.ZL => "Zwolnienie chorobowe/F",
-    RodzajNieobecnosci.ZY => "Zwolnienie chorobowe/wyp.w drodze/F",
-    RodzajNieobecnosci.ZS => "Zwolnienie chorobowe/wyp.przy pracy/F",
-    RodzajNieobecnosci.ZN => "Zwolnienie chorobowe/bez prawa do zas.",
-    RodzajNieobecnosci.ZP => "Zwolnienie chorobowe/pozbawiony prawa",
-    RodzajNieobecnosci.UR => "Urlop rehabilitacyjny",
-    RodzajNieobecnosci.ZR => "Urlop rehabilitacyjny/wypadek w drodze..",
-    RodzajNieobecnosci.ZD => "Urlop rehabilitacyjny/wypadek przy pracy",
-    RodzajNieobecnosci.UM => "Urlop macierzyński",
-    RodzajNieobecnosci.UC => "Urlop ojcowski",
-    RodzajNieobecnosci.OP => "Urlop opiekuńczy (zasiłek)",
-    RodzajNieobecnosci.UY => "Urlop wychowawczy (121)",
-    RodzajNieobecnosci.UW => "Urlop wypoczynkowy",
-    RodzajNieobecnosci.NU => "Nieobecność usprawiedliwiona (151)",
-    RodzajNieobecnosci.NN => "Nieobecność nieusprawiedliwiona (152)",
-    RodzajNieobecnosci.UL => "Służba wojskowa",
-    RodzajNieobecnosci.DR => "Urlop rodzicielski",
-    RodzajNieobecnosci.DM => "Urlop macierzyński dodatkowy",
-    RodzajNieobecnosci.PP => "Dni wolne na poszukiwanie pracy",
-    RodzajNieobecnosci.UK => "Dni wolne z tyt. krwiodawstwa",
-    RodzajNieobecnosci.IK => "Covid19",
-    _ => "Nieobecność (B2B)"*/
-    // Przyczyny:
-    /*
-    RodzajNieobecnosci.ZL => 1,        // Zwolnienie lekarskie
-    RodzajNieobecnosci.DM => 2,        // Urlop macierzyński
-    RodzajNieobecnosci.DR => 13,        // Urlop opiekuńczy
-    RodzajNieobecnosci.NB => 1,        // Zwolnienie lekarskie
-    RodzajNieobecnosci.NN => 5,        // Nieobecność nieusprawiedliwiona
-    RodzajNieobecnosci.UC => 21,       // Urlop opiekuńczy
-    RodzajNieobecnosci.UD => 21,       // Urlop opiekuńczy
-    RodzajNieobecnosci.UJ => 10,       // Służba wojskowa
-    RodzajNieobecnosci.UL => 10,       // Służba wojskowa
-    RodzajNieobecnosci.UM => 2,       // Urlop macierzyński
-    RodzajNieobecnosci.UO => 4,       // Urlop okolicznościowy
-    RodzajNieobecnosci.UN => 3,       // Urlop rehabilitacyjny
-    RodzajNieobecnosci.UR => 3,       // Urlop rehabilitacyjny
-    RodzajNieobecnosci.ZC => 21,       // Urlop opiekuńczy
-    RodzajNieobecnosci.ZD => 21,       // Urlop opiekuńczy
-    RodzajNieobecnosci.ZK => 21,       // Urlop opiekuńczy
-    RodzajNieobecnosci.ZN => 1,       // Zwolnienie lekarskie
-    RodzajNieobecnosci.ZR => 3,       // Urlop rehabilitacyjny
-    RodzajNieobecnosci.ZZ => 1,       // Zwolnienie lekarskie
-    _ => 9                             // Nie dotyczy dla pozostałych przypadków*/
-
-    // co znaczy ob. w grafikach pracy z przed 2024 -> dałem nieobecnosc B2B na ten moment
-    // czy UŻ powinienem traktować jako UZ (Urlop na żądanie) czy coś innego
-    // Pracownicy którzy mają te same imie i nazwisko -> ciężko mi je połączyć gdyż często dział/zespół/stanowisko czy inne nie zleją sie dokładnie z danymi w bazie
-    // Mam wielu pracowników których nie ma w bazie ciężko rozróżnić czy nie ma go w bazie czy jest źle wpisany
-    //
-    /// </section>
     public static void Do_The_Thing(string Folder_Path)
     {
         string[] filePaths = Directory.GetFiles(Folder_Path);
         if (filePaths.Length == 0) {
-            Console.Clear();
             Console.WriteLine($"Nie znaleziono żadnych plików w folderze {Folder_Path}");
             return;
         }
@@ -540,7 +495,7 @@ END";
     {
         try
         {
-            string destinationPath = Path.Combine(Processed_Files_Folder, Path.GetFileName(filePath));
+            string destinationPath = Path.Combine(error_logger.Current_Processed_Files_Folder, Path.GetFileName(filePath));
 
             if (File.Exists(destinationPath))
             {
@@ -606,7 +561,7 @@ END";
     }
     private static void Copy_Bad_Sheet_To_Files_Folder(string filePath, int sheetIndex)
     {
-        var newFilePath = System.IO.Path.Combine(Bad_Files_Folder, "copy_" + System.IO.Path.GetFileName(filePath));
+        var newFilePath = System.IO.Path.Combine(error_logger.Current_Bad_Files_Folder, "copy_" + System.IO.Path.GetFileName(filePath));
         try
         {
             using (var originalwb = new XLWorkbook(filePath))
@@ -651,99 +606,82 @@ END";
         }
         workbook.Save();
     }
-    private static void Check_Foldery()
+    private static void Check_Base_Files()
     {
         if (!File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config.json")))
         {
             File.Create(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config.json")).Dispose();
             var defaultConfig = new
             {
-                Files_Folder,
-                Errors_File_Folder,
-                Bad_Files_Folder,
-                Processed_Files_Folder,
                 Optima_Conection_String
             };
             File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config.json"), JsonSerializer.Serialize(defaultConfig, new JsonSerializerOptions { WriteIndented = true }));
         }
-
-        if (!Directory.Exists(Files_Folder))
+    }
+    private static void Check_Foldery_Processing(string FolderPath)
+    {
+        if (!Directory.Exists(Path.Combine(FolderPath, "Errors")))
         {
             try
             {
-                Directory.CreateDirectory(Files_Folder);
+                Directory.CreateDirectory(Path.Combine(FolderPath, "Errors"));
+                File.Create(Path.Combine(FolderPath, "Errors", "Errors.txt"));
             }
             catch
             {
-                error_logger.New_Custom_Error($"Błędna ścieżka: {Files_Folder}");
-                Console.WriteLine($"Błędna ścieżka: {Files_Folder}");
+                error_logger.New_Custom_Error($"Błędna ścieżka: {Path.Combine(FolderPath, "Errors")}");
+                Console.WriteLine($"Błędna ścieżka: {Path.Combine(FolderPath, "Errors")}");
             }
-
         }
 
-        if (!Directory.Exists(Errors_File_Folder))
+        if (File.Exists(Path.Combine(FolderPath, "Errors", "Errors.txt")))
+        {
+            File.WriteAllText(Path.Combine(FolderPath, "Errors", "Errors.txt"), string.Empty);
+        }
+
+        if (!Directory.Exists(Path.Combine(FolderPath, "Bad_Files")))
         {
             try
             {
-                Directory.CreateDirectory(Errors_File_Folder);
+                Directory.CreateDirectory(Path.Combine(FolderPath, "Bad_Files"));
             }
             catch
             {
-                error_logger.New_Custom_Error($"Błędna ścieżka: {Errors_File_Folder}");
-                Console.WriteLine($"Błędna ścieżka: {Errors_File_Folder}");
-            }
-        }
-
-
-        if (File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Errors.txt")))
-        {
-            File.WriteAllText(Errors_File_Folder + "Errors.txt", string.Empty);
-
-        }
-
-        if (!Directory.Exists(Bad_Files_Folder))
-        {
-            try
-            {
-                Directory.CreateDirectory(Bad_Files_Folder);
-            }
-            catch
-            {
-                error_logger.New_Custom_Error($"Błędna ścieżka: {Bad_Files_Folder}");
-                Console.WriteLine($"Błędna ścieżka: {Bad_Files_Folder}");
+                error_logger.New_Custom_Error($"Błędna ścieżka: {Path.Combine(FolderPath, "Bad_Files")}");
+                Console.WriteLine($"Błędna ścieżka: {Path.Combine(FolderPath, "Bad_Files")}");
             }
         }
         else
         {
-            foreach (var file in Directory.GetFiles(Bad_Files_Folder))
+            foreach (var file in Directory.GetFiles(Path.Combine(FolderPath, "Bad_Files")))
             {
                 File.Delete(file);
             }
-            foreach (var directory in Directory.GetDirectories(Bad_Files_Folder))
+            foreach (var directory in Directory.GetDirectories(Path.Combine(FolderPath, "Bad_Files")))
             {
                 Directory.Delete(directory, recursive: true);
             }
         }
 
-        if (!Directory.Exists(Processed_Files_Folder))
+        if (!Directory.Exists(Path.Combine(FolderPath, "Processed_Files")))
         {
             try
             {
-                Directory.CreateDirectory(Processed_Files_Folder);
+                Directory.CreateDirectory(Path.Combine(FolderPath, "Processed_Files"));
             }
             catch
             {
-                error_logger.New_Custom_Error($"Błędna ścieżka: {Processed_Files_Folder}");
-                Console.WriteLine($"Błędna ścieżka: {Processed_Files_Folder}");
+                error_logger.New_Custom_Error($"Błędna ścieżka: {Path.Combine(FolderPath, "Processed_Files")}");
+                Console.WriteLine($"Błędna ścieżka: {Path.Combine(FolderPath, "Processed_Files")}");
             }
         }
         else
         {
-            foreach (var file in Directory.GetFiles(Processed_Files_Folder))
+            foreach (var file in Directory.GetFiles(Path.Combine(FolderPath, "Processed_Files")))
             {
                 File.Delete(file);
             }
-            foreach (var directory in Directory.GetDirectories(Processed_Files_Folder))
+            foreach (var directory in Directory.GetDirectories(Path.Combine(FolderPath, "Processed_Files")))
             {
                 Directory.Delete(directory, recursive: true);
             }
@@ -780,7 +718,7 @@ END";
         }
 
         using var workbook = new XLWorkbook();
-        foreach (DataTable table in dataSet.Tables)
+        foreach (System.Data.DataTable table in dataSet.Tables)
         {
             var worksheet = workbook.Worksheets.Add(table.TableName);
             for (int i = 0; i < table.Columns.Count; i++)
@@ -817,10 +755,6 @@ END";
             File.Create(filePath).Dispose();
             var defaultConfig = new
             {
-                Files_Folder,
-                Errors_File_Folder,
-                Bad_Files_Folder,
-                Processed_Files_Folder,
                 Optima_Conection_String
             };
             File.WriteAllText(filePath, JsonSerializer.Serialize(defaultConfig, new JsonSerializerOptions { WriteIndented = true }));
@@ -829,10 +763,7 @@ END";
         var config = JsonSerializer.Deserialize<Config_Data_Json>(json);
         if (config != null)
         {
-            Files_Folder = config.Files_Folder;
-            Errors_File_Folder = config.Errors_File_Folder;
-            Bad_Files_Folder = config.Bad_Files_Folder;
-            Processed_Files_Folder = config.Processed_Files_Folder;
+            Files_Folders = config.Files_Folders;
             Optima_Conection_String = config.Optima_Conection_String;
         }
     }
@@ -840,13 +771,9 @@ END";
 }
 public class Config_Data_Json
 {
-    public string Files_Folder { get; set; } = Program.Files_Folder;
-    public string Errors_File_Folder { get; set; } = Program.Errors_File_Folder;
-    public string Bad_Files_Folder { get; set; } = Program.Bad_Files_Folder;
-    public string Processed_Files_Folder { get; set; } = Program.Processed_Files_Folder;
-    public string Optima_Conection_String { get; set; } = Program.Optima_Conection_String;
+    public List<string> Files_Folders { get; set; } = [];
+    public string Optima_Conection_String { get; set; } = string.Empty;
 }
-
 //{
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::.................................::::::::----::::::-==+=======--:----==
 //::::::--::::::::::::::::::::::::::::::::::::::::::::::::::::::...............::::..................:::::-------:::::===+====---:::::---

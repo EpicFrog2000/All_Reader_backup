@@ -29,6 +29,9 @@
         public string Last_Mod_Osoba = "";
         public DateTime Last_Mod_Time = DateTime.Now;
 
+        public string Current_Processed_Files_Folder = "";
+        public string Current_Bad_Files_Folder = "";
+
         /// <summary>
         /// Tworzy wiadomość z podanych parametrów i dodaje wiadomość o błędzie do pliku z errorami.
         /// </summary>
