@@ -14,6 +14,7 @@ namespace All_Readeer
         {
             public string Imie { get; set; } = "";
             public string Nazwisko { get; set; } = "";
+            public string Akronim { get; set; } = "-1";
         }
         private class Grafik
         {
@@ -265,7 +266,19 @@ namespace All_Readeer
                     dane_dni.pracownik.Imie = dane_dni.pracownik.Imie.ToLower();
                     dane_dni.pracownik.Imie = char.ToUpper(dane_dni.pracownik.Imie[0], CultureInfo.CurrentCulture) + dane_dni.pracownik.Imie.Substring(1);
 
+
                     pozycja.col = 3;
+                    var nrDniaLubAkronim = worksheet.Cell(5, pozycja.col).GetFormattedString().Trim();
+                    if (!string.IsNullOrEmpty(nrDniaLubAkronim) && nrDniaLubAkronim.ToLower().Contains("akronim"))
+                    {
+                        var akr = worksheet.Cell(pozycja.row, pozycja.col).GetFormattedString().Trim().Replace("  ", " ");
+                        if (!string.IsNullOrEmpty(akr))
+                        {
+                            dane_dni.pracownik.Akronim = akr;
+                        }
+                        pozycja.col++;
+                    }
+
                     while (true)
                     {
                         Dane_Dnia dane_dnia = new();
@@ -439,8 +452,7 @@ namespace All_Readeer
                             insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = ("1899-12-30 " + godz_zak_pracy.ToString());
                             insertCmd.Parameters.AddWithValue("@CzasPrzepracowanyInsert", (godz_zak_pracy - godz_rozp_pracy).TotalHours);
                             insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", (godz_zak_pracy - godz_rozp_pracy).TotalHours);
-                            insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", dane_Dni.pracownik.Nazwisko);
-                            insertCmd.Parameters.AddWithValue("@PracownikImieInsert", dane_Dni.pracownik.Imie);
+                            insertCmd.Parameters.AddWithValue("@PRI_PraId", Get_ID_Pracownika(dane_Dni.pracownik));
                             insertCmd.Parameters.AddWithValue("@Godz_dod_50", 0);
                             insertCmd.Parameters.AddWithValue("@Godz_dod_100", 0);
                             if (Program.error_logger.Last_Mod_Osoba.Length > 20)
@@ -500,8 +512,7 @@ namespace All_Readeer
                         DateTime dataBazowa = new DateTime(1899, 12, 30);
                         DateTime dataniobecnoscistart = new DateTime(ListaNieo[0].rok, ListaNieo[0].miesiac, ListaNieo[0].dzien);
                         DateTime dataniobecnosciend = new DateTime(ListaNieo[ListaNieo.Count - 1].rok, ListaNieo[ListaNieo.Count - 1].miesiac, ListaNieo[ListaNieo.Count - 1].dzien);
-                        insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", ListaNieo[0].pracownik.Nazwisko);
-                        insertCmd.Parameters.AddWithValue("@PracownikImieInsert", ListaNieo[0].pracownik.Imie);
+                        insertCmd.Parameters.AddWithValue("@PRI_PraId", Get_ID_Pracownika(ListaNieo[0].pracownik));
                         insertCmd.Parameters.AddWithValue("@NazwaNieobecnosci", "Nieobecność (B2B) (plan)");
                         insertCmd.Parameters.AddWithValue("@DniPracy", dni_robocze);
                         insertCmd.Parameters.AddWithValue("@DniKalendarzowe", dni_calosc);
@@ -612,6 +623,34 @@ namespace All_Readeer
 
             return listaOsobnychNieobecnosci;
         }
-
+        private static int Get_ID_Pracownika(Pracownik pracownik)
+        {
+            using (SqlConnection connection = new SqlConnection(Program.Optima_Conection_String))
+            {
+                try
+                {
+                    connection.Open();
+                    using (SqlCommand getCmd = new SqlCommand(Program.sqlQueryGetPRI_PraId, connection))
+                    {
+                        getCmd.Parameters.AddWithValue("@Akronim ", pracownik.Akronim);
+                        getCmd.Parameters.AddWithValue("@PracownikImieInsert", pracownik.Imie);
+                        getCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", pracownik.Nazwisko);
+                        var result = getCmd.ExecuteScalar();
+                        if (result != null)
+                        {
+                            return Convert.ToInt32(result);
+                        }
+                    }
+                    connection.Close();
+                }
+                catch (Exception ex)
+                {
+                    connection.Close();
+                    Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
+                    throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}" + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
+                }
+            }
+            return 0;
+        }
     }
 }

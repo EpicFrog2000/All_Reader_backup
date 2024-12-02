@@ -9,22 +9,40 @@ class Program
     public static string Optima_Conection_String = "Server=ITEGER-NT;Database=CDN_Wars_Test_3_;User Id=sa;Password=cdn;Encrypt=True;TrustServerCertificate=True;";
     public static List<string> Files_Folders = [];
     public static Error_Logger error_logger = new();
-    public static string sqlQueryInsertObecnościDoOptimy = @"
-DECLARE @id int;
-
-                -- dodawaina pracownika do pracx i init pracpracdni
-IF((select DISTINCT COUNT(PRI_PraId) from cdn.Pracidx WHERE PRI_Imie1 = @PracownikImieInsert and PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Typ = 1) > 1)
+    public static string sqlQueryGetPRI_PraId = @"
+-- weź @PRA_PraId z akronimu
+IF @Akronim IS NOT NULL AND @Akronim != 0
 BEGIN
-	DECLARE @ErrorMessageC NVARCHAR(500) = 'Jest 2 pracowników w bazie o takim samym imieniu i nazwisku: ' +@PracownikImieInsert + ' ' +  @PracownikNazwiskoInsert;
-	THROW 50001, @ErrorMessageC, 1;
+	DECLARE @AkroRes INT = (SELECT PracKod.PRA_PraId FROM CDN.PracKod where PRA_Kod = @Akronim);
+	IF @AkroRes IS NOT NULL
+	BEGIN
+		SELECT @AkroRes;
+	END
 END
+
+-- weż @PRA_PraId z imie i nazwisko
+IF (
+    (
+        SELECT DISTINCT COUNT(PRI_PraId)
+        FROM cdn.Pracidx
+        WHERE
+            (PRI_Imie1 = @PracownikImieInsert AND PRI_Nazwisko = @PracownikNazwiskoInsert AND PRI_Typ = 1)
+            OR
+            (PRI_Imie1 = @PracownikNazwiskoInsert AND PRI_Nazwisko = @PracownikImieInsert AND PRI_Typ = 1)
+    ) > 1
+)
+BEGIN
+    DECLARE @ErrorMessageC NVARCHAR(500) = 'Jest 2 pracowników w bazie o takim samym imieniu i nazwisku, a takiego akronimu nie ma w bazie: ' + @PracownikImieInsert + ' ' + @PracownikNazwiskoInsert + ' ' + Convert(VARCHAR(200), @Akronim);
+    THROW 50001, @ErrorMessageC, 1;
+END
+
 DECLARE @PRI_PraId INT = (select DISTINCT PRI_PraId from cdn.Pracidx WHERE PRI_Imie1 = @PracownikImieInsert and PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Typ = 1);
 IF @PRI_PraId IS NULL
 BEGIN
 	SET @PRI_PraId = (select DISTINCT PRI_PraId from cdn.Pracidx WHERE PRI_Imie1 = @PracownikNazwiskoInsert  and PRI_Nazwisko = @PracownikImieInsert and PRI_Typ = 1);
 	IF @PRI_PraId IS NULL
 	BEGIN
-		DECLARE @ErrorMessage NVARCHAR(500) = 'Brak takiego pracownika w bazie o imieniu i nazwisku: ' +@PracownikImieInsert + ' ' +  @PracownikNazwiskoInsert;
+		DECLARE @ErrorMessage NVARCHAR(500) = 'Brak takiego pracownika w bazie o imieniu, nazwisku i akronimie: ' +@PracownikImieInsert + ' ' +  @PracownikNazwiskoInsert + ' ' + Convert(VARCHAR(200), @Akronim);
 		THROW 50000, @ErrorMessage, 1;
 	END
 END
@@ -33,29 +51,12 @@ DECLARE @EXISTSPRACTEST INT = (SELECT PracKod.PRA_PraId FROM CDN.PracKod where P
 
 IF @EXISTSPRACTEST IS NULL
 BEGIN
-    INSERT INTO [CDN].[PracKod]
-            ([PRA_Kod]
-            ,[PRA_Archiwalny]
-            ,[PRA_Nadrzedny]
-            ,[PRA_EPEmail]
-            ,[PRA_EPTelefon]
-            ,[PRA_EPNrPokoju]
-            ,[PRA_EPDostep]
-            ,[PRA_HasloDoWydrukow])
-        VALUES
-            (@PRI_PraId
-            ,0
-            ,0
-            ,''
-            ,''
-            ,''
-            ,0
-            ,'')
+    INSERT INTO [CDN].[PracKod] ([PRA_Kod] ,[PRA_Archiwalny],[PRA_Nadrzedny],[PRA_EPEmail],[PRA_EPTelefon],[PRA_EPNrPokoju],[PRA_EPDostep],[PRA_HasloDoWydrukow])
+    VALUES (@PRI_PraId,0,0,'','','',0,'');
 END
-
-DECLARE @PRA_PraId INT = (SELECT PracKod.PRA_PraId FROM CDN.PracKod where PRA_Kod = @PRI_PraId);
-
-DECLARE @EXISTSDZIEN DATETIME = (SELECT PracPracaDni.PPR_Data FROM cdn.PracPracaDni WHERE PPR_PraId = @PRA_PraId and PPR_Data = @DataInsert)
+SELECT @PRI_PraId;";
+    public static string sqlQueryInsertObecnościDoOptimy = @"
+DECLARE @EXISTSDZIEN DATETIME = (SELECT PracPracaDni.PPR_Data FROM cdn.PracPracaDni WHERE PPR_PraId = @PRI_PraId and PPR_Data = @DataInsert)
 IF @EXISTSDZIEN is null
 BEGIN
     BEGIN TRY
@@ -84,8 +85,6 @@ BEGIN
     END CATCH
 END
 
-SET @id = (select PPR_PprId from cdn.PracPracaDni where CAST(PPR_Data as datetime) = @DataInsert and PPR_PraId = @PRI_PraId);
-
 INSERT INTO CDN.PracPracaDniGodz
 		(PGR_PprId,
 		PGR_Lp,
@@ -97,7 +96,7 @@ INSERT INTO CDN.PracPracaDniGodz
 		PGR_Uwagi,
 		PGR_OdbNadg)
 	VALUES
-		(@id,
+		((select PPR_PprId from cdn.PracPracaDni where CAST(PPR_Data as datetime) = @DataInsert and PPR_PraId = @PRI_PraId),
 		1,
 		DATEADD(MINUTE, 0, @GodzOdDate),
 		DATEADD(MINUTE, -60 * (@CzasPrzepracowanyInsert - @PracaWgGrafikuInsert), @GodzDoDate),
@@ -107,24 +106,7 @@ INSERT INTO CDN.PracPracaDniGodz
 		'',
 		1);";
     public static string sqlQueryInsertNieObecnoŚciDoOptimy = @$"
-IF((select DISTINCT COUNT(PRI_PraId) from cdn.Pracidx WHERE PRI_Imie1 = @PracownikImieInsert and PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Typ = 1) > 1)
-BEGIN
-	DECLARE @ErrorMessageC NVARCHAR(500) = 'Jest 2 pracowników w bazie o takim samym imieniu i nazwisku: ' +@PracownikImieInsert + ' ' +  @PracownikNazwiskoInsert;
-	THROW 50001, @ErrorMessageC, 1;
-END
-DECLARE @PRACID INT = (select DISTINCT PRI_PraId from cdn.Pracidx WHERE PRI_Imie1 = @PracownikImieInsert and PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Typ = 1);
-IF @PRACID IS NULL
-BEGIN
-	SET @PRACID = (select DISTINCT PRI_PraId from cdn.Pracidx WHERE PRI_Imie1 = @PracownikNazwiskoInsert  and PRI_Nazwisko = @PracownikImieInsert and PRI_Typ = 1);
-	IF @PRACID IS NULL
-	BEGIN
-		DECLARE @ErrorMessage NVARCHAR(500) = 'Brak takiego pracownika w bazie o imieniu i nazwisku: ' +@PracownikImieInsert + ' ' +  @PracownikNazwiskoInsert;
-		THROW 50000, @ErrorMessage, 1;
-	END
-END
-
 DECLARE @TNBID INT = (select TNB_TnbId from cdn.TypNieobec WHERE TNB_Nazwa = @NazwaNieobecnosci)
-
 INSERT INTO [CDN].[PracNieobec]
            ([PNB_PraId]
            ,[PNB_TnbId]
@@ -156,7 +138,7 @@ INSERT INTO [CDN].[PracNieobec]
            ,[PNB_OpeZalNazwisko]
            ,[PNB_Zrodlo])
      VALUES
-           (@PRACID
+           (@PRI_PraId
            ,@TNBID
            ,99999
            ,0
@@ -187,48 +169,7 @@ INSERT INTO [CDN].[PracNieobec]
            ,0);";
     public static string sqlQueryInsertPlanDoOptimy = $@"
 DECLARE @id int;
-IF((select DISTINCT COUNT(PRI_PraId) from cdn.Pracidx WHERE PRI_Imie1 = @PracownikImieInsert and PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Typ = 1) > 1)
-BEGIN
-	DECLARE @ErrorMessageC NVARCHAR(500) = 'Jest 2 pracowników w bazie o takim samym imieniu i nazwisku: ' +@PracownikImieInsert + ' ' +  @PracownikNazwiskoInsert;
-	THROW 50001, @ErrorMessageC, 1;
-END
-DECLARE @PRI_PraId INT = (select DISTINCT PRI_PraId from cdn.Pracidx WHERE PRI_Imie1 = @PracownikImieInsert and PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Typ = 1);
-IF @PRI_PraId IS NULL
-BEGIN
-	SET @PRI_PraId = (select DISTINCT PRI_PraId from cdn.Pracidx WHERE PRI_Imie1 = @PracownikNazwiskoInsert  and PRI_Nazwisko = @PracownikImieInsert and PRI_Typ = 1);
-	IF @PRI_PraId IS NULL
-	BEGIN
-		DECLARE @ErrorMessage NVARCHAR(500) = 'Brak takiego pracownika w bazie o imieniu i nazwisku: ' +@PracownikImieInsert + ' ' +  @PracownikNazwiskoInsert;
-		THROW 50000, @ErrorMessage, 1;
-	END
-END
-DECLARE @EXISTSPRACTEST INT = (SELECT CDN.PracKod.PRA_PraId FROM CDN.PracKod where PRA_Kod = @PRI_PraId)
-
-IF @EXISTSPRACTEST IS NULL
-BEGIN
-INSERT INTO [CDN].[PracKod]
-    ([PRA_Kod]
-    ,[PRA_Archiwalny]
-    ,[PRA_Nadrzedny]
-    ,[PRA_EPEmail]
-    ,[PRA_EPTelefon]
-    ,[PRA_EPNrPokoju]
-    ,[PRA_EPDostep]
-    ,[PRA_HasloDoWydrukow])
-VALUES
-    (@PRI_PraId
-    ,0
-    ,0
-    ,''
-    ,''
-    ,''
-    ,0
-    ,'')
-END
-
-DECLARE @PRA_PraId INT = (SELECT cdn.PracKod.PRA_PraId FROM CDN.PracKod where PRA_Kod = @PRI_PraId);
-
-DECLARE @EXISTSDZIEN INT = (SELECT COUNT([CDN].[PracPlanDni].[PPL_Data]) FROM cdn.PracPlanDni WHERE cdn.PracPlanDni.PPL_PraId = @PRA_PraId and [CDN].[PracPlanDni].[PPL_Data] = @DataInsert)
+DECLARE @EXISTSDZIEN INT = (SELECT COUNT([CDN].[PracPlanDni].[PPL_Data]) FROM cdn.PracPlanDni WHERE cdn.PracPlanDni.PPL_PraId = @PRI_PraId and [CDN].[PracPlanDni].[PPL_Data] = @DataInsert)
 IF @EXISTSDZIEN = 0
 BEGIN
 BEGIN TRY
@@ -330,52 +271,59 @@ INSERT INTO CDN.PracPlanDniGodz
 	        '');
 END
 END";
+
+    // TODO zrób lepsze błędy dot. imie, nazwisko i akronim
     public static void Main()
     {
         Check_Base_Files(); // sprawdz czy istnieje plik config, jesli nie to go inicjalizuje
         GetConfigFromFile();
+        string[] folders;
+        List<string> allfolders = [];
+        foreach (var Big_Folder in Files_Folders)
+        {
+            try
+            {
+                folders = Directory.GetDirectories(Big_Folder);
+            }
+            catch
+            {
+                error_logger.Set_Error_File_Path(Path.Combine(AppDomain.CurrentDomain.BaseDirectory));
+                error_logger.New_Custom_Error($"Nie znaleziono folderu {Big_Folder}");
+                Console.WriteLine($"Nie znaleziono folderu {Big_Folder}");
+                continue;
+            }
+            if (folders.Count() == 0)
+            {
+                Console.WriteLine($"Nie znaleziono żadnych folderów w: {Big_Folder}");
+            }
+            else
+            {
+                foreach (var folder in folders)
+                {
+                    Check_Foldery_Processing(folder); // sprawdz czy istnieją odpowiednie podfoldery, jesli nie to je inicjalizuje
+                    allfolders.Add(folder);
+                }
+            }
+        }
         while (true)
         {
-            foreach(var Big_Folder in Files_Folders)
+            foreach (var folder in allfolders)
             {
-                string[] folders;
+                error_logger.Set_Error_File_Path(Path.Combine(folder, "Errors"));
+                error_logger.Current_Processed_Files_Folder = Path.Combine(folder, "Processed_Files");
+                error_logger.Current_Bad_Files_Folder = Path.Combine(folder, "Bad_Files");
                 try
                 {
-                    folders = Directory.GetDirectories(Big_Folder);
+                    Do_The_Thing(folder);
                 }
-                catch
+                catch(Exception ex)
                 {
                     error_logger.Set_Error_File_Path(Path.Combine(AppDomain.CurrentDomain.BaseDirectory));
-                    error_logger.New_Custom_Error($"Nie znaleziono folderu {Big_Folder}");
-                    Console.WriteLine($"Nie znaleziono folderu {Big_Folder}");
+                    error_logger.New_Custom_Error($"{ex.Message}");
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine($"{ex.Message}");
+                    Console.ForegroundColor = ConsoleColor.White;
                     continue;
-                }
-                if (folders.Count() == 0)
-                {
-                    Console.WriteLine($"Nie znaleziono żadnych folderów w: {Big_Folder}");
-                }
-                else
-                {
-                    foreach(var folder in folders)
-                    {
-                        Check_Foldery_Processing(folder); // sprawdz czy istnieją odpowiednie podfoldery, jesli nie to je inicjalizuje
-                        error_logger.Set_Error_File_Path(Path.Combine(folder, "Errors"));
-                        error_logger.Current_Processed_Files_Folder = Path.Combine(folder, "Processed_Files");
-                        error_logger.Current_Bad_Files_Folder = Path.Combine(folder, "Bad_Files");
-                        try
-                        {
-                            Do_The_Thing(folder);
-                        }
-                        catch(Exception ex)
-                        {
-                            error_logger.Set_Error_File_Path(Path.Combine(AppDomain.CurrentDomain.BaseDirectory));
-                            error_logger.New_Custom_Error($"{ex.Message}");
-                            Console.ForegroundColor = ConsoleColor.Red;
-                            Console.WriteLine($"{ex.Message}");
-                            Console.ForegroundColor = ConsoleColor.White;
-                            continue;
-                        }
-                    }
                 }
             }
             Thread.Sleep(3000);
@@ -613,6 +561,7 @@ END";
             File.Create(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config.json")).Dispose();
             var defaultConfig = new
             {
+                Files_Folders = new[] { Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Files") },
                 Optima_Conection_String
             };
             File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config.json"), JsonSerializer.Serialize(defaultConfig, new JsonSerializerOptions { WriteIndented = true }));

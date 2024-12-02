@@ -1,7 +1,5 @@
 ﻿using ClosedXML.Excel;
-using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.Data.SqlClient;
-using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Text.RegularExpressions;
@@ -14,6 +12,7 @@ namespace All_Readeer
         {
             public string Imie { get; set; } = "";
             public string Nazwisko { get; set; } = "";
+            public int Akronim { get; set; } = -1;
         }
         private class Karta_Pracy
         {
@@ -404,9 +403,12 @@ namespace All_Readeer
 
             //wczytaj nazwisko i imie
             {
+                Current_Position pozycja_wczytania_danych = new();
                 int tmpi = 0;
                 string[] wordsToRemove = { "IMIĘ:", "IMIE:", "NAZWISKO:", "NAZWISKO", " IMIE", "IMIĘ", ":" };
                 dane = worksheet.Cell(StartKarty.row - 2, StartKarty.col).GetFormattedString().Trim().Replace("  ", " ");
+                pozycja_wczytania_danych.row = StartKarty.row - 2;
+                pozycja_wczytania_danych.col = StartKarty.col;
                 for (int i = 0; i < 6; i++)
                 {
                     foreach (var word in wordsToRemove)
@@ -432,11 +434,15 @@ namespace All_Readeer
                     else
                     {
                         dane = worksheet.Cell(StartKarty.row - 2, StartKarty.col + i).GetFormattedString().Trim().Replace("  ", " ");
+                        pozycja_wczytania_danych.row = StartKarty.row - 2;
+                        pozycja_wczytania_danych.col = StartKarty.col + i;
                     }
                 }
                 if (string.IsNullOrEmpty(dane))
                 {
                     dane = worksheet.Cell(StartKarty.row - 3, StartKarty.col).GetFormattedString().Trim().Replace("  ", " ");
+                    pozycja_wczytania_danych.row = StartKarty.row - 3;
+                    pozycja_wczytania_danych.col = StartKarty.col;
                     for (int i = 0; i < 6; i++)
                     {
                         foreach (var word in wordsToRemove)
@@ -456,6 +462,8 @@ namespace All_Readeer
                         else
                         {
                             dane = worksheet.Cell(StartKarty.row - 3, StartKarty.col + i).GetFormattedString().Trim().Replace("  ", " ");
+                            pozycja_wczytania_danych.row = StartKarty.row - 3;
+                            pozycja_wczytania_danych.col = StartKarty.col + i;
                         }
                     }
                 }
@@ -488,6 +496,8 @@ namespace All_Readeer
                     if(string.IsNullOrEmpty(karta_pracy.pracownik.Imie) && !string.IsNullOrEmpty(karta_pracy.pracownik.Nazwisko))
                     {
                         dane = worksheet.Cell(StartKarty.row - 3, StartKarty.col + tmpi).GetFormattedString().Trim().Replace("  ", " ");
+                        pozycja_wczytania_danych.row = StartKarty.row - 3;
+                        pozycja_wczytania_danych.col = StartKarty.col + tmpi;
                         if (!string.IsNullOrEmpty(dane))
                         {
                             karta_pracy.pracownik.Imie = dane;
@@ -496,6 +506,8 @@ namespace All_Readeer
                     else if (string.IsNullOrEmpty(karta_pracy.pracownik.Nazwisko) && !string.IsNullOrEmpty(karta_pracy.pracownik.Imie))
                     {
                         dane = worksheet.Cell(StartKarty.row - 3, StartKarty.col + tmpi).GetFormattedString().Trim().Replace("  ", " ");
+                        pozycja_wczytania_danych.row = StartKarty.row - 3;
+                        pozycja_wczytania_danych.col = StartKarty.col + tmpi;
                         if (!string.IsNullOrEmpty(dane))
                         {
                             karta_pracy.pracownik.Nazwisko = dane;
@@ -509,15 +521,47 @@ namespace All_Readeer
                     }
 
                 }
-                if (karta_pracy.pracownik.Nazwisko == null || karta_pracy.pracownik.Imie == null)
+
+                // znajdz akronim w w prawo
+                var akronim = "";
+                for (int i = 0; i < 6; i++)
                 {
-                    Program.error_logger.New_Error(dane, "nazwisko i imie", StartKarty.col, StartKarty.row - 2, "Zły format pola nazwisko i imie. Powinno być: KARTA PRACY: Nazwisko Imie");
-                    throw new Exception(Program.error_logger.Get_Error_String());
+                    akronim = worksheet.Cell(pozycja_wczytania_danych.row, pozycja_wczytania_danych.col + 1 + i).GetFormattedString().Trim().Replace("  ", " ");
+                    if (!string.IsNullOrEmpty(akronim))
+                    {
+                        break;
+                    }
                 }
-                karta_pracy.pracownik.Nazwisko = karta_pracy.pracownik.Nazwisko.ToLower();
-                karta_pracy.pracownik.Nazwisko = char.ToUpper(karta_pracy.pracownik.Nazwisko[0], CultureInfo.CurrentCulture) + karta_pracy.pracownik.Nazwisko.Substring(1);
-                karta_pracy.pracownik.Imie = karta_pracy.pracownik.Imie.ToLower();
-                karta_pracy.pracownik.Imie = char.ToUpper(karta_pracy.pracownik.Imie[0], CultureInfo.CurrentCulture) + karta_pracy.pracownik.Imie.Substring(1);
+                if (!string.IsNullOrEmpty(akronim))
+                {
+                    if (int.TryParse(akronim, out int parsedValue))
+                    {
+                        karta_pracy.pracownik.Akronim = parsedValue;
+                    }
+                    else
+                    {
+                        karta_pracy.pracownik.Akronim = -1;
+                    }
+                }
+                if ((karta_pracy.pracownik.Nazwisko == null || karta_pracy.pracownik.Imie == null))
+                {
+                    if (karta_pracy.pracownik.Akronim == 0)
+                    {
+                        Program.error_logger.New_Error(dane, "nazwisko i imie", StartKarty.col, StartKarty.row - 2, "Zły format pola nazwisko i imie. Powinno być: KARTA PRACY: Nazwisko Imie");
+                        Program.error_logger.New_Error(dane, "akronim", pozycja_wczytania_danych.col + 2, pozycja_wczytania_danych.row, "Nie znaleziono wartości akronim. Powinno być: Akronim");
+                        throw new Exception(Program.error_logger.Get_Error_String());
+                    }
+                }
+                if(karta_pracy.pracownik.Nazwisko != null)
+                {
+                    karta_pracy.pracownik.Nazwisko = karta_pracy.pracownik.Nazwisko.ToLower();
+                    karta_pracy.pracownik.Nazwisko = char.ToUpper(karta_pracy.pracownik.Nazwisko[0], CultureInfo.CurrentCulture) + karta_pracy.pracownik.Nazwisko.Substring(1);
+                }
+                if (karta_pracy.pracownik.Imie != null)
+                {
+                    karta_pracy.pracownik.Imie = karta_pracy.pracownik.Imie.ToLower();
+                    karta_pracy.pracownik.Imie = char.ToUpper(karta_pracy.pracownik.Imie[0], CultureInfo.CurrentCulture) + karta_pracy.pracownik.Imie.Substring(1);
+                }
             }
         }
         private static void Get_Dane_Dni(Current_Position StartKarty, IXLWorksheet worksheet, ref Karta_Pracy karta_pracy)
@@ -686,8 +730,16 @@ namespace All_Readeer
                     }
                     double czasPodstawowy = czasPrzepracowany - ((double)(dane_Dni.Godz_nadl_platne_z_dod_50 + dane_Dni.Godz_nadl_platne_z_dod_100));
                     bool czy_next_dzien = false;
+                    int pid = 0;
+                    try
+                    {
+                        pid = Get_ID_Pracownika(karta.pracownik);
+                    }
+                    catch (Exception ex)
+                    {
+                        Program.error_logger.New_Custom_Error(ex.Message);
+                    }
 
-                    // zrob to co ponizej ale dla wszystkich 3 xdd
                     if (czasPodstawowy > 0)
                     {
                         if (endPodstawowy < startPodstawowy)
@@ -705,8 +757,7 @@ namespace All_Readeer
                                 double czasPrzepracowanyInsert = (TimeSpan.FromHours(24) - startPodstawowy).TotalHours;
                                 insertCmd.Parameters.AddWithValue("@CzasPrzepracowanyInsert", czasPrzepracowanyInsert);
                                 insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", czasPrzepracowanyInsert);
-                                insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", karta.pracownik.Nazwisko);
-                                insertCmd.Parameters.AddWithValue("@PracownikImieInsert", karta.pracownik.Imie);
+                                insertCmd.Parameters.AddWithValue("@PRI_PraId", pid);
                                 insertCmd.Parameters.AddWithValue("@TypPracy", 2); // podstawowy
                                 if (Program.error_logger.Last_Mod_Osoba.Length > 20)
                                 {
@@ -740,8 +791,7 @@ namespace All_Readeer
                                 double czasPrzepracowanyInsert = endPodstawowy.TotalHours;
                                 insertCmd.Parameters.AddWithValue("@CzasPrzepracowanyInsert", czasPrzepracowanyInsert);
                                 insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", czasPrzepracowanyInsert);
-                                insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", karta.pracownik.Nazwisko);
-                                insertCmd.Parameters.AddWithValue("@PracownikImieInsert", karta.pracownik.Imie);
+                                insertCmd.Parameters.AddWithValue("@PRI_PraId", pid);
                                 insertCmd.Parameters.AddWithValue("@TypPracy", 2); // podstawowy
                                 if (Program.error_logger.Last_Mod_Osoba.Length > 20)
                                 {
@@ -775,8 +825,7 @@ namespace All_Readeer
                                 insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
                                 insertCmd.Parameters.AddWithValue("@CzasPrzepracowanyInsert", (endPodstawowy - startPodstawowy).TotalHours);
                                 insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", (endPodstawowy - startPodstawowy).TotalHours);
-                                insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", karta.pracownik.Nazwisko);
-                                insertCmd.Parameters.AddWithValue("@PracownikImieInsert", karta.pracownik.Imie);
+                                insertCmd.Parameters.AddWithValue("@PRI_PraId", pid);
                                 insertCmd.Parameters.AddWithValue("@TypPracy", 2); // podstawowy
                                 if (Program.error_logger.Last_Mod_Osoba.Length > 20)
                                 {
@@ -823,8 +872,7 @@ namespace All_Readeer
                                     insertCmd.Parameters.AddWithValue("@DataInsert", WażnaData);
                                     insertCmd.Parameters.AddWithValue("@CzasPrzepracowanyInsert", czasPrzepracowanyInsert);
                                     insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", czasPrzepracowanyInsert);
-                                    insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", karta.pracownik.Nazwisko);
-                                    insertCmd.Parameters.AddWithValue("@PracownikImieInsert", karta.pracownik.Imie);
+                                    insertCmd.Parameters.AddWithValue("@PRI_PraId", pid);
                                     insertCmd.Parameters.AddWithValue("@TypPracy", 8); // 50%
                                     if (Program.error_logger.Last_Mod_Osoba.Length > 20)
                                     {
@@ -861,8 +909,7 @@ namespace All_Readeer
                                     insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
                                     insertCmd.Parameters.AddWithValue("@CzasPrzepracowanyInsert", czasPrzepracowanyInsert);
                                     insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", czasPrzepracowanyInsert);
-                                    insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", karta.pracownik.Nazwisko);
-                                    insertCmd.Parameters.AddWithValue("@PracownikImieInsert", karta.pracownik.Imie);
+                                    insertCmd.Parameters.AddWithValue("@PRI_PraId", pid);
                                     insertCmd.Parameters.AddWithValue("@TypPracy", 8); // 50%
                                     if (Program.error_logger.Last_Mod_Osoba.Length > 20)
                                     {
@@ -900,8 +947,7 @@ namespace All_Readeer
                                     insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
                                     insertCmd.Parameters.AddWithValue("@CzasPrzepracowanyInsert", (endNadl50 - startNadl50).TotalHours);
                                     insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", (endNadl50 - startNadl50).TotalHours);
-                                    insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", karta.pracownik.Nazwisko);
-                                    insertCmd.Parameters.AddWithValue("@PracownikImieInsert", karta.pracownik.Imie);
+                                    insertCmd.Parameters.AddWithValue("@PRI_PraId", pid);
                                     insertCmd.Parameters.AddWithValue("@TypPracy", 8); // 50%
                                     if (Program.error_logger.Last_Mod_Osoba.Length > 20)
                                     {
@@ -949,8 +995,7 @@ namespace All_Readeer
                                     insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
                                     insertCmd.Parameters.AddWithValue("@CzasPrzepracowanyInsert", czasPrzepracowanyInsert);
                                     insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", czasPrzepracowanyInsert);
-                                    insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", karta.pracownik.Nazwisko);
-                                    insertCmd.Parameters.AddWithValue("@PracownikImieInsert", karta.pracownik.Imie);
+                                    insertCmd.Parameters.AddWithValue("@PRI_PraId", pid);
                                     insertCmd.Parameters.AddWithValue("@TypPracy", 6); // 100%
                                     if (Program.error_logger.Last_Mod_Osoba.Length > 20)
                                     {
@@ -987,8 +1032,7 @@ namespace All_Readeer
                                     insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
                                     insertCmd.Parameters.AddWithValue("@CzasPrzepracowanyInsert", czasPrzepracowanyInsert);
                                     insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", czasPrzepracowanyInsert);
-                                    insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", karta.pracownik.Nazwisko);
-                                    insertCmd.Parameters.AddWithValue("@PracownikImieInsert", karta.pracownik.Imie);
+                                    insertCmd.Parameters.AddWithValue("@PRI_PraId", pid);
                                     insertCmd.Parameters.AddWithValue("@TypPracy", 6); // 100%
                                     if (Program.error_logger.Last_Mod_Osoba.Length > 20)
                                     {
@@ -1026,8 +1070,7 @@ namespace All_Readeer
                                     insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
                                     insertCmd.Parameters.AddWithValue("@CzasPrzepracowanyInsert", (endNadl100 - startNadl100).TotalHours);
                                     insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", (endNadl100 - startNadl100).TotalHours);
-                                    insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", karta.pracownik.Nazwisko);
-                                    insertCmd.Parameters.AddWithValue("@PracownikImieInsert", karta.pracownik.Imie);
+                                    insertCmd.Parameters.AddWithValue("@PRI_PraId", pid);
                                     insertCmd.Parameters.AddWithValue("@TypPracy", 6); // 100%
                                     if (Program.error_logger.Last_Mod_Osoba.Length > 20)
                                     {
@@ -1093,9 +1136,18 @@ namespace All_Readeer
                         }
                         DateTime dataniobecnoscistart = new DateTime(ListaNieo[0].rok, ListaNieo[0].miesiac, ListaNieo[0].dzien);
                         DateTime dataniobecnosciend = new DateTime(ListaNieo[ListaNieo.Count-1].rok, ListaNieo[ListaNieo.Count-1].miesiac, ListaNieo[ListaNieo.Count-1].dzien);
+                        int pid = 0;
+                        try
+                        {
+                            pid = Get_ID_Pracownika(ListaNieo[0].pracownik);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine(ex.Message);
+                            Program.error_logger.New_Custom_Error(ex.Message);
+                        }
+                        insertCmd.Parameters.AddWithValue("@PRI_PraId", pid);
                         int przyczyna = Dopasuj_Przyczyne(ListaNieo[0].rodzaj_absencji);
-                        insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", ListaNieo[0].pracownik.Nazwisko);
-                        insertCmd.Parameters.AddWithValue("@PracownikImieInsert", ListaNieo[0].pracownik.Imie);
                         insertCmd.Parameters.AddWithValue("@NazwaNieobecnosci", nazwa_nieobecnosci);
                         insertCmd.Parameters.AddWithValue("@DniPracy", dni_robocze);
                         insertCmd.Parameters.AddWithValue("@DniKalendarzowe", dni_calosc);
@@ -1310,49 +1362,8 @@ namespace All_Readeer
         }
         private static void Dodaj_Godz_Odbior_Do_Optimy(Karta_Pracy karta, SqlTransaction tran, SqlConnection connection)
         {
-            var sqlInsertOdbNadg = @"DECLARE @id int;
-IF((select DISTINCT COUNT(PRI_PraId) from cdn.Pracidx WHERE PRI_Imie1 = @PracownikImieInsert and PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Typ = 1) > 1)
-BEGIN
-	DECLARE @ErrorMessageC NVARCHAR(500) = 'Jest 2 pracowników w bazie o takim samym imieniu i nazwisku: ' +@PracownikImieInsert + ' ' +  @PracownikNazwiskoInsert;
-	THROW 50001, @ErrorMessageC, 1;
-END
-DECLARE @PRI_PraId INT = (select DISTINCT PRI_PraId from cdn.Pracidx WHERE PRI_Imie1 = @PracownikImieInsert and PRI_Nazwisko = @PracownikNazwiskoInsert and PRI_Typ = 1);
-IF @PRI_PraId IS NULL
-BEGIN
-	SET @PRI_PraId = (select DISTINCT PRI_PraId from cdn.Pracidx WHERE PRI_Imie1 = @PracownikNazwiskoInsert  and PRI_Nazwisko = @PracownikImieInsert and PRI_Typ = 1);
-	IF @PRI_PraId IS NULL
-	BEGIN
-		DECLARE @ErrorMessage NVARCHAR(500) = 'Brak takiego pracownika w bazie o imieniu i nazwisku: ' +@PracownikImieInsert + ' ' +  @PracownikNazwiskoInsert;
-		THROW 50000, @ErrorMessage, 1;
-	END
-END
-
-DECLARE @EXISTSPRACTEST INT = (SELECT PracKod.PRA_PraId FROM CDN.PracKod where PRA_Kod = @PRI_PraId)
-
-IF @EXISTSPRACTEST IS NULL
-BEGIN
-    INSERT INTO [CDN].[PracKod]
-            ([PRA_Kod]
-            ,[PRA_Archiwalny]
-            ,[PRA_Nadrzedny]
-            ,[PRA_EPEmail]
-            ,[PRA_EPTelefon]
-            ,[PRA_EPNrPokoju]
-            ,[PRA_EPDostep]
-            ,[PRA_HasloDoWydrukow])
-        VALUES
-            (@PRI_PraId
-            ,0
-            ,0
-            ,''
-            ,''
-            ,''
-            ,0
-            ,'')
-END
-
+            var sqlInsertOdbNadg = @"
 DECLARE @PRA_PraId INT = (SELECT PracKod.PRA_PraId FROM CDN.PracKod where PRA_Kod = @PRI_PraId);
-
 DECLARE @EXISTSDZIEN DATETIME = (SELECT PracPracaDni.PPR_Data FROM cdn.PracPracaDni WHERE PPR_PraId = @PRA_PraId and PPR_Data = @DataInsert)
 IF @EXISTSDZIEN is null
 BEGIN
@@ -1382,8 +1393,6 @@ BEGIN
     END CATCH
 END
 
-SET @id = (select PPR_PprId from cdn.PracPracaDni where CAST(PPR_Data as datetime) = @DataInsert and PPR_PraId = @PRI_PraId);
-
 INSERT INTO CDN.PracPracaDniGodz
 		(PGR_PprId,
 		PGR_Lp,
@@ -1395,7 +1404,7 @@ INSERT INTO CDN.PracPracaDniGodz
 		PGR_Uwagi,
 		PGR_OdbNadg)
 	VALUES
-		(@id,
+		((select PPR_PprId from cdn.PracPracaDni where CAST(PPR_Data as datetime) = @DataInsert and PPR_PraId = @PRI_PraId),
 		1,
 		DATEADD(MINUTE, 0, @GodzOdDate),
 		DATEADD(MINUTE, 0, @GodzDoDate),
@@ -1421,8 +1430,7 @@ INSERT INTO CDN.PracPracaDniGodz
                             DateTime godzDoDate = dataBazowa + endGodz;
                             insertCmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = godzOdDate;
                             insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
-                            insertCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", karta.pracownik.Nazwisko);
-                            insertCmd.Parameters.AddWithValue("@PracownikImieInsert", karta.pracownik.Imie);
+                            insertCmd.Parameters.AddWithValue("@PRI_PraId", Get_ID_Pracownika(karta.pracownik));
                             insertCmd.Parameters.AddWithValue("@TypPracy", 2); // podstawowy
                             insertCmd.Parameters.AddWithValue("@TypNadg", 4); // W.PŁ
                             if (Program.error_logger.Last_Mod_Osoba.Length > 20)
@@ -1463,6 +1471,35 @@ INSERT INTO CDN.PracPracaDniGodz
                     throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}" + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
                 }
             }
+        }
+        private static int Get_ID_Pracownika(Pracownik pracownik)
+        {
+            using (SqlConnection connection = new SqlConnection(Program.Optima_Conection_String))
+            {
+                try
+                {
+                    connection.Open();
+                    using (SqlCommand getCmd = new SqlCommand(Program.sqlQueryGetPRI_PraId, connection))
+                    {
+                        getCmd.Parameters.AddWithValue("@Akronim ", pracownik.Akronim);
+                        getCmd.Parameters.AddWithValue("@PracownikImieInsert", pracownik.Imie);
+                        getCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", pracownik.Nazwisko);
+                        var result = getCmd.ExecuteScalar();
+                        if (result != null)
+                        {
+                            return Convert.ToInt32(result);
+                        }
+                    }
+                    connection.Close();
+                }
+                catch (Exception ex)
+                {
+                    connection.Close();
+                    Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
+                    throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}" + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
+                }
+            }
+            return 0;
         }
     }
 }
