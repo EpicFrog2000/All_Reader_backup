@@ -273,6 +273,7 @@ END
 END";
 
     // TODO zrób lepsze błędy dot. imie, nazwisko i akronim
+
     public static void Main()
     {
         Check_Base_Files(); // sprawdz czy istnieje plik config, jesli nie to go inicjalizuje
@@ -284,6 +285,18 @@ END";
             try
             {
                 folders = Directory.GetDirectories(Big_Folder);
+                if (!folders.Any())
+                {
+                    Console.WriteLine($"Nie znaleziono żadnych folderów w: {Big_Folder}");
+                }
+                else
+                {
+                    foreach (var folder in folders)
+                    {
+                        Check_Foldery_Processing(folder); // sprawdz czy istnieją odpowiednie podfoldery, jesli nie to je inicjalizuje
+                        allfolders.Add(folder);
+                    }
+                }
             }
             catch
             {
@@ -291,18 +304,6 @@ END";
                 error_logger.New_Custom_Error($"Nie znaleziono folderu {Big_Folder}");
                 Console.WriteLine($"Nie znaleziono folderu {Big_Folder}");
                 continue;
-            }
-            if (folders.Count() == 0)
-            {
-                Console.WriteLine($"Nie znaleziono żadnych folderów w: {Big_Folder}");
-            }
-            else
-            {
-                foreach (var folder in folders)
-                {
-                    Check_Foldery_Processing(folder); // sprawdz czy istnieją odpowiednie podfoldery, jesli nie to je inicjalizuje
-                    allfolders.Add(folder);
-                }
             }
         }
         while (true)
@@ -321,7 +322,7 @@ END";
                     error_logger.Set_Error_File_Path(Path.Combine(AppDomain.CurrentDomain.BaseDirectory));
                     error_logger.New_Custom_Error($"{ex.Message}");
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"{ex.Message}");
+                    Console.WriteLine($"{ex.Message} {DateTime.Now}");
                     Console.ForegroundColor = ConsoleColor.White;
                     continue;
                 }
@@ -340,7 +341,7 @@ END";
         {
             string filePath = current_filePath;
             Console.ForegroundColor = ConsoleColor.Blue;
-            Console.WriteLine($"Czytanie: {System.IO.Path.GetFileNameWithoutExtension(filePath)}");
+            Console.WriteLine($"Czytanie: {Path.GetFileNameWithoutExtension(filePath)}");
             Console.ForegroundColor = ConsoleColor.White;
             if (!Is_File_Xlsx(filePath))
             {
@@ -716,7 +717,6 @@ END";
             Optima_Conection_String = config.Optima_Conection_String;
         }
     }
-
 }
 public class Config_Data_Json
 {

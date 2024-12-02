@@ -337,106 +337,13 @@ namespace All_Readeer
                                     if (godziny.Godz_Zakonczenia_Pracy < godziny.Godz_Rozpoczecia_Pracy)
                                     {
                                         // insert godziny przed północą
-                                        using (SqlCommand insertCmd = new SqlCommand(Program.sqlQueryInsertPlanDoOptimy, connection, tran))
-                                        {
-                                            insertCmd.Parameters.AddWithValue("@DataInsert", DateTime.ParseExact($"{grafik.rok}-{grafik.miesiac:D2}-{dzien.dzien:D2}", "yyyy-MM-dd", CultureInfo.InvariantCulture));
-                                            DateTime baseDate = new DateTime(1899, 12, 30);
-                                            DateTime godzOdDate = baseDate + godziny.Godz_Rozpoczecia_Pracy;
-                                            DateTime godzDoDate = baseDate + TimeSpan.FromHours(24);
-                                            insertCmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = godzOdDate;
-                                            insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
-                                            double czasPrzepracowanyInsert = (TimeSpan.FromHours(24) - godziny.Godz_Rozpoczecia_Pracy).TotalHours;
-                                            insertCmd.Parameters.AddWithValue("@CzasPrzepracowanyInsert", czasPrzepracowanyInsert);
-                                            insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", czasPrzepracowanyInsert);
-                                            insertCmd.Parameters.AddWithValue("@PRI_PraId", Get_ID_Pracownika(dane_Dni.pracownik));
-                                            insertCmd.Parameters.AddWithValue("@Godz_dod_50", 0);
-                                            insertCmd.Parameters.AddWithValue("@Godz_dod_100", 0);
-                                            if (Program.error_logger.Last_Mod_Osoba.Length > 20)
-                                            {
-                                                insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 20));
-                                            }
-                                            else
-                                            {
-                                                insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba);
-                                            }
-                                            if (Program.error_logger.Last_Mod_Osoba.Length > 50)
-                                            {
-                                                insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 50));
-                                            }
-                                            else
-                                            {
-                                                insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba);
-                                            }
-                                            insertCmd.Parameters.AddWithValue("@DataMod", Program.error_logger.Last_Mod_Time);
-                                            insertCmd.ExecuteScalar();
-                                        }
+                                        Zrob_Insert_Plan_command(connection, tran,grafik,dane_Dni.pracownik,new DateTime(grafik.rok, grafik.miesiac, dzien.dzien), godziny.Godz_Rozpoczecia_Pracy, TimeSpan.FromHours(24), (TimeSpan.FromHours(24) - godziny.Godz_Rozpoczecia_Pracy).TotalHours);
                                         // insert po północy
-                                        using (SqlCommand insertCmd = new SqlCommand(Program.sqlQueryInsertPlanDoOptimy, connection, tran))
-                                        {
-                                            var data = new DateTime(grafik.rok, grafik.miesiac, dzien.dzien).AddDays(1);
-                                            insertCmd.Parameters.AddWithValue("@DataInsert", DateTime.ParseExact($"{data:yyyy-MM-dd}", "yyyy-MM-dd", CultureInfo.InvariantCulture));
-                                            DateTime baseDate = new DateTime(1899, 12, 30);
-                                            DateTime godzOdDate = baseDate + TimeSpan.FromHours(0);
-                                            DateTime godzDoDate = baseDate + godziny.Godz_Zakonczenia_Pracy;
-                                            insertCmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = godzOdDate;
-                                            insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
-                                            double czasPrzepracowanyInsert = godziny.Godz_Zakonczenia_Pracy.TotalHours;
-                                            insertCmd.Parameters.AddWithValue("@CzasPrzepracowanyInsert", czasPrzepracowanyInsert);
-                                            insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", czasPrzepracowanyInsert);
-                                            insertCmd.Parameters.AddWithValue("@PRI_PraId", Get_ID_Pracownika(dane_Dni.pracownik));
-                                            insertCmd.Parameters.AddWithValue("@Godz_dod_50", 0);
-                                            insertCmd.Parameters.AddWithValue("@Godz_dod_100", 0);
-                                            if (Program.error_logger.Last_Mod_Osoba.Length > 20)
-                                            {
-                                                insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 20));
-                                            }
-                                            else
-                                            {
-                                                insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba);
-                                            }
-                                            if (Program.error_logger.Last_Mod_Osoba.Length > 50)
-                                            {
-                                                insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 50));
-                                            }
-                                            else
-                                            {
-                                                insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba);
-                                            }
-                                            insertCmd.Parameters.AddWithValue("@DataMod", Program.error_logger.Last_Mod_Time);
-                                            insertCmd.ExecuteScalar();
-                                        }
+                                        Zrob_Insert_Plan_command(connection, tran, grafik, dane_Dni.pracownik, new DateTime(grafik.rok, grafik.miesiac, dzien.dzien).AddDays(1), TimeSpan.FromHours(0), godziny.Godz_Zakonczenia_Pracy, godziny.Godz_Zakonczenia_Pracy.TotalHours);
                                     }
                                     else
                                     {
-                                        using (SqlCommand insertCmd = new SqlCommand(Program.sqlQueryInsertPlanDoOptimy, connection, tran))
-                                        {
-                                            insertCmd.Parameters.AddWithValue("@DataInsert", DateTime.ParseExact($"{grafik.rok}-{grafik.miesiac:D2}-{dzien.dzien:D2}", "yyyy-MM-dd", CultureInfo.InvariantCulture));
-                                            insertCmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = ("1899-12-30 " + godziny.Godz_Rozpoczecia_Pracy.ToString());
-                                            insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = ("1899-12-30 " + godziny.Godz_Zakonczenia_Pracy.ToString());
-                                            insertCmd.Parameters.AddWithValue("@CzasPrzepracowanyInsert", (godziny.Godz_Zakonczenia_Pracy - godziny.Godz_Rozpoczecia_Pracy).TotalHours);
-                                            insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", (godziny.Godz_Zakonczenia_Pracy - godziny.Godz_Rozpoczecia_Pracy).TotalHours);
-                                            insertCmd.Parameters.AddWithValue("@PRI_PraId", Get_ID_Pracownika(dane_Dni.pracownik));
-                                            insertCmd.Parameters.AddWithValue("@Godz_dod_50", 0);
-                                            insertCmd.Parameters.AddWithValue("@Godz_dod_100", 0);
-                                            if (Program.error_logger.Last_Mod_Osoba.Length > 20)
-                                            {
-                                                insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 20));
-                                            }
-                                            else
-                                            {
-                                                insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba);
-                                            }
-                                            if (Program.error_logger.Last_Mod_Osoba.Length > 50)
-                                            {
-                                                insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 50));
-                                            }
-                                            else
-                                            {
-                                                insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba);
-                                            }
-                                            insertCmd.Parameters.AddWithValue("@DataMod", Program.error_logger.Last_Mod_Time);
-                                            insertCmd.ExecuteScalar();
-                                        }
+                                        Zrob_Insert_Plan_command(connection, tran, grafik, dane_Dni.pracownik, DateTime.ParseExact($"{grafik.rok}-{grafik.miesiac:D2}-{dzien.dzien:D2}", "yyyy-MM-dd", CultureInfo.InvariantCulture), godziny.Godz_Rozpoczecia_Pracy, godziny.Godz_Zakonczenia_Pracy, (godziny.Godz_Zakonczenia_Pracy - godziny.Godz_Rozpoczecia_Pracy).TotalHours);
                                     }
                                 }
                             }
@@ -494,5 +401,41 @@ namespace All_Readeer
             }
             return 0;
         }
+        private static void Zrob_Insert_Plan_command(SqlConnection connection, SqlTransaction transaction, Grafik grafik, Pracownik pracownik, DateTime data, TimeSpan startGodz, TimeSpan endGodz, double czasPrzepracowanyInsert)
+        {
+            using (SqlCommand insertCmd = new SqlCommand(Program.sqlQueryInsertPlanDoOptimy, connection, transaction))
+            {
+                DateTime baseDate = new DateTime(1899, 12, 30);
+                DateTime godzOdDate = baseDate + startGodz;
+                DateTime godzDoDate = baseDate + endGodz;
+                insertCmd.Parameters.AddWithValue("@DataInsert", data);
+                insertCmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = godzOdDate;
+                insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
+                insertCmd.Parameters.AddWithValue("@CzasPrzepracowanyInsert", czasPrzepracowanyInsert);
+                insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", czasPrzepracowanyInsert);
+                insertCmd.Parameters.AddWithValue("@PRI_PraId", Get_ID_Pracownika(pracownik));
+                insertCmd.Parameters.AddWithValue("@Godz_dod_50", 0);
+                insertCmd.Parameters.AddWithValue("@Godz_dod_100", 0);
+                if (Program.error_logger.Last_Mod_Osoba.Length > 20)
+                {
+                    insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 20));
+                }
+                else
+                {
+                    insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba);
+                }
+                if (Program.error_logger.Last_Mod_Osoba.Length > 50)
+                {
+                    insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 50));
+                }
+                else
+                {
+                    insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba);
+                }
+                insertCmd.Parameters.AddWithValue("@DataMod", Program.error_logger.Last_Mod_Time);
+                insertCmd.ExecuteScalar();
+            }
+        }
+
     }
 }
