@@ -478,8 +478,8 @@ namespace All_Readeer
                 }
                 if (string.IsNullOrEmpty(dane))
                 {
-                    Program.error_logger.New_Error(dane, "nazwisko i imie", StartKarty.col, StartKarty.row - 2, $"Nie znaleziono pola z nazwiskiem i imieniem między kolumna[{StartKarty.col}] rząd[{StartKarty.row - 2}] a kolumna[{StartKarty.col + 5}] rząd[{StartKarty.row - 2}]");
-                    throw new Exception(Program.error_logger.Get_Error_String());
+                    //Program.error_logger.New_Error(dane, "nazwisko i imie", StartKarty.col, StartKarty.row - 2, $"Nie znaleziono pola z nazwiskiem i imieniem między kolumna[{StartKarty.col}] rząd[{StartKarty.row - 2}] a kolumna[{StartKarty.col + 5}] rząd[{StartKarty.row - 2}]");
+                    //throw new Exception(Program.error_logger.Get_Error_String());
                 }
                 else
                 {
@@ -516,8 +516,8 @@ namespace All_Readeer
 
                     if(string.IsNullOrEmpty(karta_pracy.pracownik.Imie) || string.IsNullOrEmpty(karta_pracy.pracownik.Nazwisko))
                     {
-                        Program.error_logger.New_Error(dane, "nazwisko i imie", StartKarty.col, StartKarty.row - 2, $"Nie znaleziono pola z nazwiskiem i imieniem między kolumna[{StartKarty.col}] rząd[{StartKarty.row - 2}] a kolumna[{StartKarty.col + 5}] rząd[{StartKarty.row - 2}]");
-                        throw new Exception(Program.error_logger.Get_Error_String());
+                        //Program.error_logger.New_Error(dane, "nazwisko i imie", StartKarty.col, StartKarty.row - 2, $"Nie znaleziono pola z nazwiskiem i imieniem między kolumna[{StartKarty.col}] rząd[{StartKarty.row - 2}] a kolumna[{StartKarty.col + 5}] rząd[{StartKarty.row - 2}]");
+                        //throw new Exception(Program.error_logger.Get_Error_String());
                     }
 
                 }
@@ -543,7 +543,8 @@ namespace All_Readeer
                         karta_pracy.pracownik.Akronim = -1;
                     }
                 }
-                if ((karta_pracy.pracownik.Nazwisko == null || karta_pracy.pracownik.Imie == null))
+
+                if ((karta_pracy.pracownik.Nazwisko == null || karta_pracy.pracownik.Imie == null) || (string.IsNullOrEmpty(karta_pracy.pracownik.Nazwisko) || string.IsNullOrEmpty(karta_pracy.pracownik.Imie)))
                 {
                     if (karta_pracy.pracownik.Akronim == 0)
                     {
@@ -552,12 +553,12 @@ namespace All_Readeer
                         throw new Exception(Program.error_logger.Get_Error_String());
                     }
                 }
-                if(karta_pracy.pracownik.Nazwisko != null)
+                if(karta_pracy.pracownik.Nazwisko != null && !string.IsNullOrEmpty(karta_pracy.pracownik.Nazwisko))
                 {
                     karta_pracy.pracownik.Nazwisko = karta_pracy.pracownik.Nazwisko.ToLower();
                     karta_pracy.pracownik.Nazwisko = char.ToUpper(karta_pracy.pracownik.Nazwisko[0], CultureInfo.CurrentCulture) + karta_pracy.pracownik.Nazwisko.Substring(1);
                 }
-                if (karta_pracy.pracownik.Imie != null)
+                if (karta_pracy.pracownik.Imie != null && string.IsNullOrEmpty(karta_pracy.pracownik.Imie))
                 {
                     karta_pracy.pracownik.Imie = karta_pracy.pracownik.Imie.ToLower();
                     karta_pracy.pracownik.Imie = char.ToUpper(karta_pracy.pracownik.Imie[0], CultureInfo.CurrentCulture) + karta_pracy.pracownik.Imie.Substring(1);

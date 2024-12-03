@@ -212,8 +212,8 @@ namespace All_Readeer
                 }
                 catch
                 {
-                    Program.error_logger.New_Error(nazwiskoimie, "Nazwisko Imie", pozycja.col, pozycja.row, "Źle wpisane nazwisko i imie. Wartość w komórce powinna być: Nazwisko Imie ");
-                    throw new Exception(Program.error_logger.Get_Error_String());
+                    //Program.error_logger.New_Error(nazwiskoimie, "Nazwisko Imie", pozycja.col, pozycja.row, "Źle wpisane nazwisko i imie. Wartość w komórce powinna być: Nazwisko Imie ");
+                    //throw new Exception(Program.error_logger.Get_Error_String());
                 }
                 dane_dni.pracownik.Nazwisko = dane_dni.pracownik.Nazwisko.ToLower();
                 dane_dni.pracownik.Nazwisko = char.ToUpper(dane_dni.pracownik.Nazwisko[0], CultureInfo.CurrentCulture) + dane_dni.pracownik.Nazwisko.Substring(1);

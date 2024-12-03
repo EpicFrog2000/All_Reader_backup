@@ -275,6 +275,9 @@ INSERT INTO CDN.PracPlanDniGodz
 	        '');
 END
 END";
+
+    // Todo usun bledy z wczytywanie nazwisko imie
+
     public static void Main()
     {
         while (true)

@@ -255,16 +255,16 @@ namespace All_Readeer
                     {
                         dane_dni.pracownik.Nazwisko = nazwiskoiimie.Split(' ')[0].Trim();
                         dane_dni.pracownik.Imie = nazwiskoiimie.Split(' ')[1].Trim();
+                        dane_dni.pracownik.Nazwisko = dane_dni.pracownik.Nazwisko.ToLower();
+                        dane_dni.pracownik.Nazwisko = char.ToUpper(dane_dni.pracownik.Nazwisko[0], CultureInfo.CurrentCulture) + dane_dni.pracownik.Nazwisko.Substring(1);
+                        dane_dni.pracownik.Imie = dane_dni.pracownik.Imie.ToLower();
+                        dane_dni.pracownik.Imie = char.ToUpper(dane_dni.pracownik.Imie[0], CultureInfo.CurrentCulture) + dane_dni.pracownik.Imie.Substring(1);
                     }
                     catch
                     {
-                        Program.error_logger.New_Error(nazwiskoiimie, "Nazwisko Imie", pozycja.col, pozycja.row, "Niepoprawnie wpisane nazwisko i ime. Powinno być w formacie np. 'Nazwisko Imie'");
-                        throw new Exception(Program.error_logger.Get_Error_String());
+                        //Program.error_logger.New_Error(nazwiskoiimie, "Nazwisko Imie", pozycja.col, pozycja.row, "Niepoprawnie wpisane nazwisko i ime. Powinno być w formacie np. 'Nazwisko Imie'");
+                        //throw new Exception(Program.error_logger.Get_Error_String());
                     }
-                    dane_dni.pracownik.Nazwisko = dane_dni.pracownik.Nazwisko.ToLower();
-                    dane_dni.pracownik.Nazwisko = char.ToUpper(dane_dni.pracownik.Nazwisko[0], CultureInfo.CurrentCulture) + dane_dni.pracownik.Nazwisko.Substring(1);
-                    dane_dni.pracownik.Imie = dane_dni.pracownik.Imie.ToLower();
-                    dane_dni.pracownik.Imie = char.ToUpper(dane_dni.pracownik.Imie[0], CultureInfo.CurrentCulture) + dane_dni.pracownik.Imie.Substring(1);
 
 
                     pozycja.col = 3;
