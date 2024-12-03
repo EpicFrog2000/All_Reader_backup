@@ -6,6 +6,10 @@ using System.Text.Json;
 
 class Program
 {
+    public static bool Clear_Logs_On_Program_Restart = false;
+    public static bool Clear_Processed_Files_On_Restart = true;
+    public static bool Clear_Bad_Files_On_Restart = true;
+
     public static string Optima_Conection_String = "Server=ITEGER-NT;Database=CDN_Wars_Test_3_;User Id=sa;Password=cdn;Encrypt=True;TrustServerCertificate=True;";
     public static List<string> Files_Folders = [];
     public static Error_Logger error_logger = new();
@@ -271,77 +275,78 @@ INSERT INTO CDN.PracPlanDniGodz
 	        '');
 END
 END";
-
-    // TODO zrób lepsze błędy dot. imie, nazwisko i akronim
-
     public static void Main()
     {
-        Check_Base_Files(); // sprawdz czy istnieje plik config, jesli nie to go inicjalizuje
-        GetConfigFromFile();
-        string[] folders;
-        List<string> allfolders = [];
-        foreach (var Big_Folder in Files_Folders)
-        {
-            try
-            {
-                folders = Directory.GetDirectories(Big_Folder);
-                if (!folders.Any())
-                {
-                    Console.WriteLine($"Nie znaleziono żadnych folderów w: {Big_Folder}");
-                }
-                else
-                {
-                    foreach (var folder in folders)
-                    {
-                        Check_Foldery_Processing(folder); // sprawdz czy istnieją odpowiednie podfoldery, jesli nie to je inicjalizuje
-                        allfolders.Add(folder);
-                    }
-                }
-            }
-            catch
-            {
-                error_logger.Set_Error_File_Path(Path.Combine(AppDomain.CurrentDomain.BaseDirectory));
-                error_logger.New_Custom_Error($"Nie znaleziono folderu {Big_Folder}");
-                Console.WriteLine($"Nie znaleziono folderu {Big_Folder}");
-                continue;
-            }
-        }
         while (true)
         {
-            foreach (var folder in allfolders)
+            Check_Base_Files(); // sprawdz czy istnieje plik config, jesli nie to go inicjalizuje
+            GetConfigFromFile();
+            string[] folders;
+            List<string> allfolders = [];
+            foreach (var Big_Folder in Files_Folders)
             {
-                error_logger.Set_Error_File_Path(Path.Combine(folder, "Errors"));
-                error_logger.Current_Processed_Files_Folder = Path.Combine(folder, "Processed_Files");
-                error_logger.Current_Bad_Files_Folder = Path.Combine(folder, "Bad_Files");
                 try
                 {
-                    Do_The_Thing(folder);
+                    folders = Directory.GetDirectories(Big_Folder);
+                    if (!folders.Any())
+                    {
+                        Console.WriteLine($"Nie znaleziono żadnych folderów w: {Big_Folder} {DateTime.Now}");
+                    }
+                    else
+                    {
+                        foreach (var folder in folders)
+                        {
+                            Check_Foldery_Processing(folder); // sprawdz czy istnieją odpowiednie podfoldery, jesli nie to je inicjalizuje
+                            allfolders.Add(folder);
+                        }
+                    }
                 }
-                catch(Exception ex)
+                catch
                 {
                     error_logger.Set_Error_File_Path(Path.Combine(AppDomain.CurrentDomain.BaseDirectory));
-                    error_logger.New_Custom_Error($"{ex.Message}");
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"{ex.Message} {DateTime.Now}");
-                    Console.ForegroundColor = ConsoleColor.White;
+                    error_logger.New_Custom_Error($"Nie znaleziono folderu {Big_Folder} {DateTime.Now}");
+                    Console.WriteLine($"Nie znaleziono folderu {Big_Folder} {DateTime.Now}");
                     continue;
                 }
             }
-            Thread.Sleep(3000);
+            while (true)
+            {
+                foreach (var folder in allfolders)
+                {
+                    error_logger.Set_Error_File_Path(Path.Combine(folder, "Errors"));
+                    error_logger.Current_Processed_Files_Folder = Path.Combine(folder, "Processed_Files");
+                    error_logger.Current_Bad_Files_Folder = Path.Combine(folder, "Bad_Files");
+                    try
+                    {
+                        Do_The_Thing(folder);
+                    }
+                    catch (Exception ex)
+                    {
+                        error_logger.Set_Error_File_Path(Path.Combine(AppDomain.CurrentDomain.BaseDirectory));
+                        error_logger.New_Custom_Error($"{ex.Message} {DateTime.Now}");
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine($"{ex.Message} {DateTime.Now}");
+                        Console.ForegroundColor = ConsoleColor.White;
+                        continue;
+                    }
+                }
+                Thread.Sleep(3000);
+            }
         }
+
     }
     public static void Do_The_Thing(string Folder_Path)
     {
         string[] filePaths = Directory.GetFiles(Folder_Path);
         if (filePaths.Length == 0) {
-            Console.WriteLine($"Nie znaleziono żadnych plików w folderze {Folder_Path}");
+            Console.WriteLine($"Nie znaleziono żadnych plików w folderze {Folder_Path} {DateTime.Now}");
             return;
         }
         foreach (string current_filePath in filePaths)
         {
             string filePath = current_filePath;
             Console.ForegroundColor = ConsoleColor.Blue;
-            Console.WriteLine($"Czytanie: {Path.GetFileNameWithoutExtension(filePath)}");
+            Console.WriteLine($"Czytanie: {Path.GetFileNameWithoutExtension(filePath)} {DateTime.Now}");
             Console.ForegroundColor = ConsoleColor.White;
             if (!Is_File_Xlsx(filePath))
             {
@@ -362,7 +367,7 @@ END";
 
             var (Last_Mod_Osoba, Last_Mod_Time) = Get_File_Meta_Info(filePath);
             if (Last_Mod_Osoba == "Error") {
-                error_logger.New_Custom_Error($"Błąd w czytaniu {filePath}, nie można wczytać metadanych");
+                error_logger.New_Custom_Error($"Błąd w czytaniu {filePath}, nie można wczytać metadanych {DateTime.Now}");
             }
             error_logger.Last_Mod_Osoba = Last_Mod_Osoba;
             error_logger.Last_Mod_Time = Last_Mod_Time;
@@ -382,8 +387,8 @@ END";
                     if (typ_pliku == 0)
                     {
                         Copy_Bad_Sheet_To_Files_Folder(filePath, error_logger.Nr_Zakladki);
-                        error_logger.New_Custom_Error("Nie rozpoznano tego rodzaju zakladki: " + error_logger.Nazwa_Pliku + " nr zakladki: " + error_logger.Nr_Zakladki + " nazwa zakladki: " + error_logger.Nazwa_Zakladki + " Porada: Sprawdź czy nagłówki są uzupełnione");
-                        Console.WriteLine("Nie rozpoznano tego rodzaju zakladki: " + error_logger.Nazwa_Pliku + " nr zakladki: " + error_logger.Nr_Zakladki + " nazwa zakladki: " + error_logger.Nazwa_Zakladki + " Porada: Sprawdź czy nagłówki są uzupełnione");
+                        error_logger.New_Custom_Error("Nie rozpoznano tego rodzaju zakladki: " + error_logger.Nazwa_Pliku + " nr zakladki: " + error_logger.Nr_Zakladki + " nazwa zakladki: " + error_logger.Nazwa_Zakladki + $" Porada: Sprawdź czy nagłówki są uzupełnione {DateTime.Now}");
+                        Console.WriteLine("Nie rozpoznano tego rodzaju zakladki: " + error_logger.Nazwa_Pliku + " nr zakladki: " + error_logger.Nr_Zakladki + " nazwa zakladki: " + error_logger.Nazwa_Zakladki + $" Porada: Sprawdź czy nagłówki są uzupełnione {DateTime.Now}");
                         continue;
                     }
                     else if (typ_pliku == 1)
@@ -563,7 +568,10 @@ END";
             var defaultConfig = new
             {
                 Files_Folders = new[] { Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Files") },
-                Optima_Conection_String
+                Optima_Conection_String,
+                Clear_Logs_On_Program_Restart,
+                Clear_Processed_Files_On_Restart,
+                Clear_Bad_Files_On_Restart
             };
             File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config.json"), JsonSerializer.Serialize(defaultConfig, new JsonSerializerOptions { WriteIndented = true }));
         }
@@ -579,12 +587,12 @@ END";
             }
             catch
             {
-                error_logger.New_Custom_Error($"Błędna ścieżka: {Path.Combine(FolderPath, "Errors")}");
-                Console.WriteLine($"Błędna ścieżka: {Path.Combine(FolderPath, "Errors")}");
+                error_logger.New_Custom_Error($"Błędna ścieżka: {Path.Combine(FolderPath, "Errors")} {DateTime.Now}");
+                Console.WriteLine($"Błędna ścieżka: {Path.Combine(FolderPath, "Errors")} {DateTime.Now}");
             }
         }
 
-        if (File.Exists(Path.Combine(FolderPath, "Errors", "Errors.txt")))
+        if (File.Exists(Path.Combine(FolderPath, "Errors", "Errors.txt")) && Clear_Logs_On_Program_Restart)
         {
             File.WriteAllText(Path.Combine(FolderPath, "Errors", "Errors.txt"), string.Empty);
         }
@@ -597,19 +605,22 @@ END";
             }
             catch
             {
-                error_logger.New_Custom_Error($"Błędna ścieżka: {Path.Combine(FolderPath, "Bad_Files")}");
-                Console.WriteLine($"Błędna ścieżka: {Path.Combine(FolderPath, "Bad_Files")}");
+                error_logger.New_Custom_Error($"Błędna ścieżka: {Path.Combine(FolderPath, "Bad_Files")} {DateTime.Now}");
+                Console.WriteLine($"Błędna ścieżka: {Path.Combine(FolderPath, "Bad_Files")} {DateTime.Now}");
             }
         }
         else
         {
-            foreach (var file in Directory.GetFiles(Path.Combine(FolderPath, "Bad_Files")))
+            if (Clear_Bad_Files_On_Restart)
             {
-                File.Delete(file);
-            }
-            foreach (var directory in Directory.GetDirectories(Path.Combine(FolderPath, "Bad_Files")))
-            {
-                Directory.Delete(directory, recursive: true);
+                foreach (var file in Directory.GetFiles(Path.Combine(FolderPath, "Bad_Files")))
+                {
+                    File.Delete(file);
+                }
+                foreach (var directory in Directory.GetDirectories(Path.Combine(FolderPath, "Bad_Files")))
+                {
+                    Directory.Delete(directory, recursive: true);
+                }
             }
         }
 
@@ -621,19 +632,22 @@ END";
             }
             catch
             {
-                error_logger.New_Custom_Error($"Błędna ścieżka: {Path.Combine(FolderPath, "Processed_Files")}");
-                Console.WriteLine($"Błędna ścieżka: {Path.Combine(FolderPath, "Processed_Files")}");
+                error_logger.New_Custom_Error($"Błędna ścieżka: {Path.Combine(FolderPath, "Processed_Files")} {DateTime.Now}");
+                Console.WriteLine($"Błędna ścieżka: {Path.Combine(FolderPath, "Processed_Files")} {DateTime.Now}");
             }
         }
         else
         {
-            foreach (var file in Directory.GetFiles(Path.Combine(FolderPath, "Processed_Files")))
+            if (Clear_Processed_Files_On_Restart)
             {
-                File.Delete(file);
-            }
-            foreach (var directory in Directory.GetDirectories(Path.Combine(FolderPath, "Processed_Files")))
-            {
-                Directory.Delete(directory, recursive: true);
+                foreach (var file in Directory.GetFiles(Path.Combine(FolderPath, "Processed_Files")))
+                {
+                    File.Delete(file);
+                }
+                foreach (var directory in Directory.GetDirectories(Path.Combine(FolderPath, "Processed_Files")))
+                {
+                    Directory.Delete(directory, recursive: true);
+                }
             }
         }
     }
@@ -652,6 +666,7 @@ END";
     }
     public static void ConvertToXlsx(string inputFilePath, string outputFilePath)
     {
+        // nwm dlaczego textwrap jest zawsze true. Jebać to jest wystarczająco dobre.
         System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
         DataSet dataSet;
         using (var stream = File.Open(inputFilePath, FileMode.Open, FileAccess.Read))
@@ -705,7 +720,10 @@ END";
             File.Create(filePath).Dispose();
             var defaultConfig = new
             {
-                Optima_Conection_String
+                Optima_Conection_String,
+                Clear_Processed_Files_On_Restart,
+                Clear_Bad_Files_On_Restart,
+                Clear_Logs_On_Program_Restart
             };
             File.WriteAllText(filePath, JsonSerializer.Serialize(defaultConfig, new JsonSerializerOptions { WriteIndented = true }));
         }
@@ -715,6 +733,9 @@ END";
         {
             Files_Folders = config.Files_Folders;
             Optima_Conection_String = config.Optima_Conection_String;
+            Clear_Logs_On_Program_Restart = config.Clear_Logs_On_Program_Restart;
+            Clear_Bad_Files_On_Restart = config.Clear_Bad_Files_On_Restart;
+            Clear_Processed_Files_On_Restart = config.Clear_Processed_Files_On_Restart;
         }
     }
 }
@@ -722,6 +743,9 @@ public class Config_Data_Json
 {
     public List<string> Files_Folders { get; set; } = [];
     public string Optima_Conection_String { get; set; } = string.Empty;
+    public bool Clear_Logs_On_Program_Restart { get; set;  } = false;
+    public bool Clear_Bad_Files_On_Restart { get; set; } = true;
+    public bool Clear_Processed_Files_On_Restart { get; set; } = true;
 }
 //{
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::.................................::::::::----::::::-==+=======--:----==

@@ -436,6 +436,5 @@ namespace All_Readeer
                 insertCmd.ExecuteScalar();
             }
         }
-
     }
 }
