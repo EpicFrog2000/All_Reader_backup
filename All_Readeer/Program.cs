@@ -102,8 +102,8 @@ INSERT INTO CDN.PracPracaDniGodz
 	VALUES
 		((select PPR_PprId from cdn.PracPracaDni where CAST(PPR_Data as datetime) = @DataInsert and PPR_PraId = @PRI_PraId),
 		1,
-		DATEADD(MINUTE, 0, @GodzOdDate),
-		DATEADD(MINUTE, -60 * (@CzasPrzepracowanyInsert - @PracaWgGrafikuInsert), @GodzDoDate),
+		@GodzOdDate,
+		@GodzDoDate,
 		@TypPracy,
 		1,
 		1,
@@ -206,32 +206,6 @@ END
 
 SET @id = (select [cdn].[PracPlanDni].[PPL_PplId] from [cdn].[PracPlanDni] where [cdn].[PracPlanDni].[PPL_Data] = @DataInsert and [cdn].[PracPlanDni].[PPL_PraId] = @PRI_PraId);
 
--- DODANIE GODZIN W NORMIE
-INSERT INTO CDN.PracPlanDniGodz
-(PGL_PplId,
-PGL_Lp,
-PGL_OdGodziny,
-PGL_DoGodziny,
-PGL_Strefa,
-PGL_DzlId,
-PGL_PrjId,
-PGL_UwagiPlanu)
-VALUES
-(@id,
-1,
-DATEADD(MINUTE, 0, @GodzOdDate),
-DATEADD(MINUTE, -60 * (@CzasPrzepracowanyInsert - @PracaWgGrafikuInsert), @GodzDoDate),
-2,
-1,
-1,
-'');
-
--- DODANIE NADGODZIN
-IF(@CzasPrzepracowanyInsert > @PracaWgGrafikuInsert)
-BEGIN
-
-IF(@Godz_dod_50 > 0)
-BEGIN
 INSERT INTO CDN.PracPlanDniGodz
 	        (PGL_PplId,
 	        PGL_Lp,
@@ -244,37 +218,12 @@ INSERT INTO CDN.PracPlanDniGodz
         VALUES
 	        (@id,
 	        1,
-	        DATEADD(MINUTE, -60 * (@CzasPrzepracowanyInsert - @PracaWgGrafikuInsert), @GodzDoDate),
-	        DATEADD(MINUTE, 60 * @Godz_dod_50, DATEADD(MINUTE, -60 * (@CzasPrzepracowanyInsert - @PracaWgGrafikuInsert), @GodzDoDate)),
-	        4,
-	        1,
-	        1,
-	        '');
-SET @CzasPrzepracowanyInsert = @CzasPrzepracowanyInsert - @Godz_dod_50;
-END
-
-IF(@CzasPrzepracowanyInsert > @PracaWgGrafikuInsert)
-BEGIN
-INSERT INTO CDN.PracPlanDniGodz
-	        (PGL_PplId,
-	        PGL_Lp,
-	        PGL_OdGodziny,
-	        PGL_DoGodziny,
-	        PGL_Strefa,
-	        PGL_DzlId,
-	        PGL_PrjId,
-	        PGL_UwagiPlanu)
-        VALUES
-	        (@id,
-	        1,
-	        DATEADD(MINUTE, -60 * (@CzasPrzepracowanyInsert - @PracaWgGrafikuInsert), @GodzDoDate),
+	        @GodzOdDate,
 	        @GodzDoDate,
 	        4,
 	        1,
 	        1,
-	        '');
-END
-END";
+	        '');";
 
     // Todo usun bledy z wczytywanie nazwisko imie
 
@@ -442,6 +391,21 @@ END";
                             catch { }
                             continue;
                         }
+                    }else if (typ_pliku == 4)
+                    {
+                        try
+                        {
+                            Grafik_Pracy_Reader_2024_v2.Process_Zakladka_For_Optima(zakladka);
+                        }
+                        catch
+                        {
+                            try
+                            {
+                                Copy_Bad_Sheet_To_Files_Folder(filePath, error_logger.Nr_Zakladki);
+                            }
+                            catch { }
+                            continue;
+                        }
                     }
                 }
             }
@@ -490,6 +454,12 @@ END";
         if (cellValue1_1.Trim().Contains("GRAFIK PRACY")) // grafik v2024
         {
             return 3;
+        }
+
+        cellValue3_1 = workshit.Cell(3, 1).Value.ToString();
+        if (cellValue3_1.Trim().Contains("Data")) // grafik v2024 v2
+        {
+            return 4;
         }
 
         return 0;

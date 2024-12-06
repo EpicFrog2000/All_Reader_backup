@@ -333,18 +333,7 @@ namespace All_Readeer
                             {
                                 foreach (var godziny in dzien.godz_pracy)
                                 {
-                                    // jak praca po północy to na next dzien przeniesc
-                                    if (godziny.Godz_Zakonczenia_Pracy < godziny.Godz_Rozpoczecia_Pracy)
-                                    {
-                                        // insert godziny przed północą
-                                        Zrob_Insert_Plan_command(connection, tran,grafik,dane_Dni.pracownik,new DateTime(grafik.rok, grafik.miesiac, dzien.dzien), godziny.Godz_Rozpoczecia_Pracy, TimeSpan.FromHours(24), (TimeSpan.FromHours(24) - godziny.Godz_Rozpoczecia_Pracy).TotalHours);
-                                        // insert po północy
-                                        Zrob_Insert_Plan_command(connection, tran, grafik, dane_Dni.pracownik, new DateTime(grafik.rok, grafik.miesiac, dzien.dzien).AddDays(1), TimeSpan.FromHours(0), godziny.Godz_Zakonczenia_Pracy, godziny.Godz_Zakonczenia_Pracy.TotalHours);
-                                    }
-                                    else
-                                    {
-                                        Zrob_Insert_Plan_command(connection, tran, grafik, dane_Dni.pracownik, DateTime.ParseExact($"{grafik.rok}-{grafik.miesiac:D2}-{dzien.dzien:D2}", "yyyy-MM-dd", CultureInfo.InvariantCulture), godziny.Godz_Rozpoczecia_Pracy, godziny.Godz_Zakonczenia_Pracy, (godziny.Godz_Zakonczenia_Pracy - godziny.Godz_Rozpoczecia_Pracy).TotalHours);
-                                    }
+                                    Zrob_Insert_Plan_command(connection, tran, grafik, dane_Dni.pracownik, new DateTime(grafik.rok, grafik.miesiac, dzien.dzien), godziny.Godz_Rozpoczecia_Pracy, godziny.Godz_Zakonczenia_Pracy);
                                 }
                             }
                             catch (SqlException ex)
@@ -401,7 +390,7 @@ namespace All_Readeer
             }
             return 0;
         }
-        private static void Zrob_Insert_Plan_command(SqlConnection connection, SqlTransaction transaction, Grafik grafik, Pracownik pracownik, DateTime data, TimeSpan startGodz, TimeSpan endGodz, double czasPrzepracowanyInsert)
+        private static void Zrob_Insert_Plan_command(SqlConnection connection, SqlTransaction transaction, Grafik grafik, Pracownik pracownik, DateTime data, TimeSpan startGodz, TimeSpan endGodz)
         {
             using (SqlCommand insertCmd = new SqlCommand(Program.sqlQueryInsertPlanDoOptimy, connection, transaction))
             {
@@ -411,11 +400,7 @@ namespace All_Readeer
                 insertCmd.Parameters.AddWithValue("@DataInsert", data);
                 insertCmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = godzOdDate;
                 insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
-                insertCmd.Parameters.AddWithValue("@CzasPrzepracowanyInsert", czasPrzepracowanyInsert);
-                insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", czasPrzepracowanyInsert);
                 insertCmd.Parameters.AddWithValue("@PRI_PraId", Get_ID_Pracownika(pracownik));
-                insertCmd.Parameters.AddWithValue("@Godz_dod_50", 0);
-                insertCmd.Parameters.AddWithValue("@Godz_dod_100", 0);
                 if (Program.error_logger.Last_Mod_Osoba.Length > 20)
                 {
                     insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 20));

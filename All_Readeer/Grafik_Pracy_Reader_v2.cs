@@ -450,11 +450,7 @@ namespace All_Readeer
                             insertCmd.Parameters.AddWithValue("@DataInsert", DateTime.ParseExact($"{grafik.rok}-{grafik.miesiac:D2}-{dzien.dzien:D2}", "yyyy-MM-dd", CultureInfo.InvariantCulture));
                             insertCmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = ("1899-12-30 " + godz_rozp_pracy.ToString());
                             insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = ("1899-12-30 " + godz_zak_pracy.ToString());
-                            insertCmd.Parameters.AddWithValue("@CzasPrzepracowanyInsert", (godz_zak_pracy - godz_rozp_pracy).TotalHours);
-                            insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", (godz_zak_pracy - godz_rozp_pracy).TotalHours);
                             insertCmd.Parameters.AddWithValue("@PRI_PraId", Get_ID_Pracownika(dane_Dni.pracownik));
-                            insertCmd.Parameters.AddWithValue("@Godz_dod_50", 0);
-                            insertCmd.Parameters.AddWithValue("@Godz_dod_100", 0);
                             if (Program.error_logger.Last_Mod_Osoba.Length > 20)
                             {
                                 insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 20));

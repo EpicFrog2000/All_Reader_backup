@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("All_Readeer")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+982db186dbd0044a705f4c85e809dbe42c64e0b2")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e9b0e734ef2d5f9642f5affd9c4a9d5c6042a7b9")]
 [assembly: System.Reflection.AssemblyProductAttribute("All_Readeer")]
 [assembly: System.Reflection.AssemblyTitleAttribute("All_Readeer")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

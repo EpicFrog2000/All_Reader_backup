@@ -731,62 +731,18 @@ namespace All_Readeer
                         czasPrzepracowany = (dane_Dni.godz_zakoncz_pracy - dane_Dni.godz_rozp_pracy).TotalHours;
                     }
                     double czasPodstawowy = czasPrzepracowany - ((double)(dane_Dni.Godz_nadl_platne_z_dod_50 + dane_Dni.Godz_nadl_platne_z_dod_100));
-                    bool czy_next_dzien = false;
 
                     if (czasPodstawowy > 0)
                     {
-                        if (endPodstawowy < startPodstawowy)
-                        {
-                            czy_next_dzien = true;
-                            // insert godziny przed północą
-                            Zrob_Insert_Obecnosc_Command(connection, tran, Data_Karty, startPodstawowy, TimeSpan.FromHours(24), karta, 2, (endPodstawowy - startPodstawowy).TotalHours);
-                            // insert po północy
-                            Zrob_Insert_Obecnosc_Command(connection, tran, Data_Karty.AddDays(1), TimeSpan.FromHours(0), endPodstawowy, karta, 2, endPodstawowy.TotalHours);
-                        }
-                        else
-                        {
-                            Zrob_Insert_Obecnosc_Command(connection, tran, Data_Karty, startPodstawowy, endPodstawowy, karta, 2, (endPodstawowy - startPodstawowy).TotalHours);
-                        }
-                    }
-                    if (czy_next_dzien)
-                    {
-                        Data_Karty = Data_Karty.AddDays(1);
-                        czy_next_dzien = false;
+                        Zrob_Insert_Obecnosc_Command(connection, tran, Data_Karty, startPodstawowy, endPodstawowy, karta, 2);
                     }
                     if (dane_Dni.Godz_nadl_platne_z_dod_50 > 0)
                     {
-                        if (endNadl50 < startNadl50)
-                        {
-                            czy_next_dzien = true;
-                            // insert godziny przed północą
-                            Zrob_Insert_Obecnosc_Command(connection, tran, Data_Karty, startNadl50, TimeSpan.FromHours(24), karta, 8, (TimeSpan.FromHours(24) - startNadl50).TotalHours);
-                            // insert po północy
-                            Zrob_Insert_Obecnosc_Command(connection, tran, Data_Karty.AddDays(1), TimeSpan.FromHours(0), endNadl50,karta, 8, endNadl50.TotalHours);
-                        }
-                        else
-                        {
-                            Zrob_Insert_Obecnosc_Command(connection, tran, Data_Karty, startNadl50, endNadl50, karta, 8, (endNadl50 - startNadl50).TotalHours);
-                        }
-                    }
-                    if (czy_next_dzien)
-                    {
-                        Data_Karty = Data_Karty.AddDays(1);
-                        czy_next_dzien = false;
+                        Zrob_Insert_Obecnosc_Command(connection, tran, Data_Karty, startNadl50, endNadl50, karta, 8);
                     }
                     if (dane_Dni.Godz_nadl_platne_z_dod_100 > 0)
                     {
-                        czy_next_dzien = true;
-                        if (endNadl100 < startNadl100)
-                        {
-                            // insert godziny przed północą
-                            Zrob_Insert_Obecnosc_Command(connection, tran, Data_Karty, startNadl100, TimeSpan.FromHours(24), karta, 6, (TimeSpan.FromHours(24) - startNadl100).TotalHours);
-                            // insert po północy
-                            Zrob_Insert_Obecnosc_Command(connection, tran, Data_Karty.AddDays(1), TimeSpan.FromHours(0), endNadl100, karta, 6, endNadl100.TotalHours);
-                        }
-                        else
-                        {
-                            Zrob_Insert_Obecnosc_Command(connection, tran, Data_Karty, startNadl100, endNadl100, karta,6, (endNadl100 - startNadl100).TotalHours);
-                        }
+                        Zrob_Insert_Obecnosc_Command(connection, tran, Data_Karty, startNadl100, endNadl100, karta, 6);
                     }
                 }
                 catch (SqlException ex)
@@ -807,7 +763,7 @@ namespace All_Readeer
                 }
             }
         }                                                                                                                                                                                    //  2 -> podstawowy
-        private static void Zrob_Insert_Obecnosc_Command(SqlConnection connection, SqlTransaction transaction, DateTime Data_Karty, TimeSpan startPodstawowy, TimeSpan endPodstawowy, Karta_Pracy karta, int Typ_Pracy, double czasPrzepracowanyInsert)
+        private static void Zrob_Insert_Obecnosc_Command(SqlConnection connection, SqlTransaction transaction, DateTime Data_Karty, TimeSpan startPodstawowy, TimeSpan endPodstawowy, Karta_Pracy karta, int Typ_Pracy)
         {
             DateTime baseDate = new DateTime(1899, 12, 30);
             using (SqlCommand insertCmd = new SqlCommand(Program.sqlQueryInsertObecnościDoOptimy, connection, transaction))
@@ -819,8 +775,6 @@ namespace All_Readeer
                     insertCmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = godzOdDate;
                     insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
                     insertCmd.Parameters.AddWithValue("@DataInsert", Data_Karty);
-                    insertCmd.Parameters.AddWithValue("@CzasPrzepracowanyInsert", czasPrzepracowanyInsert);
-                    insertCmd.Parameters.AddWithValue("@PracaWgGrafikuInsert", czasPrzepracowanyInsert);
                     insertCmd.Parameters.AddWithValue("@PRI_PraId", Get_ID_Pracownika(karta.pracownik));
                     insertCmd.Parameters.AddWithValue("@TypPracy", Typ_Pracy);
                     if (Program.error_logger.Last_Mod_Osoba.Length > 20)
