@@ -429,7 +429,7 @@ INSERT INTO CDN.PracPlanDniGodz
         {
         }
     }
-    private static int Get_Typ_Zakladki(IXLWorksheet workshit)
+    private static int Get_Typ_Zakladki(IXLWorksheet workshit) //to jest zjebane ale lepiej nie wiem jak zrobić :c
     {
         foreach (var cell in workshit.CellsUsed()) // karta v2
         {

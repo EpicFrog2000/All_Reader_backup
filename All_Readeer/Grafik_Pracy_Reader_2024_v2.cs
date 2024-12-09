@@ -143,7 +143,7 @@ namespace All_Readeer
                         catch
                         {
                             Program.error_logger.New_Custom_Error($"Zła nazwa zakładki. Ma wyglądać: miesiąc rok a jest {worksheet.Name}");
-                            throw;
+                            throw new Exception(Program.error_logger.Get_Error_String());
                         }
                         grafik.Pracownik = Get_Pracownik(worksheet, new Current_Position { row = Startpozycja.row - 2, col = Startpozycja.col + ((counter * 3) + 1) });
                         if (string.IsNullOrEmpty(grafik.Pracownik.Imie) && string.IsNullOrEmpty(grafik.Pracownik.Nazwisko) && string.IsNullOrEmpty(grafik.Pracownik.Akronim))
@@ -167,6 +167,7 @@ namespace All_Readeer
             catch(Exception ex)
             {
                 Console.WriteLine(ex.Message);
+                throw;
             }
         }
         private static Pracownik Get_Pracownik(IXLWorksheet worksheet, Current_Position pozycja)
@@ -214,14 +215,32 @@ namespace All_Readeer
                         pozycja.row += 1;
                         continue;
                     }
-                    dane_Dnia.Godzina_Pracy_Od = TimeSpan.Parse(dane);
+                    if (TimeSpan.TryParse(dane, out TimeSpan time))
+                    {
+                        dane_Dnia.Godzina_Pracy_Od = time;
+                    }
+                    else
+                    {
+                        Program.error_logger.New_Error(dane, "Godzina pracy od", pozycja.col, pozycja.row, "Błędna wartość w godzinie pracy od");
+                        throw new Exception(Program.error_logger.Get_Error_String());
+                    }
+
+
                     dane = worksheet.Cell(pozycja.row, pozycja.col + 1).GetFormattedString().Trim();
                     if (string.IsNullOrEmpty(dane))
                     {
                         pozycja.row += 1;
                         continue;
                     }
-                    dane_Dnia.Godzina_Pracy_Do = TimeSpan.Parse(dane);
+                    if (TimeSpan.TryParse(dane, out TimeSpan time2))
+                    {
+                        dane_Dnia.Godzina_Pracy_Do = time2;
+                    }
+                    else
+                    {
+                        Program.error_logger.New_Error(dane, "Godzina pracy do", pozycja.col + 1, pozycja.row, "Błędna wartość w godzinie pracy do");
+                        throw new Exception(Program.error_logger.Get_Error_String());
+                    }
                     Dane_Dni.Add(dane_Dnia);
                     pozycja.row += 1;
                 }

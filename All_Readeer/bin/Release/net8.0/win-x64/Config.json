@@ -1,6 +1,9 @@
 {
   "Files_Folders": [
-    "G:\\ITEGER\\staż\\obecności\\All_Reader\\WARS Reader\\Files"
+    "G:\\ITEGER\\sta\u017C\\obecno\u015Bci\\All_Reader\\All_Readeer\\bin\\Release\\net8.0\\win-x64\\Files"
   ],
-  "Optima_Conection_String": "Server=ITEGER-NT;Database=CDN_Wars_Test_3_;User Id=sa;Password=cdn;Encrypt=True;TrustServerCertificate=True;"
+  "Optima_Conection_String": "Server=ITEGER-NT;Database=CDN_Wars_Test_3_;User Id=sa;Password=cdn;Encrypt=True;TrustServerCertificate=True;",
+  "Clear_Logs_On_Program_Restart": false,
+  "Clear_Processed_Files_On_Restart": true,
+  "Clear_Bad_Files_On_Restart": true
 }
