@@ -225,8 +225,6 @@ INSERT INTO CDN.PracPlanDniGodz
 	        1,
 	        '');";
 
-    // Todo usun bledy z wczytywanie nazwisko imie
-
     public static void Main()
     {
         while (true)
@@ -316,14 +314,12 @@ INSERT INTO CDN.PracPlanDniGodz
             }
 
             error_logger.Nazwa_Pliku = filePath;
-
             var (Last_Mod_Osoba, Last_Mod_Time) = Get_File_Meta_Info(filePath);
             if (Last_Mod_Osoba == "Error") {
                 error_logger.New_Custom_Error($"Błąd w czytaniu {filePath}, nie można wczytać metadanych {DateTime.Now}");
             }
             error_logger.Last_Mod_Osoba = Last_Mod_Osoba;
             error_logger.Last_Mod_Time = Last_Mod_Time;
-
             int ilosc_zakladek = 0;
             using (var workbook = new XLWorkbook(filePath))
             {
@@ -334,7 +330,6 @@ INSERT INTO CDN.PracPlanDniGodz
                     error_logger.Nr_Zakladki = i;
                     var zakladka = workbook.Worksheet(i);
                     error_logger.Nazwa_Zakladki = zakladka.Name;
-
                     var typ_pliku = Get_Typ_Zakladki(zakladka);
                     if (typ_pliku == 0)
                     {
@@ -429,8 +424,9 @@ INSERT INTO CDN.PracPlanDniGodz
         {
         }
     }
-    private static int Get_Typ_Zakladki(IXLWorksheet workshit) //to jest zjebane ale lepiej nie wiem jak zrobić :c
+    private static int Get_Typ_Zakladki(IXLWorksheet workshit)
     {
+        //to jest zjebane ale lepiej nie wiem jak zrobić :c
         foreach (var cell in workshit.CellsUsed()) // karta v2
         {
             try
@@ -457,11 +453,10 @@ INSERT INTO CDN.PracPlanDniGodz
         }
 
         cellValue3_1 = workshit.Cell(3, 1).Value.ToString();
-        if (cellValue3_1.Trim().Contains("Data")) // grafik v2024 v2
+        if (cellValue3_1.Trim() == "Data") // grafik v2024 v2
         {
             return 4;
         }
-
         return 0;
     }
     private static (string, DateTime) Get_File_Meta_Info(string File_Path)
@@ -488,13 +483,13 @@ INSERT INTO CDN.PracPlanDniGodz
     }
     private static void Copy_Bad_Sheet_To_Files_Folder(string filePath, int sheetIndex)
     {
-        var newFilePath = System.IO.Path.Combine(error_logger.Current_Bad_Files_Folder, "copy_" + System.IO.Path.GetFileName(filePath));
+        var newFilePath = System.IO.Path.Combine(error_logger.Current_Bad_Files_Folder, "DO_POPRAWY_" + System.IO.Path.GetFileName(filePath));
         try
         {
             using (var originalwb = new XLWorkbook(filePath))
             {
                 var sheetToCopy = originalwb.Worksheet(sheetIndex);
-                string newSheetName = $"Copy_{sheetIndex}_{sheetToCopy.Name}";
+                string newSheetName = sheetToCopy.Name;
                 if (newSheetName.Length > 31)
                 {
                     newSheetName = newSheetName.Substring(0, 31);

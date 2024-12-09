@@ -3,6 +3,14 @@
   "WorkspaceRootPath": "G:\\ITEGER\\sta\u017C\\obecno\u015Bci\\All_Reader\\All_Readeer\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{51188863-BB71-45E5-A6E8-7B2949A2EC43}|All_Readeer.csproj|g:\\iteger\\sta\u017C\\obecno\u015Bci\\all_reader\\all_readeer\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{51188863-BB71-45E5-A6E8-7B2949A2EC43}|All_Readeer.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{51188863-BB71-45E5-A6E8-7B2949A2EC43}|All_Readeer.csproj|g:\\iteger\\sta\u017C\\obecno\u015Bci\\all_reader\\all_readeer\\reader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{51188863-BB71-45E5-A6E8-7B2949A2EC43}|All_Readeer.csproj|solutionrelative:reader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{51188863-BB71-45E5-A6E8-7B2949A2EC43}|All_Readeer.csproj|g:\\iteger\\sta\u017C\\obecno\u015Bci\\all_reader\\all_readeer\\grafik_pracy_reader_2024_v2.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{51188863-BB71-45E5-A6E8-7B2949A2EC43}|All_Readeer.csproj|solutionrelative:grafik_pracy_reader_2024_v2.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -17,14 +25,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{51188863-BB71-45E5-A6E8-7B2949A2EC43}|All_Readeer.csproj|g:\\iteger\\sta\u017C\\obecno\u015Bci\\all_reader\\all_readeer\\karta_pracy_reader_v2.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{51188863-BB71-45E5-A6E8-7B2949A2EC43}|All_Readeer.csproj|solutionrelative:karta_pracy_reader_v2.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{51188863-BB71-45E5-A6E8-7B2949A2EC43}|All_Readeer.csproj|g:\\iteger\\sta\u017C\\obecno\u015Bci\\all_reader\\all_readeer\\reader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{51188863-BB71-45E5-A6E8-7B2949A2EC43}|All_Readeer.csproj|solutionrelative:reader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{51188863-BB71-45E5-A6E8-7B2949A2EC43}|All_Readeer.csproj|g:\\iteger\\sta\u017C\\obecno\u015Bci\\all_reader\\all_readeer\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{51188863-BB71-45E5-A6E8-7B2949A2EC43}|All_Readeer.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -34,11 +34,11 @@
       "DocumentGroups": [
         {
           "DockedWidth": 353,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 5,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 3,
               "Title": "Grafik_Pracy_Reader_v2.cs",
               "DocumentMoniker": "G:\\ITEGER\\sta\u017C\\obecno\u015Bci\\All_Reader\\All_Readeer\\Grafik_Pracy_Reader_v2.cs",
               "RelativeDocumentMoniker": "Grafik_Pracy_Reader_v2.cs",
@@ -46,12 +46,11 @@
               "RelativeToolTip": "Grafik_Pracy_Reader_v2.cs",
               "ViewState": "AQIAAAAAAAAAAAAAAAAAAGYAAAAJAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-09T07:57:15.762Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-12-09T07:57:15.762Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 4,
               "Title": "Grafik_Pracy_Reader_v2024.cs",
               "DocumentMoniker": "G:\\ITEGER\\sta\u017C\\obecno\u015Bci\\All_Reader\\All_Readeer\\Grafik_Pracy_Reader_v2024.cs",
               "RelativeDocumentMoniker": "Grafik_Pracy_Reader_v2024.cs",
@@ -59,12 +58,11 @@
               "RelativeToolTip": "Grafik_Pracy_Reader_v2024.cs",
               "ViewState": "AQIAAAAAAAAAAAAAAAAAAMMAAAAFAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-09T07:57:05.64Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-12-09T07:57:05.64Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 5,
               "Title": "Karta_Pracy_Reader_v2.cs",
               "DocumentMoniker": "G:\\ITEGER\\sta\u017C\\obecno\u015Bci\\All_Reader\\All_Readeer\\Karta_Pracy_Reader_v2.cs",
               "RelativeDocumentMoniker": "Karta_Pracy_Reader_v2.cs",
@@ -72,44 +70,43 @@
               "RelativeToolTip": "Karta_Pracy_Reader_v2.cs",
               "ViewState": "AQIAAAAAAAAAAAAAAAAAAAAAAAAWAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-06T14:30:04.803Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-12-06T14:30:04.803Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 2,
               "Title": "Grafik_Pracy_Reader_2024_v2.cs",
               "DocumentMoniker": "G:\\ITEGER\\sta\u017C\\obecno\u015Bci\\All_Reader\\All_Readeer\\Grafik_Pracy_Reader_2024_v2.cs",
               "RelativeDocumentMoniker": "Grafik_Pracy_Reader_2024_v2.cs",
               "ToolTip": "G:\\ITEGER\\sta\u017C\\obecno\u015Bci\\All_Reader\\All_Readeer\\Grafik_Pracy_Reader_2024_v2.cs",
               "RelativeToolTip": "Grafik_Pracy_Reader_2024_v2.cs",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAAGEBAAAFAAAA",
+              "ViewState": "AQIAAA8AAAAAAAAAAAAwwIMAAAARAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-12-06T09:44:29.642Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 1,
               "Title": "Reader.cs",
               "DocumentMoniker": "G:\\ITEGER\\sta\u017C\\obecno\u015Bci\\All_Reader\\All_Readeer\\Reader.cs",
               "RelativeDocumentMoniker": "Reader.cs",
               "ToolTip": "G:\\ITEGER\\sta\u017C\\obecno\u015Bci\\All_Reader\\All_Readeer\\Reader.cs",
               "RelativeToolTip": "Reader.cs",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAUAAAAdAAAA",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAEsAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-12-09T07:10:48.373Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 0,
               "Title": "Program.cs",
               "DocumentMoniker": "G:\\ITEGER\\sta\u017C\\obecno\u015Bci\\All_Reader\\All_Readeer\\Program.cs",
               "RelativeDocumentMoniker": "Program.cs",
               "ToolTip": "G:\\ITEGER\\sta\u017C\\obecno\u015Bci\\All_Reader\\All_Readeer\\Program.cs",
               "RelativeToolTip": "Program.cs",
-              "ViewState": "AQIAAGwBAAAAAAAAAAAmwH0BAAAZAAAA",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAMUCAAAcAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-12-06T10:01:14.966Z",
               "EditorCaption": ""

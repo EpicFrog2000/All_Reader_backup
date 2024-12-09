@@ -142,7 +142,7 @@ namespace All_Readeer
                         }
                         catch
                         {
-                            Program.error_logger.New_Custom_Error($"Zła nazwa zakładki. Ma wyglądać: miesiąc rok a jest {worksheet.Name}");
+                            Program.error_logger.New_Custom_Error($"Zła nazwa zakładki. Ma wyglądać: miesiąc rok a jest {worksheet.Name} w pliku {Program.error_logger.Nazwa_Pliku}");
                             throw new Exception(Program.error_logger.Get_Error_String());
                         }
                         grafik.Pracownik = Get_Pracownik(worksheet, new Current_Position { row = Startpozycja.row - 2, col = Startpozycja.col + ((counter * 3) + 1) });
