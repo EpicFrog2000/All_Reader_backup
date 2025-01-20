@@ -291,6 +291,7 @@ INSERT INTO CDN.PracPlanDniGodz
                     if (!folders.Any())
                     {
                         Console.WriteLine($"Nie znaleziono żadnych folderów w: {Big_Folder} {DateTime.Now}");
+                        continue;
                     }
                     else
                     {

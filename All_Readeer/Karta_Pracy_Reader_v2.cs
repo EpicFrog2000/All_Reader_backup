@@ -985,7 +985,8 @@ namespace All_Readeer
                     Dodaj_Godz_Odbior_Do_Optimy(karta, tran, connection);
                     Dodaj_Obecnosci_do_Optimy(karta, tran, connection);
                     Dodaj_Nieobecnosci_do_Optimy(karta.ListaNieobecnosci, tran, connection);
-
+                    //Update kalendarz i rozlicz czas pracy
+                    //update cdn.PracEtaty SET PRE_KalId = 6 where PRE_PreId = @PRA_PraId;
 
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.WriteLine($"Poprawnie dodawno odbiory nadgodzin z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
