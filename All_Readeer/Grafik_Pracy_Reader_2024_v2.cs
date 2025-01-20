@@ -135,16 +135,23 @@ namespace All_Readeer
                     while (true)
                     {
                         Grafik grafik = new();
+
+                        // TODO: będą zmainy w grafik_2024_v2 KURRRRWA xd date z innego miesca się bedzie brało
+                        // Dokoncz, kiedy wiadomo:
+                        // string (miesiac, rok) = Get_Grafik_Date(worksheet, Startpozycja);
+                        // get date
                         try
                         {
-                            grafik.Set_Miesiac(worksheet.Name.Split(' ')[0]);
-                            grafik.Rok = int.Parse(worksheet.Name.Split(' ')[1]);
+                            grafik.Set_Miesiac(worksheet.Name.Split(' ')[0].Trim());
+                            grafik.Rok = int.Parse(worksheet.Name.Split(' ')[1].Trim());
                         }
                         catch
                         {
                             Program.error_logger.New_Custom_Error($"Zła nazwa zakładki. Ma wyglądać: miesiąc rok a jest {worksheet.Name} w pliku {Program.error_logger.Nazwa_Pliku}");
                             throw new Exception(Program.error_logger.Get_Error_String());
                         }
+
+
                         grafik.Pracownik = Get_Pracownik(worksheet, new Current_Position { row = Startpozycja.row - 2, col = Startpozycja.col + ((counter * 3) + 1) });
                         if (string.IsNullOrEmpty(grafik.Pracownik.Imie) && string.IsNullOrEmpty(grafik.Pracownik.Nazwisko) && string.IsNullOrEmpty(grafik.Pracownik.Akronim))
                         {
@@ -169,6 +176,29 @@ namespace All_Readeer
                 Console.WriteLine(ex.Message);
                 throw;
             }
+        }
+        private static (string, string) Get_Grafik_Date(IXLWorksheet worksheet, Current_Position pozycja)
+        {
+            string miesiac = "", rok = "";
+            var value = "";
+            try
+            {
+                value = worksheet.Cell(pozycja.row - 3, pozycja.col + 1).GetFormattedString().Trim();
+                // Nwm jeszcze do konca jaki str będzie
+                // index 3 i 5 po split prawdopodobnie
+                //mies = value.split[3].trim()
+
+
+
+
+
+            }
+            catch
+            {
+                Program.error_logger.New_Error(value, "tytuł grafiku", pozycja.col + 1, pozycja.row - 3, "Zła format nagłówka grafiku");
+                throw new Exception(Program.error_logger.Get_Error_String());
+            }
+            return (miesiac, rok);
         }
         private static Pracownik Get_Pracownik(IXLWorksheet worksheet, Current_Position pozycja)
         {

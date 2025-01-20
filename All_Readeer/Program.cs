@@ -4,6 +4,10 @@ using ExcelDataReader;
 using System.Data;
 using System.Text.Json;
 
+
+// TODO: będą zmainy w grafik_2024_v2 KURRRRWA xd date z innego miesca się bedzie brało
+
+
 class Program
 {
     public static bool Clear_Logs_On_Program_Restart = false;
@@ -47,7 +51,7 @@ BEGIN
 	IF @PRI_PraId IS NULL
 	BEGIN
 		DECLARE @ErrorMessage NVARCHAR(500) = 'Brak takiego pracownika w bazie o imieniu, nazwisku i akronimie: ' +@PracownikImieInsert + ' ' +  @PracownikNazwiskoInsert + ' ' + Convert(VARCHAR(200), @Akronim);
-		THROW 50000, @ErrorMessage, 1;
+		THROW 50003, @ErrorMessage, 1;
 	END
 END
 
@@ -89,6 +93,27 @@ BEGIN
     END CATCH
 END
 
+DECLARE @EXISTSDANE INT = (
+    SELECT COUNT(PGR_PgrId)
+    FROM CDN.PracPracaDniGodz
+    WHERE PGR_PprId = (
+        SELECT PPR_PprId
+        FROM CDN.PracPracaDni
+        WHERE CAST(PPR_Data AS datetime) = @DataInsert
+          AND PPR_PraId = @PRI_PraId
+    )
+      AND PGR_OdGodziny = @GodzOdDate
+      AND PGR_DoGodziny = @GodzDoDate
+      AND PGR_Strefa = @TypPracy
+);
+
+IF @EXISTSDZIEN !=0 AND @EXISTSDANE != 0
+BEGIN
+    DECLARE @ErrorMessageC NVARCHAR(500) = 'Taki rekord juz istnieje. Taki sam plik został już wcześniej prawdopodobnie zaimportowany';
+	THROW 50003, @ErrorMessageC, 1;
+END
+
+
 INSERT INTO CDN.PracPracaDniGodz
 		(PGR_PprId,
 		PGR_Lp,
@@ -110,67 +135,84 @@ INSERT INTO CDN.PracPracaDniGodz
 		'',
 		1);";
     public static string sqlQueryInsertNieObecnoŚciDoOptimy = @$"
-DECLARE @TNBID INT = (select TNB_TnbId from cdn.TypNieobec WHERE TNB_Nazwa = @NazwaNieobecnosci)
-INSERT INTO [CDN].[PracNieobec]
-           ([PNB_PraId]
-           ,[PNB_TnbId]
-           ,[PNB_TyuId]
-           ,[PNB_NaPodstPoprzNB]
-           ,[PNB_OkresOd]
-           ,[PNB_Seria]
-           ,[PNB_Numer]
-           ,[PNB_OkresDo]
-           ,[PNB_Opis]
-           ,[PNB_Rozliczona]
-           ,[PNB_RozliczData]
-           ,[PNB_ZwolFPFGSP]
-           ,[PNB_UrlopNaZadanie]
-           ,[PNB_Przyczyna]
-           ,[PNB_DniPracy]
-           ,[PNB_DniKalend]
-           ,[PNB_Calodzienna]
-           ,[PNB_ZlecZasilekPIT]
-           ,[PNB_PracaRodzic]
-           ,[PNB_Dziecko]
-           ,[PNB_OpeZalId]
-           ,[PNB_StaZalId]
-           ,[PNB_TS_Zal]
-           ,[PNB_TS_Mod]
-           ,[PNB_OpeModKod]
-           ,[PNB_OpeModNazwisko]
-           ,[PNB_OpeZalKod]
-           ,[PNB_OpeZalNazwisko]
-           ,[PNB_Zrodlo])
-     VALUES
-           (@PRI_PraId
-           ,@TNBID
-           ,99999
-           ,0
-           ,@DataOd
-           ,''
-           ,''
-           ,@DataDo
-           ,''
-           ,0
-           ,@BaseDate
-           ,0
-           ,0
-           ,@Przyczyna
-           ,@DniPracy
-           ,@DniKalendarzowe
-           ,1
-           ,0
-           ,0
-           ,''
-           ,1
-           ,1
-           ,@DataMod
-           ,@DataMod
-           ,@ImieMod
-           ,@NazwiskoMod
-           ,@ImieMod
-           ,@NazwiskoMod
-           ,0);";
+DECLARE @TNBID INT = (SELECT TNB_TnbId FROM cdn.TypNieobec WHERE TNB_Nazwa = @NazwaNieobecnosci);
+IF NOT EXISTS (
+    SELECT 1
+    FROM [CDN].[PracNieobec]
+    WHERE PNB_PraId = @PRI_PraId
+      AND PNB_TnbId = @TNBID
+      AND PNB_OkresOd = @DataOd
+      AND PNB_OkresDo = @DataDo
+      AND PNB_Przyczyna = @Przyczyna
+)
+BEGIN
+    INSERT INTO [CDN].[PracNieobec]
+               ([PNB_PraId]
+               ,[PNB_TnbId]
+               ,[PNB_TyuId]
+               ,[PNB_NaPodstPoprzNB]
+               ,[PNB_OkresOd]
+               ,[PNB_Seria]
+               ,[PNB_Numer]
+               ,[PNB_OkresDo]
+               ,[PNB_Opis]
+               ,[PNB_Rozliczona]
+               ,[PNB_RozliczData]
+               ,[PNB_ZwolFPFGSP]
+               ,[PNB_UrlopNaZadanie]
+               ,[PNB_Przyczyna]
+               ,[PNB_DniPracy]
+               ,[PNB_DniKalend]
+               ,[PNB_Calodzienna]
+               ,[PNB_ZlecZasilekPIT]
+               ,[PNB_PracaRodzic]
+               ,[PNB_Dziecko]
+               ,[PNB_OpeZalId]
+               ,[PNB_StaZalId]
+               ,[PNB_TS_Zal]
+               ,[PNB_TS_Mod]
+               ,[PNB_OpeModKod]
+               ,[PNB_OpeModNazwisko]
+               ,[PNB_OpeZalKod]
+               ,[PNB_OpeZalNazwisko]
+               ,[PNB_Zrodlo])
+         VALUES
+               (@PRI_PraId
+               ,@TNBID
+               ,99999
+               ,0
+               ,@DataOd
+               ,''
+               ,''
+               ,@DataDo
+               ,''
+               ,0
+               ,@BaseDate
+               ,0
+               ,0
+               ,@Przyczyna
+               ,@DniPracy
+               ,@DniKalendarzowe
+               ,1
+               ,0
+               ,0
+               ,''
+               ,1
+               ,1
+               ,@DataMod
+               ,@DataMod
+               ,@ImieMod
+               ,@NazwiskoMod
+               ,@ImieMod
+               ,@NazwiskoMod
+               ,0);
+END
+ELSE
+BEGIN
+    DECLARE @ErrorMessageC NVARCHAR(500) = 'Taki rekord juz istnieje. Taki sam plik został już wcześniej prawdopodobnie zaimportowany';
+	THROW 50003, @ErrorMessageC, 1;
+END;
+";
     public static string sqlQueryInsertPlanDoOptimy = $@"
 DECLARE @id int;
 DECLARE @EXISTSDZIEN INT = (SELECT COUNT([CDN].[PracPlanDni].[PPL_Data]) FROM cdn.PracPlanDni WHERE cdn.PracPlanDni.PPL_PraId = @PRI_PraId and [CDN].[PracPlanDni].[PPL_Data] = @DataInsert)
@@ -205,6 +247,14 @@ END CATCH
 END
 
 SET @id = (select [cdn].[PracPlanDni].[PPL_PplId] from [cdn].[PracPlanDni] where [cdn].[PracPlanDni].[PPL_Data] = @DataInsert and [cdn].[PracPlanDni].[PPL_PraId] = @PRI_PraId);
+
+-- sprawdz czy taki rekord juz istnieje
+DECLARE @EXISTSDANE INT = (SELECT COUNT(PGL_PplId) FROM CDN.PracPlanDniGodz WHERE PGL_PplId = @id and PGL_OdGodziny = @GodzOdDate and PGL_DoGodziny = @GodzDoDate)
+IF @EXISTSDZIEN !=0 AND @EXISTSDANE != 0
+BEGIN
+    DECLARE @ErrorMessageC NVARCHAR(500) = 'Taki rekord juz istnieje. Taki sam plik został już wcześniej prawdopodobnie zaimportowany';
+	THROW 50003, @ErrorMessageC, 1;
+END
 
 INSERT INTO CDN.PracPlanDniGodz
 	        (PGL_PplId,
@@ -426,7 +476,6 @@ INSERT INTO CDN.PracPlanDniGodz
     }
     private static int Get_Typ_Zakladki(IXLWorksheet workshit)
     {
-        //to jest zjebane ale lepiej nie wiem jak zrobić :c
         foreach (var cell in workshit.CellsUsed()) // karta v2
         {
             try

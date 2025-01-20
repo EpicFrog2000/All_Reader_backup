@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "G:\\ITEGER\\staż\\obecności\\All_Reader\\All_Readeer\\All_Readeer.csproj": {}
+    "E:\\ITEGER\\Praca\\obecności\\All_Reader\\All_Readeer\\All_Readeer.csproj": {}
   },
   "projects": {
-    "G:\\ITEGER\\staż\\obecności\\All_Reader\\All_Readeer\\All_Readeer.csproj": {
+    "E:\\ITEGER\\Praca\\obecności\\All_Reader\\All_Readeer\\All_Readeer.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "G:\\ITEGER\\staż\\obecności\\All_Reader\\All_Readeer\\All_Readeer.csproj",
+        "projectUniqueName": "E:\\ITEGER\\Praca\\obecności\\All_Reader\\All_Readeer\\All_Readeer.csproj",
         "projectName": "All_Readeer",
-        "projectPath": "G:\\ITEGER\\staż\\obecności\\All_Reader\\All_Readeer\\All_Readeer.csproj",
+        "projectPath": "E:\\ITEGER\\Praca\\obecności\\All_Reader\\All_Readeer\\All_Readeer.csproj",
         "packagesPath": "C:\\Users\\norbert.tasarz\\.nuget\\packages\\",
-        "outputPath": "G:\\ITEGER\\staż\\obecności\\All_Reader\\All_Readeer\\obj\\publish\\win-x64\\",
+        "outputPath": "E:\\ITEGER\\Praca\\obecności\\All_Reader\\All_Readeer\\obj\\publish\\win-x64\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -44,7 +44,8 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        }
+        },
+        "SdkAnalysisLevel": "9.0.100"
       },
       "frameworks": {
         "net8.0": {
@@ -69,7 +70,7 @@
             "Microsoft.NET.ILLink.Tasks": {
               "suppressParent": "All",
               "target": "Package",
-              "version": "[8.0.7, )",
+              "version": "[8.0.11, )",
               "autoReferenced": true
             },
             "Microsoft.Office.Interop.Excel": {
@@ -91,15 +92,15 @@
           "downloadDependencies": [
             {
               "name": "Microsoft.AspNetCore.App.Runtime.win-x64",
-              "version": "[8.0.7, 8.0.7]"
+              "version": "[8.0.11, 8.0.11]"
             },
             {
               "name": "Microsoft.NETCore.App.Runtime.win-x64",
-              "version": "[8.0.7, 8.0.7]"
+              "version": "[8.0.11, 8.0.11]"
             },
             {
               "name": "Microsoft.WindowsDesktop.App.Runtime.win-x64",
-              "version": "[8.0.7, 8.0.7]"
+              "version": "[8.0.11, 8.0.11]"
             }
           ],
           "frameworkReferences": {
@@ -107,7 +108,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.303/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.101/PortableRuntimeIdentifierGraph.json"
         }
       },
       "runtimes": {

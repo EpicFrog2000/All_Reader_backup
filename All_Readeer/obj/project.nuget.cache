@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "BPTDBWV/ER0=",
+  "dgSpecHash": "C7tEBXGXqjs=",
   "success": true,
-  "projectFilePath": "G:\\ITEGER\\staż\\obecności\\All_Reader\\All_Readeer\\All_Readeer.csproj",
+  "projectFilePath": "E:\\ITEGER\\Praca\\obecności\\All_Reader\\All_Readeer\\All_Readeer.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\norbert.tasarz\\.nuget\\packages\\azure.core\\1.38.0\\azure.core.1.38.0.nupkg.sha512",
     "C:\\Users\\norbert.tasarz\\.nuget\\packages\\azure.identity\\1.11.4\\azure.identity.1.11.4.nupkg.sha512",

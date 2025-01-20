@@ -522,12 +522,12 @@ namespace All_Readeer
 
                 }
 
-                // znajdz akronim w w prawo
+                // znajdz akronim w prawo
                 var akronim = "";
                 for (int i = 0; i < 6; i++)
                 {
                     akronim = worksheet.Cell(pozycja_wczytania_danych.row, pozycja_wczytania_danych.col + 1 + i).GetFormattedString().Trim().Replace("  ", " ");
-                    if (!string.IsNullOrEmpty(akronim))
+                    if (!string.IsNullOrEmpty(akronim) && akronim != "akronim" && akronim != "akronim:")
                     {
                         break;
                     }
@@ -540,9 +540,29 @@ namespace All_Readeer
                     }
                     else
                     {
+                        try
+                        {
+                            if (int.TryParse(akronim.Split(' ')[1], out int parsedValue2))
+                            {
+                                karta_pracy.pracownik.Akronim = parsedValue2;
+                            }
+                        }
+                        catch
+                        {
+                            karta_pracy.pracownik.Akronim = -1;
+                        }
                         karta_pracy.pracownik.Akronim = -1;
                     }
                 }
+                // Jeśli nie znalazlo akronim, to możę jest obok imie nazwisko w tej samej komórce
+                if(karta_pracy.pracownik.Akronim == -1)
+                {
+                    if (int.TryParse(dane.Trim().Split(' ')[^1], out int parsedValue3))
+                    {
+                        karta_pracy.pracownik.Akronim = parsedValue3;
+                    }
+                }
+
 
                 if ((karta_pracy.pracownik.Nazwisko == null || karta_pracy.pracownik.Imie == null) || (string.IsNullOrEmpty(karta_pracy.pracownik.Nazwisko) || string.IsNullOrEmpty(karta_pracy.pracownik.Imie)))
                 {
@@ -963,17 +983,13 @@ namespace All_Readeer
                     SqlTransaction tran = connection.BeginTransaction();
 
                     Dodaj_Godz_Odbior_Do_Optimy(karta, tran, connection);
+                    Dodaj_Obecnosci_do_Optimy(karta, tran, connection);
+                    Dodaj_Nieobecnosci_do_Optimy(karta.ListaNieobecnosci, tran, connection);
+
+
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.WriteLine($"Poprawnie dodawno odbiory nadgodzin z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
-                    Console.ForegroundColor = ConsoleColor.White;
-
-                    Dodaj_Obecnosci_do_Optimy(karta, tran, connection);
-                    Console.ForegroundColor = ConsoleColor.Green;
                     Console.WriteLine($"Poprawnie dodawno obecnosci z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
-                    Console.ForegroundColor = ConsoleColor.White;
-
-                    Dodaj_Nieobecnosci_do_Optimy(karta.ListaNieobecnosci, tran, connection);
-                    Console.ForegroundColor = ConsoleColor.Green;
                     Console.WriteLine($"Poprawnie dodawno nieobecnosci z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
                     Console.ForegroundColor = ConsoleColor.White;
 
@@ -1067,6 +1083,24 @@ BEGIN
     END TRY
     BEGIN CATCH
     END CATCH
+END
+
+DECLARE @EXISTSDANE INT = (
+    SELECT 1 
+    FROM CDN.PracPracaDniGodz 
+    WHERE PGR_PprId = (SELECT PPR_PprId 
+                       FROM cdn.PracPracaDni 
+                       WHERE CAST(PPR_Data AS DATETIME) = @DataInsert 
+                         AND PPR_PraId = @PRI_PraId)
+      AND PGR_OdGodziny = DATEADD(MINUTE, 0, @GodzOdDate)
+      AND PGR_DoGodziny = DATEADD(MINUTE, 0, @GodzDoDate)
+      AND PGR_Strefa = @TypPracy
+      AND PGR_OdbNadg = @TypNadg)
+
+IF @EXISTSDZIEN != 0 AND @EXISTSDANE !=0
+BEGIN
+    DECLARE @ErrorMessageC NVARCHAR(500) = 'Taki rekord juz istnieje. Taki sam plik został już wcześniej prawdopodobnie zaimportowany';
+	THROW 50003, @ErrorMessageC, 1;
 END
 
 INSERT INTO CDN.PracPracaDniGodz
