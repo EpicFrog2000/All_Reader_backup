@@ -384,7 +384,7 @@
           }
         }
       },
-      "Microsoft.NET.ILLink.Tasks/8.0.11": {
+      "Microsoft.NET.ILLink.Tasks/8.0.7": {
         "type": "package",
         "build": {
           "build/Microsoft.NET.ILLink.Tasks.props": {}
@@ -2267,7 +2267,7 @@
           }
         }
       },
-      "Microsoft.NET.ILLink.Tasks/8.0.11": {
+      "Microsoft.NET.ILLink.Tasks/8.0.7": {
         "type": "package",
         "build": {
           "build/Microsoft.NET.ILLink.Tasks.props": {}
@@ -4606,10 +4606,10 @@
         "microsoft.identitymodel.tokens.nuspec"
       ]
     },
-    "Microsoft.NET.ILLink.Tasks/8.0.11": {
-      "sha512": "zk5lnZrYJgtuJG8L4v17Ej8rZ3PUcR2iweNV08BaO5LbYHIi2wNaVNcJoLxvqgQdnjLlKnCCfVGLDr6QHeAarQ==",
+    "Microsoft.NET.ILLink.Tasks/8.0.7": {
+      "sha512": "iI52ptEKby2ymQ6B7h4TWbFmm85T4VvLgc/HvS45Yr3lgi4IIFbQtjON3bQbX/Vc94jXNSLvrDOp5Kh7SJyFYQ==",
       "type": "package",
-      "path": "microsoft.net.illink.tasks/8.0.11",
+      "path": "microsoft.net.illink.tasks/8.0.7",
       "hasTools": true,
       "files": [
         ".nupkg.metadata",
@@ -4623,7 +4623,7 @@
         "build/Microsoft.NET.ILLink.Analyzers.props",
         "build/Microsoft.NET.ILLink.Tasks.props",
         "build/Microsoft.NET.ILLink.targets",
-        "microsoft.net.illink.tasks.8.0.11.nupkg.sha512",
+        "microsoft.net.illink.tasks.8.0.7.nupkg.sha512",
         "microsoft.net.illink.tasks.nuspec",
         "tools/net472/ILLink.Tasks.dll",
         "tools/net472/ILLink.Tasks.dll.config",
@@ -9170,12 +9170,12 @@
       "ExcelDataReader >= 3.7.0",
       "ExcelDataReader.DataSet >= 3.7.0",
       "Microsoft.Data.SqlClient >= 5.2.2",
-      "Microsoft.NET.ILLink.Tasks >= 8.0.11",
+      "Microsoft.NET.ILLink.Tasks >= 8.0.7",
       "Microsoft.Office.Interop.Excel >= 15.0.4795.1001"
     ]
   },
   "packageFolders": {
-    "C:\\Users\\norbert.tasarz\\.nuget\\packages\\": {},
+    "C:\\Users\\tasar\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
@@ -9184,14 +9184,14 @@
       "projectUniqueName": "E:\\ITEGER\\Praca\\obecności\\All_Reader\\All_Readeer\\All_Readeer.csproj",
       "projectName": "All_Readeer",
       "projectPath": "E:\\ITEGER\\Praca\\obecności\\All_Reader\\All_Readeer\\All_Readeer.csproj",
-      "packagesPath": "C:\\Users\\norbert.tasarz\\.nuget\\packages\\",
+      "packagesPath": "C:\\Users\\tasar\\.nuget\\packages\\",
       "outputPath": "E:\\ITEGER\\Praca\\obecności\\All_Reader\\All_Readeer\\obj\\publish\\win-x64\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\norbert.tasarz\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\tasar\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -9218,8 +9218,7 @@
         "enableAudit": "true",
         "auditLevel": "low",
         "auditMode": "direct"
-      },
-      "SdkAnalysisLevel": "9.0.100"
+      }
     },
     "frameworks": {
       "net8.0": {
@@ -9244,7 +9243,7 @@
           "Microsoft.NET.ILLink.Tasks": {
             "suppressParent": "All",
             "target": "Package",
-            "version": "[8.0.11, )",
+            "version": "[8.0.7, )",
             "autoReferenced": true
           },
           "Microsoft.Office.Interop.Excel": {
@@ -9266,15 +9265,15 @@
         "downloadDependencies": [
           {
             "name": "Microsoft.AspNetCore.App.Runtime.win-x64",
-            "version": "[8.0.11, 8.0.11]"
+            "version": "[8.0.7, 8.0.7]"
           },
           {
             "name": "Microsoft.NETCore.App.Runtime.win-x64",
-            "version": "[8.0.11, 8.0.11]"
+            "version": "[8.0.7, 8.0.7]"
           },
           {
             "name": "Microsoft.WindowsDesktop.App.Runtime.win-x64",
-            "version": "[8.0.11, 8.0.11]"
+            "version": "[8.0.7, 8.0.7]"
           }
         ],
         "frameworkReferences": {
@@ -9282,7 +9281,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.101/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.303/PortableRuntimeIdentifierGraph.json"
       }
     },
     "runtimes": {

@@ -116,8 +116,11 @@ namespace All_Readeer
                     Get_Dane_Dni(pozycja, worksheet, ref grafik);
                     grafiki.Add(grafik);
                 }
-
-                Dodaj_Plan_do_Optimy(grafiki);
+                if(grafiki.Count > 0)
+                {
+                    Dodaj_Plan_do_Optimy(grafiki);
+                }
+                
             }
             catch(Exception ex)
             {
@@ -322,40 +325,42 @@ namespace All_Readeer
             using (SqlConnection connection = new SqlConnection(Program.Optima_Conection_String))
             {
                 connection.Open();
-                SqlTransaction tran = connection.BeginTransaction();
-                foreach (var grafik in grafiki)
+                using (SqlTransaction tran = connection.BeginTransaction())
                 {
-                    foreach (var dane_Dni in grafik.dane_dni)
+                    foreach (var grafik in grafiki)
                     {
-                        foreach (var dzien in dane_Dni.dane_dnia)
+                        foreach (var dane_Dni in grafik.dane_dni)
                         {
-                            try
+                            foreach (var dzien in dane_Dni.dane_dnia)
                             {
-                                foreach (var godziny in dzien.godz_pracy)
+                                try
                                 {
-                                    Zrob_Insert_Plan_command(connection, tran, grafik, dane_Dni.pracownik, new DateTime(grafik.rok, grafik.miesiac, dzien.dzien), godziny.Godz_Rozpoczecia_Pracy, godziny.Godz_Zakonczenia_Pracy);
+                                    foreach (var godziny in dzien.godz_pracy)
+                                    {
+                                        Zrob_Insert_Plan_command(connection, tran, grafik, dane_Dni.pracownik, new DateTime(grafik.rok, grafik.miesiac, dzien.dzien), godziny.Godz_Rozpoczecia_Pracy, godziny.Godz_Zakonczenia_Pracy);
+                                    }
                                 }
-                            }
-                            catch (SqlException ex)
-                            {
-                                tran.Rollback();
-                                Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
-                                throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}" + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
-                            }
-                            catch (FormatException)
-                            {
-                                continue;
-                            }
-                            catch (Exception ex)
-                            {
-                                tran.Rollback();
-                                Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
-                                throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}" + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
+                                catch (SqlException ex)
+                                {
+                                    tran.Rollback();
+                                    Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
+                                    throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}" + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
+                                }
+                                catch (FormatException)
+                                {
+                                    continue;
+                                }
+                                catch (Exception ex)
+                                {
+                                    tran.Rollback();
+                                    Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
+                                    throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}" + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
+                                }
                             }
                         }
                     }
+                    tran.Commit();
                 }
-                tran.Commit();
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine($"Poprawnie dodawno plan z pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}");
                 Console.ForegroundColor = ConsoleColor.White;

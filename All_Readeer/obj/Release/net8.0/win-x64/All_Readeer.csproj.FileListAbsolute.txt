@@ -474,7 +474,7 @@ E:\ITEGER\Praca\obecności\All_Reader\All_Readeer\bin\Release\net8.0\win-x64\cre
 E:\ITEGER\Praca\obecności\All_Reader\All_Readeer\bin\Release\net8.0\win-x64\hostfxr.dll
 E:\ITEGER\Praca\obecności\All_Reader\All_Readeer\bin\Release\net8.0\win-x64\hostpolicy.dll
 E:\ITEGER\Praca\obecności\All_Reader\All_Readeer\bin\Release\net8.0\win-x64\mscordaccore.dll
-E:\ITEGER\Praca\obecności\All_Reader\All_Readeer\bin\Release\net8.0\win-x64\mscordaccore_amd64_amd64_8.0.1124.51707.dll
+E:\ITEGER\Praca\obecności\All_Reader\All_Readeer\bin\Release\net8.0\win-x64\mscordaccore_amd64_amd64_8.0.724.31311.dll
 E:\ITEGER\Praca\obecności\All_Reader\All_Readeer\bin\Release\net8.0\win-x64\mscordbi.dll
 E:\ITEGER\Praca\obecności\All_Reader\All_Readeer\bin\Release\net8.0\win-x64\mscorrc.dll
 E:\ITEGER\Praca\obecności\All_Reader\All_Readeer\bin\Release\net8.0\win-x64\msquic.dll

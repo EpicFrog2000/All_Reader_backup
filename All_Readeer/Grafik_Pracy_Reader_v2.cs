@@ -132,7 +132,10 @@ namespace All_Readeer
                     grafik.ListaNieobecnosci = Get_Nieobecności_Z_Grafiku(grafik);
                     Grafiki_W_Zakladce.Add(grafik);
                 }
-                Dodaj_Dane_Do_Optimy(Grafiki_W_Zakladce);
+                if(Grafiki_W_Zakladce.Count > 0)
+                {
+                    Dodaj_Dane_Do_Optimy(Grafiki_W_Zakladce);
+                }
             }
             catch(Exception ex)
             {
@@ -562,17 +565,19 @@ namespace All_Readeer
                 using (SqlConnection connection = new SqlConnection(Program.Optima_Conection_String))
                 {
                     connection.Open();
-                    SqlTransaction tran = connection.BeginTransaction();
-                    foreach (var grafik in ListaGrafików)
+                    using (SqlTransaction tran = connection.BeginTransaction())
                     {
-                        Dodaj_Nieobecnosci_do_Optimy(grafik.ListaNieobecnosci, tran, connection);
-                        Dodaj_Plan_do_Optimy(grafik, connection, tran);
+                        foreach (var grafik in ListaGrafików)
+                        {
+                            Dodaj_Nieobecnosci_do_Optimy(grafik.ListaNieobecnosci, tran, connection);
+                            Dodaj_Plan_do_Optimy(grafik, connection, tran);
+                        }
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine($"Poprawnie dodawno planowane nieobecnosci z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
+                        Console.WriteLine($"Poprawnie dodawno plan z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
+                        Console.ForegroundColor = ConsoleColor.White;
+                        tran.Commit();
                     }
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine($"Poprawnie dodawno planowane nieobecnosci z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
-                    Console.WriteLine($"Poprawnie dodawno plan z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki);
-                    Console.ForegroundColor = ConsoleColor.White;
-                    tran.Commit();
                     connection.Close();
                 }
             }

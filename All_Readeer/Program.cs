@@ -1,12 +1,9 @@
 ﻿using All_Readeer;
+using Azure.Core;
 using ClosedXML.Excel;
 using ExcelDataReader;
 using System.Data;
 using System.Text.Json;
-
-
-// TODO: będą zmainy w grafik_2024_v2 KURRRRWA xd date z innego miesca się bedzie brało
-
 
 class Program
 {
@@ -14,7 +11,7 @@ class Program
     public static bool Clear_Processed_Files_On_Restart = true;
     public static bool Clear_Bad_Files_On_Restart = true;
 
-    public static string Optima_Conection_String = "Server=ITEGER-NT;Database=CDN_Wars_Test_3_;User Id=sa;Password=cdn;Encrypt=True;TrustServerCertificate=True;";
+    public static string Optima_Conection_String = "Server=ITEGERNT;Database=CDN_Wars_prod_ITEGER;User Id=sa;Password=cdn;Encrypt=True;TrustServerCertificate=True;";
     public static List<string> Files_Folders = [];
     public static Error_Logger error_logger = new();
     public static string sqlQueryGetPRI_PraId = @"
@@ -93,27 +90,6 @@ BEGIN
     END CATCH
 END
 
-DECLARE @EXISTSDANE INT = (
-    SELECT COUNT(PGR_PgrId)
-    FROM CDN.PracPracaDniGodz
-    WHERE PGR_PprId = (
-        SELECT PPR_PprId
-        FROM CDN.PracPracaDni
-        WHERE CAST(PPR_Data AS datetime) = @DataInsert
-          AND PPR_PraId = @PRI_PraId
-    )
-      AND PGR_OdGodziny = @GodzOdDate
-      AND PGR_DoGodziny = @GodzDoDate
-      AND PGR_Strefa = @TypPracy
-);
-
-IF @EXISTSDZIEN !=0 AND @EXISTSDANE != 0
-BEGIN
-    DECLARE @ErrorMessageC NVARCHAR(500) = 'Taki rekord juz istnieje. Taki sam plik został już wcześniej prawdopodobnie zaimportowany';
-	THROW 50003, @ErrorMessageC, 1;
-END
-
-
 INSERT INTO CDN.PracPracaDniGodz
 		(PGR_PprId,
 		PGR_Lp,
@@ -136,16 +112,6 @@ INSERT INTO CDN.PracPracaDniGodz
 		1);";
     public static string sqlQueryInsertNieObecnoŚciDoOptimy = @$"
 DECLARE @TNBID INT = (SELECT TNB_TnbId FROM cdn.TypNieobec WHERE TNB_Nazwa = @NazwaNieobecnosci);
-IF NOT EXISTS (
-    SELECT 1
-    FROM [CDN].[PracNieobec]
-    WHERE PNB_PraId = @PRI_PraId
-      AND PNB_TnbId = @TNBID
-      AND PNB_OkresOd = @DataOd
-      AND PNB_OkresDo = @DataDo
-      AND PNB_Przyczyna = @Przyczyna
-)
-BEGIN
     INSERT INTO [CDN].[PracNieobec]
                ([PNB_PraId]
                ,[PNB_TnbId]
@@ -205,14 +171,7 @@ BEGIN
                ,@NazwiskoMod
                ,@ImieMod
                ,@NazwiskoMod
-               ,0);
-END
-ELSE
-BEGIN
-    DECLARE @ErrorMessageC NVARCHAR(500) = 'Taki rekord juz istnieje. Taki sam plik został już wcześniej prawdopodobnie zaimportowany';
-	THROW 50003, @ErrorMessageC, 1;
-END;
-";
+               ,0);";
     public static string sqlQueryInsertPlanDoOptimy = $@"
 DECLARE @id int;
 DECLARE @EXISTSDZIEN INT = (SELECT COUNT([CDN].[PracPlanDni].[PPL_Data]) FROM cdn.PracPlanDni WHERE cdn.PracPlanDni.PPL_PraId = @PRI_PraId and [CDN].[PracPlanDni].[PPL_Data] = @DataInsert)
@@ -247,15 +206,6 @@ END CATCH
 END
 
 SET @id = (select [cdn].[PracPlanDni].[PPL_PplId] from [cdn].[PracPlanDni] where [cdn].[PracPlanDni].[PPL_Data] = @DataInsert and [cdn].[PracPlanDni].[PPL_PraId] = @PRI_PraId);
-
--- sprawdz czy taki rekord juz istnieje
-DECLARE @EXISTSDANE INT = (SELECT COUNT(PGL_PplId) FROM CDN.PracPlanDniGodz WHERE PGL_PplId = @id and PGL_OdGodziny = @GodzOdDate and PGL_DoGodziny = @GodzDoDate)
-IF @EXISTSDZIEN !=0 AND @EXISTSDANE != 0
-BEGIN
-    DECLARE @ErrorMessageC NVARCHAR(500) = 'Taki rekord juz istnieje. Taki sam plik został już wcześniej prawdopodobnie zaimportowany';
-	THROW 50003, @ErrorMessageC, 1;
-END
-
 INSERT INTO CDN.PracPlanDniGodz
 	        (PGL_PplId,
 	        PGL_Lp,
@@ -291,11 +241,10 @@ INSERT INTO CDN.PracPlanDniGodz
                     if (!folders.Any())
                     {
                         Console.WriteLine($"Nie znaleziono żadnych folderów w: {Big_Folder} {DateTime.Now}");
-                        continue;
                     }
                     else
                     {
-                        foreach (var folder in folders)
+                        foreach (string folder in folders)
                         {
                             Check_Foldery_Processing(folder); // sprawdz czy istnieją odpowiednie podfoldery, jesli nie to je inicjalizuje
                             allfolders.Add(folder);
@@ -332,6 +281,7 @@ INSERT INTO CDN.PracPlanDniGodz
                     }
                 }
                 Thread.Sleep(3000);
+                Console.Clear();
             }
         }
 
@@ -349,7 +299,13 @@ INSERT INTO CDN.PracPlanDniGodz
             Console.ForegroundColor = ConsoleColor.Blue;
             Console.WriteLine($"Czytanie: {Path.GetFileNameWithoutExtension(filePath)} {DateTime.Now}");
             Console.ForegroundColor = ConsoleColor.White;
-            if (!Is_File_Xlsx(filePath))
+            if (Path.GetExtension(filePath) == ".xlsb")
+            {
+                error_logger.New_Custom_Error($"Błąd dla pliku {filePath}: Program nie obsługuje plików o rozszerzeniu xlsb. Proszę o plik z rozszerzeniem xlsx.");
+                Console.WriteLine($"Błąd dla pliku {filePath}: Program nie obsługuje plików o rozszerzeniu xlsb. Proszę o plik z rozszerzeniem xlsx.");
+                MoveFile(current_filePath);
+                continue;
+            }else if (!Is_File_Xlsx(filePath))
             {
                 try
                 {
@@ -496,16 +452,16 @@ INSERT INTO CDN.PracPlanDniGodz
             return 2;
         }
 
+        cellValue3_1 = workshit.Cell(1, 1).Value.ToString();
+        if (cellValue3_1.Trim().StartsWith("GRAFIK PRACY MIESIĄC")) // grafik v2024 v2
+        {
+            return 4;
+        }
+
         var cellValue1_1 = workshit.Cell(1, 1).Value.ToString();
         if (cellValue1_1.Trim().Contains("GRAFIK PRACY")) // grafik v2024
         {
             return 3;
-        }
-
-        cellValue3_1 = workshit.Cell(3, 1).Value.ToString();
-        if (cellValue3_1.Trim() == "Data") // grafik v2024 v2
-        {
-            return 4;
         }
         return 0;
     }
