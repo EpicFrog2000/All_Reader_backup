@@ -454,22 +454,8 @@ namespace All_Readeer
                             insertCmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = ("1899-12-30 " + godz_rozp_pracy.ToString());
                             insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = ("1899-12-30 " + godz_zak_pracy.ToString());
                             insertCmd.Parameters.AddWithValue("@PRI_PraId", Get_ID_Pracownika(dane_Dni.pracownik));
-                            if (Program.error_logger.Last_Mod_Osoba.Length > 20)
-                            {
-                                insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 20));
-                            }
-                            else
-                            {
-                                insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba);
-                            }
-                            if (Program.error_logger.Last_Mod_Osoba.Length > 50)
-                            {
-                                insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 50));
-                            }
-                            else
-                            {
-                                insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba);
-                            }
+                            insertCmd.Parameters.AddWithValue("@ImieMod", Truncate(Program.error_logger.Last_Mod_Osoba, 20));
+                            insertCmd.Parameters.AddWithValue("@NazwiskoMod", Truncate(Program.error_logger.Last_Mod_Osoba, 50));
                             insertCmd.Parameters.AddWithValue("@DataMod", Program.error_logger.Last_Mod_Time);
                             insertCmd.ExecuteScalar();
                         }
@@ -502,39 +488,20 @@ namespace All_Readeer
             List<List<Nieobecnosci>> Nieobecnosci = Podziel_Niobecnosci_Na_Osobne(ListaNieobecności);
             foreach (var ListaNieo in Nieobecnosci)
             {
-                var dni_robocze = Ile_Dni_Roboczych(ListaNieo);
-                var dni_calosc = ListaNieo.Count;
                 try
                 {
                     using (SqlCommand insertCmd = new SqlCommand(Program.sqlQueryInsertNieObecnoŚciDoOptimy, connection, tran))
                     {
-                        DateTime dataBazowa = new DateTime(1899, 12, 30);
-                        DateTime dataniobecnoscistart = new DateTime(ListaNieo[0].rok, ListaNieo[0].miesiac, ListaNieo[0].dzien);
-                        DateTime dataniobecnosciend = new DateTime(ListaNieo[ListaNieo.Count - 1].rok, ListaNieo[ListaNieo.Count - 1].miesiac, ListaNieo[ListaNieo.Count - 1].dzien);
                         insertCmd.Parameters.AddWithValue("@PRI_PraId", Get_ID_Pracownika(ListaNieo[0].pracownik));
                         insertCmd.Parameters.AddWithValue("@NazwaNieobecnosci", "Nieobecność (B2B) (plan)");
-                        insertCmd.Parameters.AddWithValue("@DniPracy", dni_robocze);
-                        insertCmd.Parameters.AddWithValue("@DniKalendarzowe", dni_calosc);
+                        insertCmd.Parameters.AddWithValue("@DniPracy", Ile_Dni_Roboczych(ListaNieo));
+                        insertCmd.Parameters.AddWithValue("@DniKalendarzowe", ListaNieo.Count);
                         insertCmd.Parameters.AddWithValue("@Przyczyna", 9); // "Nieobecności inne"
-                        insertCmd.Parameters.Add("@DataOd", SqlDbType.DateTime).Value = dataniobecnoscistart;
-                        insertCmd.Parameters.Add("@BaseDate", SqlDbType.DateTime).Value = dataBazowa;
-                        insertCmd.Parameters.Add("@DataDo", SqlDbType.DateTime).Value = dataniobecnosciend;
-                        if (Program.error_logger.Last_Mod_Osoba.Length > 20)
-                        {
-                            insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 20));
-                        }
-                        else
-                        {
-                            insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba);
-                        }
-                        if (Program.error_logger.Last_Mod_Osoba.Length > 50)
-                        {
-                            insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 50));
-                        }
-                        else
-                        {
-                            insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba);
-                        }
+                        insertCmd.Parameters.Add("@DataOd", SqlDbType.DateTime).Value = new DateTime(ListaNieo[0].rok, ListaNieo[0].miesiac, ListaNieo[0].dzien);
+                        insertCmd.Parameters.Add("@BaseDate", SqlDbType.DateTime).Value = Program.baseDate;
+                        insertCmd.Parameters.Add("@DataDo", SqlDbType.DateTime).Value = new DateTime(ListaNieo[ListaNieo.Count - 1].rok, ListaNieo[ListaNieo.Count - 1].miesiac, ListaNieo[ListaNieo.Count - 1].dzien);
+                        insertCmd.Parameters.AddWithValue("@ImieMod", Truncate(Program.error_logger.Last_Mod_Osoba, 20));
+                        insertCmd.Parameters.AddWithValue("@NazwiskoMod", Truncate(Program.error_logger.Last_Mod_Osoba, 50));
                         insertCmd.Parameters.AddWithValue("@DataMod", Program.error_logger.Last_Mod_Time);
                         insertCmd.ExecuteScalar();
                     }
@@ -586,19 +553,8 @@ namespace All_Readeer
                 throw;
             }
         }
-        private static int Ile_Dni_Roboczych(List<Nieobecnosci> listaNieobecnosci)
-        {
-            int total = 0;
-            foreach (var nieobecnosc in listaNieobecnosci)
-            {
-                DateTime absenceDate = new DateTime(nieobecnosc.rok, nieobecnosc.miesiac, nieobecnosc.dzien);
-                if (absenceDate.DayOfWeek != DayOfWeek.Saturday && absenceDate.DayOfWeek != DayOfWeek.Sunday)
-                {
-                    total++;
-                }
-            }
-            return total;
-        }
+        private static int Ile_Dni_Roboczych(List<Nieobecnosci> listaNieobecnosci) 
+            =>listaNieobecnosci.Count(n =>n.rok >= 1 && n.miesiac >= 1 && n.dzien >= 1 && new DateTime(n.rok, n.miesiac, n.dzien).DayOfWeek != DayOfWeek.Saturday && new DateTime(n.rok, n.miesiac, n.dzien).DayOfWeek != DayOfWeek.Sunday);
         private static List<List<Nieobecnosci>> Podziel_Niobecnosci_Na_Osobne(List<Nieobecnosci> listaNieobecnosci)
         {
             List<List<Nieobecnosci>> listaOsobnychNieobecnosci = new();
@@ -637,12 +593,8 @@ namespace All_Readeer
                         getCmd.Parameters.AddWithValue("@PracownikImieInsert", pracownik.Imie);
                         getCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", pracownik.Nazwisko);
                         var result = getCmd.ExecuteScalar();
-                        if (result != null)
-                        {
-                            return Convert.ToInt32(result);
-                        }
+                        return result != null ? Convert.ToInt32(result) : 0;
                     }
-                    connection.Close();
                 }
                 catch (Exception ex)
                 {
@@ -651,7 +603,15 @@ namespace All_Readeer
                     throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}" + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
                 }
             }
-            return 0;
+        }
+        private static string Truncate(string value, int maxLength)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return string.Empty;
+            }
+            return value.Length > maxLength ? value.Substring(0, maxLength) : value;
         }
     }
+
 }

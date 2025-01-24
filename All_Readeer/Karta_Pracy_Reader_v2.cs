@@ -1,7 +1,5 @@
 ﻿using ClosedXML.Excel;
-using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.Data.SqlClient;
-using Microsoft.IdentityModel.Tokens;
 using System.Data;
 using System.Globalization;
 using System.Text.RegularExpressions;
@@ -236,8 +234,8 @@ namespace All_Readeer
             try
             {
                 List<Karta_Pracy> karty_pracy = [];
-                var tabelki = Find_Karty(worksheet);
-                foreach(var tabelka in tabelki)
+                List<Current_Position> tabelki = Find_Karty(worksheet);
+                foreach(Current_Position tabelka in tabelki)
                 {
                     Karta_Pracy karta_pracy = new();
                     karta_pracy.nazwa_pliku = Program.error_logger.Nazwa_Pliku;
@@ -248,7 +246,7 @@ namespace All_Readeer
                 }
                 if (karty_pracy.Count > 0)
                 {
-                    foreach (var karta in karty_pracy)
+                    foreach (Karta_Pracy karta in karty_pracy)
                     {
                         try
                         {
@@ -271,7 +269,7 @@ namespace All_Readeer
             List<Current_Position> starty = new();
             int Limiter = 1000;
             int counter = 0;
-            foreach (var cell in worksheet.CellsUsed())
+            foreach (IXLCell? cell in worksheet.CellsUsed())
             {
                 try
                 {
@@ -303,7 +301,7 @@ namespace All_Readeer
         private static void Get_Header_Karta_Info(Current_Position StartKarty, IXLWorksheet worksheet, ref Karta_Pracy karta_pracy)
         {
             //wczytaj date
-            var dane = worksheet.Cell(StartKarty.row - 3, StartKarty.col + 4).GetFormattedString().Trim().ToLower();
+            string dane = worksheet.Cell(StartKarty.row - 3, StartKarty.col + 4).GetFormattedString().Trim().ToLower();
             for (int i = 0; i < 12; i++)
             {
                 if (string.IsNullOrEmpty(dane))
@@ -338,7 +336,7 @@ namespace All_Readeer
                         {
                             if (dane.Split(" ").Length == 2)
                             {
-                                var ndata = dane.Split(" ");
+                                string[] ndata = dane.Split(" ");
                                 try
                                 {
                                     karta_pracy.Set_Miesiac(ndata[0]);
@@ -351,7 +349,7 @@ namespace All_Readeer
                             }
                             else if (dane.Split(" ").Length == 3)
                             {
-                                var ndata = dane.Split(" ");
+                                string[] ndata = dane.Split(" ");
                                 try
                                 {
                                     karta_pracy.Set_Miesiac(ndata[1]);
@@ -367,7 +365,7 @@ namespace All_Readeer
                                 if (dane.Split(" ").Count() > 1)
                                 {
                                     //wez 2 od tylu
-                                    var ndata = dane.Split(" ");
+                                    string[] ndata = dane.Split(" ");
                                     try
                                     {
                                         karta_pracy.Set_Miesiac(ndata[^2]);
@@ -413,9 +411,9 @@ namespace All_Readeer
                 pozycja_wczytania_danych.col = StartKarty.col;
                 for (int i = 0; i < 6; i++)
                 {
-                    foreach (var word in wordsToRemove)
+                    foreach (string word in wordsToRemove)
                     {
-                        var pattern = $@"\b{Regex.Escape(word)}\b";
+                        string pattern = $@"\b{Regex.Escape(word)}\b";
                         dane = Regex.Replace(dane, pattern, "", RegexOptions.IgnoreCase);
                     }
 
@@ -447,7 +445,7 @@ namespace All_Readeer
                     pozycja_wczytania_danych.col = StartKarty.col;
                     for (int i = 0; i < 6; i++)
                     {
-                        foreach (var word in wordsToRemove)
+                        foreach (string word in wordsToRemove)
                         {
                             dane = dane.Replace(word, "", StringComparison.OrdinalIgnoreCase);
                         }
@@ -469,7 +467,7 @@ namespace All_Readeer
                         }
                     }
                 }
-                foreach (var word in wordsToRemove)
+                foreach (string word in wordsToRemove)
                 {
                     dane = dane.Replace(word, "", StringComparison.OrdinalIgnoreCase);
                 }
@@ -487,7 +485,7 @@ namespace All_Readeer
                 {
                     try
                     {
-                        var parts = dane.Trim().Split(' ');
+                        string[] parts = dane.Trim().Split(' ');
                         if (parts.Length == 2)
                         {
                             karta_pracy.pracownik.Nazwisko = dane.Trim().Split(' ')[0];
@@ -544,7 +542,7 @@ namespace All_Readeer
                 // znajdz akronim w prawo
                 if (karta_pracy.pracownik.Akronim == -1)
                 {
-                    var akronim = "";
+                    string akronim = "";
                     for (int i = 0; i < 6; i++)
                     {
                         akronim = worksheet.Cell(pozycja_wczytania_danych.row, pozycja_wczytania_danych.col + 1 + i).GetFormattedString().Trim().Replace("  ", " ");
@@ -606,7 +604,7 @@ namespace All_Readeer
                 }
 
             }
-            catch (Exception ex)
+            catch
             {
                 Program.error_logger.New_Error(dane, "Imie nazwisko", StartKarty.row - 2, StartKarty.col, "Nieznany format");
                 throw new Exception($"{Program.error_logger.Get_Error_String()}");
@@ -615,7 +613,7 @@ namespace All_Readeer
         private static void Get_Dane_Dni(Current_Position StartKarty, IXLWorksheet worksheet, ref Karta_Pracy karta_pracy)
         {
             StartKarty.row += 3;
-            var NrDnia = worksheet.Cell(StartKarty.row, StartKarty.col).GetFormattedString().Trim();
+            string NrDnia = worksheet.Cell(StartKarty.row, StartKarty.col).GetFormattedString().Trim();
             while (!string.IsNullOrEmpty(NrDnia))
             {
                 Dane_Dnia dzien = new();
@@ -631,7 +629,7 @@ namespace All_Readeer
                     Program.error_logger.New_Error(NrDnia, "dzien", StartKarty.col, StartKarty.row, "Błędny nr dnia");
                     throw new Exception(Program.error_logger.Get_Error_String());
                 }
-                var Cell_Value = "";
+                string Cell_Value = "";
 
                 // try get odb nadgodzin
                 try
@@ -726,7 +724,7 @@ namespace All_Readeer
                 Cell_Value = worksheet.Cell(StartKarty.row, StartKarty.col + 9).GetFormattedString().Trim();
                 if (!string.IsNullOrEmpty(Cell_Value))
                 {
-                    if (decimal.TryParse(Cell_Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var godzNadlPlatne))
+                    if (decimal.TryParse(Cell_Value, NumberStyles.Any, CultureInfo.InvariantCulture, out decimal godzNadlPlatne))
                     {
                         dzien.Godz_nadl_platne_z_dod_50 = godzNadlPlatne;
                     }
@@ -740,7 +738,7 @@ namespace All_Readeer
                 Cell_Value = worksheet.Cell(StartKarty.row, StartKarty.col + 10).GetFormattedString().Trim();
                 if (!string.IsNullOrEmpty(Cell_Value))
                 {
-                    if (decimal.TryParse(Cell_Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var godzNadlPlatne))
+                    if (decimal.TryParse(Cell_Value, NumberStyles.Any, CultureInfo.InvariantCulture, out decimal godzNadlPlatne))
                     {
                         dzien.Godz_nadl_platne_z_dod_100 = godzNadlPlatne;
                     }
@@ -761,16 +759,14 @@ namespace All_Readeer
         }
         private static int Dodaj_Obecnosci_do_Optimy(Karta_Pracy karta, SqlTransaction tran, SqlConnection connection)
         {
-            
             int ilosc_wpisow = 0;
-            DateTime baseDate = new DateTime(1899, 12, 30);
-            foreach (var dane_Dni in karta.dane_dni)
+            foreach (Dane_Dnia dane_Dni in karta.dane_dni)
             {
                 try
                 {
                     if (DateTime.TryParse($"{karta.rok}-{karta.miesiac:D2}-{dane_Dni.dzien:D2}", out DateTime Data_Karty))
                     {
-                        var (startPodstawowy, endPodstawowy, startNadl50, endNadl50, startNadl100, endNadl100) = Oblicz_Czas_Z_Dodatkiem(dane_Dni);
+                        (TimeSpan startPodstawowy, TimeSpan endPodstawowy, TimeSpan startNadl50, TimeSpan endNadl50, TimeSpan startNadl100, TimeSpan endNadl100) = Oblicz_Czas_Z_Dodatkiem(dane_Dni);
                         double czasPrzepracowany = 0;
                         if (dane_Dni.godz_zakoncz_pracy < dane_Dni.godz_rozp_pracy)
                         {
@@ -817,10 +813,10 @@ namespace All_Readeer
         }                                                                                                                                                                                    //  2 -> podstawowy
         private static int Zrob_Insert_Obecnosc_Command(SqlConnection connection, SqlTransaction transaction, DateTime Data_Karty, TimeSpan startPodstawowy, TimeSpan endPodstawowy, Karta_Pracy karta, int Typ_Pracy)
         {
-            DateTime baseDate = new DateTime(1899, 12, 30);
-            DateTime godzOdDate = baseDate + startPodstawowy;
-            DateTime godzDoDate = baseDate + endPodstawowy;
+            DateTime godzOdDate = Program.baseDate + startPodstawowy;
+            DateTime godzDoDate = Program.baseDate + endPodstawowy;
             bool duplicate = false;
+            int IdPracownika = Get_ID_Pracownika(karta.pracownik);
             using (SqlCommand cmd = new SqlCommand(@"
     IF EXISTS (
         SELECT 1
@@ -843,10 +839,9 @@ namespace All_Readeer
                 cmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = godzOdDate;
                 cmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
                 cmd.Parameters.AddWithValue("@DataInsert", Data_Karty);
-                cmd.Parameters.AddWithValue("@PRI_PraId", Get_ID_Pracownika(karta.pracownik));
+                cmd.Parameters.AddWithValue("@PRI_PraId", IdPracownika);
                 cmd.Parameters.AddWithValue("@TypPracy", Typ_Pracy);
-                int result = (int)cmd.ExecuteScalar();
-                duplicate = (result == 1);
+                duplicate = (int)cmd.ExecuteScalar() == 1;
             }
 
             if (!duplicate)
@@ -858,24 +853,10 @@ namespace All_Readeer
                         insertCmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = godzOdDate;
                         insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
                         insertCmd.Parameters.AddWithValue("@DataInsert", Data_Karty);
-                        insertCmd.Parameters.AddWithValue("@PRI_PraId", Get_ID_Pracownika(karta.pracownik));
+                        insertCmd.Parameters.AddWithValue("@PRI_PraId", IdPracownika);
                         insertCmd.Parameters.AddWithValue("@TypPracy", Typ_Pracy);
-                        if (Program.error_logger.Last_Mod_Osoba.Length > 20)
-                        {
-                            insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 20));
-                        }
-                        else
-                        {
-                            insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba);
-                        }
-                        if (Program.error_logger.Last_Mod_Osoba.Length > 50)
-                        {
-                            insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 50));
-                        }
-                        else
-                        {
-                            insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba);
-                        }
+                        insertCmd.Parameters.AddWithValue("@ImieMod", Truncate(Program.error_logger.Last_Mod_Osoba, 20));
+                        insertCmd.Parameters.AddWithValue("@NazwiskoMod", Truncate(Program.error_logger.Last_Mod_Osoba, 50));
                         insertCmd.Parameters.AddWithValue("@DataMod", Program.error_logger.Last_Mod_Time);
                         insertCmd.ExecuteScalar();
                     }
@@ -887,7 +868,6 @@ namespace All_Readeer
         private static int Dodaj_Nieobecnosci_do_Optimy(List<Nieobecnosc> ListaNieobecności, SqlTransaction tran, SqlConnection connection)
         {
             int ilosc_wpisow = 0;
-            DateTime baseDate = new DateTime(1899, 12, 30);
             List<List<Nieobecnosc>> Nieobecnosci = Podziel_Niobecnosci_Na_Osobne(ListaNieobecności);
             foreach (var ListaNieo in Nieobecnosci)
             {
@@ -948,7 +928,7 @@ END
                     cmd.Parameters.AddWithValue("@DniKalendarzowe", dni_calosc);
                     cmd.Parameters.AddWithValue("@Przyczyna", przyczyna);
                     cmd.Parameters.Add("@DataOd", SqlDbType.DateTime).Value = dataniobecnoscistart;
-                    cmd.Parameters.Add("@BaseDate", SqlDbType.DateTime).Value = baseDate;
+                    cmd.Parameters.Add("@BaseDate", SqlDbType.DateTime).Value = Program.baseDate;
                     cmd.Parameters.Add("@DataDo", SqlDbType.DateTime).Value = dataniobecnosciend;
                     if ((int)cmd.ExecuteScalar() == 1)
                     {
@@ -956,7 +936,7 @@ END
                         return 0;
                     }
                 }
-                
+
                 if (!duplicate)
                 {
                     try
@@ -969,24 +949,10 @@ END
                             insertCmd.Parameters.AddWithValue("@DniKalendarzowe", dni_calosc);
                             insertCmd.Parameters.AddWithValue("@Przyczyna", przyczyna);
                             insertCmd.Parameters.Add("@DataOd", SqlDbType.DateTime).Value = dataniobecnoscistart;
-                            insertCmd.Parameters.Add("@BaseDate", SqlDbType.DateTime).Value = baseDate;
+                            insertCmd.Parameters.Add("@BaseDate", SqlDbType.DateTime).Value = Program.baseDate;
                             insertCmd.Parameters.Add("@DataDo", SqlDbType.DateTime).Value = dataniobecnosciend;
-                            if (Program.error_logger.Last_Mod_Osoba.Length > 20)
-                            {
-                                insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 20));
-                            }
-                            else
-                            {
-                                insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba);
-                            }
-                            if (Program.error_logger.Last_Mod_Osoba.Length > 50)
-                            {
-                                insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 50));
-                            }
-                            else
-                            {
-                                insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba);
-                            }
+                            insertCmd.Parameters.AddWithValue("@ImieMod", Truncate(Program.error_logger.Last_Mod_Osoba, 20));
+                            insertCmd.Parameters.AddWithValue("@NazwiskoMod", Truncate(Program.error_logger.Last_Mod_Osoba, 50));
                             insertCmd.Parameters.AddWithValue("@DataMod", Program.error_logger.Last_Mod_Time);
                             insertCmd.ExecuteScalar();
                         }
@@ -1076,7 +1042,7 @@ END
             List<List<Nieobecnosc>> listaOsobnychNieobecnosci = new();
             List<Nieobecnosc> currentGroup = new();
 
-            foreach (var nieobecnosc in listaNieobecnosci)
+            foreach (Nieobecnosc nieobecnosc in listaNieobecnosci)
             {
                 if (currentGroup.Count == 0 || nieobecnosc.dzien == currentGroup[^1].dzien + 1)
                 {
@@ -1132,7 +1098,6 @@ END
                         tran.Commit();
                     }
                     connection.Close();
-
                 }
             }
             catch
@@ -1142,16 +1107,11 @@ END
         }
         private static int Ile_Dni_Roboczych(List<Nieobecnosc> listaNieobecnosci)
         {
-            int total = 0;
-            foreach (var nieobecnosc in listaNieobecnosci)
+            return listaNieobecnosci.Count(nieobecnosc =>
             {
-                DateTime absenceDate = new DateTime(nieobecnosc.rok, nieobecnosc.miesiac, nieobecnosc.dzien);
-                if (absenceDate.DayOfWeek != DayOfWeek.Saturday && absenceDate.DayOfWeek != DayOfWeek.Sunday)
-                {
-                    total++;
-                }
-            }
-            return total;
+                DateTime absenceDate = new(nieobecnosc.rok, nieobecnosc.miesiac, nieobecnosc.dzien);
+                return absenceDate.DayOfWeek != DayOfWeek.Saturday && absenceDate.DayOfWeek != DayOfWeek.Sunday;
+            });
         }
         private static (TimeSpan, TimeSpan, TimeSpan, TimeSpan, TimeSpan, TimeSpan) Oblicz_Czas_Z_Dodatkiem(Dane_Dnia dane_Dni)
         {
@@ -1192,67 +1152,14 @@ END
         private static int Dodaj_Godz_Odbior_Do_Optimy(Karta_Pracy karta, SqlTransaction tran, SqlConnection connection)
         {
             int ilosc_wpisow = 0;
-            DateTime baseDate = new DateTime(1899, 12, 30);
-            var sqlInsertOdbNadg = @"
-DECLARE @PRA_PraId INT = (SELECT PracKod.PRA_PraId FROM CDN.PracKod where PRA_Kod = @PRI_PraId);
-DECLARE @EXISTSDZIEN DATETIME = (SELECT PracPracaDni.PPR_Data FROM cdn.PracPracaDni WHERE PPR_PraId = @PRA_PraId and PPR_Data = @DataInsert)
-IF @EXISTSDZIEN is null
-BEGIN
-    BEGIN TRY
-        INSERT INTO [CDN].[PracPracaDni]
-                    ([PPR_PraId]
-                    ,[PPR_Data]
-                    ,[PPR_TS_Zal]
-                    ,[PPR_TS_Mod]
-                    ,[PPR_OpeModKod]
-                    ,[PPR_OpeModNazwisko]
-                    ,[PPR_OpeZalKod]
-                    ,[PPR_OpeZalNazwisko]
-                    ,[PPR_Zrodlo])
-                VALUES
-                    (@PRI_PraId
-                    ,@DataInsert
-                    ,GETDATE()
-                    ,GETDATE()
-                    ,'ADMIN'
-                    ,'Administrator'
-                    ,'ADMIN'
-                    ,'Administrator'
-                    ,0)
-    END TRY
-    BEGIN CATCH
-    END CATCH
-END
-
-INSERT INTO CDN.PracPracaDniGodz
-		(PGR_PprId,
-		PGR_Lp,
-		PGR_OdGodziny,
-		PGR_DoGodziny,
-		PGR_Strefa,
-		PGR_DzlId,
-		PGR_PrjId,
-		PGR_Uwagi,
-		PGR_OdbNadg)
-	VALUES
-		((select PPR_PprId from cdn.PracPracaDni where CAST(PPR_Data as datetime) = @DataInsert and PPR_PraId = @PRI_PraId),
-		1,
-		DATEADD(MINUTE, 0, @GodzOdDate),
-		DATEADD(MINUTE, 0, @GodzDoDate),
-		@TypPracy,
-		1,
-		1,
-		'',
-		@TypNadg);";
             foreach (var dane_Dni in karta.dane_dni)
             {
+                int IdPracownika = Get_ID_Pracownika(karta.pracownik);
                 var Ilosc_Godzin = dane_Dni.Godz_Odbior;
-                TimeSpan startGodz = TimeSpan.FromHours(8);
-                TimeSpan endGodz = TimeSpan.FromHours(8) + TimeSpan.FromHours((double)dane_Dni.Godz_Odbior);
-                DateTime godzOdDate = baseDate + startGodz;
-                DateTime godzDoDate = baseDate + endGodz;
+                DateTime godzOdDate = Program.baseDate + TimeSpan.FromHours(8);
+                DateTime godzDoDate = Program.baseDate + TimeSpan.FromHours(8) + TimeSpan.FromHours((double)dane_Dni.Godz_Odbior);
                 bool duplicate = false;
-                    using (SqlCommand cmd = new SqlCommand(@"
+                using (SqlCommand cmd = new SqlCommand(@"
 DECLARE @EXISTSDZIEN INT;
 DECLARE @EXISTSDATA INT;
 SET @EXISTSDZIEN = (SELECT COUNT(PPR_Data) FROM cdn.PracPracaDni WHERE PPR_PraId = @PRI_PraId AND PPR_Data = @DataInsert);
@@ -1269,18 +1176,18 @@ SELECT CASE
     WHEN @EXISTSDZIEN > 0 AND @EXISTSDATA > 0 THEN 1
     ELSE 0
 END;", connection, tran))
+                {
+                    cmd.Parameters.AddWithValue("@PRI_PraId", IdPracownika);
+                    cmd.Parameters.AddWithValue("@TypPracy", 2);
+                    cmd.Parameters.AddWithValue("@TypNadg", 4);
+                    cmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = godzOdDate;
+                    cmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
+                    cmd.Parameters.AddWithValue("@DataInsert", DateTime.Parse($"{karta.rok}-{karta.miesiac:D2}-{dane_Dni.dzien:D2}"));
+                    if ((int)cmd.ExecuteScalar() == 1)
                     {
-                        cmd.Parameters.AddWithValue("@PRI_PraId", Get_ID_Pracownika(karta.pracownik));
-                        cmd.Parameters.AddWithValue("@TypPracy", 2);
-                        cmd.Parameters.AddWithValue("@TypNadg", 4);
-                        cmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = godzOdDate;
-                        cmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
-                        cmd.Parameters.AddWithValue("@DataInsert", DateTime.Parse($"{karta.rok}-{karta.miesiac:D2}-{dane_Dni.dzien:D2}"));
-                        if ((int)cmd.ExecuteScalar() == 1)
-                        {
-                            duplicate = true;
-                        }
+                        duplicate = true;
                     }
+                }
                 if (!duplicate)
                 {
                     try
@@ -1289,30 +1196,16 @@ END;", connection, tran))
                         {
                             ilosc_wpisow++;
 
-                            using (SqlCommand insertCmd = new SqlCommand(sqlInsertOdbNadg, connection, tran))
+                            using (SqlCommand insertCmd = new SqlCommand(Program.sqlQueryInsertOdbNadgodzin, connection, tran))
                             {
                                 insertCmd.Parameters.AddWithValue("@DataInsert", DateTime.Parse($"{karta.rok}-{karta.miesiac:D2}-{dane_Dni.dzien:D2}"));
                                 insertCmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = godzOdDate;
                                 insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
-                                insertCmd.Parameters.AddWithValue("@PRI_PraId", Get_ID_Pracownika(karta.pracownik));
+                                insertCmd.Parameters.AddWithValue("@PRI_PraId", IdPracownika);
                                 insertCmd.Parameters.AddWithValue("@TypPracy", 2); // podstawowy
                                 insertCmd.Parameters.AddWithValue("@TypNadg", 4); // W.PŁ
-                                if (Program.error_logger.Last_Mod_Osoba.Length > 20)
-                                {
-                                    insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 20));
-                                }
-                                else
-                                {
-                                    insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba);
-                                }
-                                if (Program.error_logger.Last_Mod_Osoba.Length > 50)
-                                {
-                                    insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 50));
-                                }
-                                else
-                                {
-                                    insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba);
-                                }
+                                insertCmd.Parameters.AddWithValue("@ImieMod", Truncate(Program.error_logger.Last_Mod_Osoba, 20));
+                                insertCmd.Parameters.AddWithValue("@NazwiskoMod", Truncate(Program.error_logger.Last_Mod_Osoba, 50));
                                 insertCmd.Parameters.AddWithValue("@DataMod", Program.error_logger.Last_Mod_Time);
                                 insertCmd.ExecuteScalar();
                             }
@@ -1350,13 +1243,9 @@ END;", connection, tran))
                         getCmd.Parameters.AddWithValue("@Akronim ", pracownik.Akronim);
                         getCmd.Parameters.AddWithValue("@PracownikImieInsert", pracownik.Imie);
                         getCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", pracownik.Nazwisko);
-                        var result = getCmd.ExecuteScalar();
-                        if (result != null)
-                        {
-                            return Convert.ToInt32(result);
-                        }
+                        object result = getCmd.ExecuteScalar();
+                        return result != null ? Convert.ToInt32(result) : 0;
                     }
-                    connection.Close();
                 }
                 catch (Exception ex)
                 {
@@ -1365,7 +1254,14 @@ END;", connection, tran))
                     throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}" + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
                 }
             }
-            return 0;
+        }
+        private static string Truncate(string value, int maxLength)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return string.Empty;
+            }
+            return value.Length > maxLength ? value.Substring(0, maxLength) : value;
         }
     }
 }

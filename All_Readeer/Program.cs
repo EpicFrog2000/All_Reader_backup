@@ -1,5 +1,4 @@
 ﻿using All_Readeer;
-using Azure.Core;
 using ClosedXML.Excel;
 using ExcelDataReader;
 using System.Data;
@@ -10,11 +9,10 @@ class Program
     public static bool Clear_Logs_On_Program_Restart = false;
     public static bool Clear_Processed_Files_On_Restart = true;
     public static bool Clear_Bad_Files_On_Restart = true;
-
     public static string Optima_Conection_String = "Server=ITEGERNT;Database=CDN_Wars_prod_ITEGER;User Id=sa;Password=cdn;Encrypt=True;TrustServerCertificate=True;";
     public static List<string> Files_Folders = [];
     public static Error_Logger error_logger = new();
-    public static string sqlQueryGetPRI_PraId = @"
+    public static readonly string sqlQueryGetPRI_PraId = @"
 -- weź @PRA_PraId z akronimu
 IF @Akronim IS NOT NULL AND @Akronim != 0
 BEGIN
@@ -60,7 +58,7 @@ BEGIN
     VALUES (@PRI_PraId,0,0,'','','',0,'');
 END
 SELECT @PRI_PraId;";
-    public static string sqlQueryInsertObecnościDoOptimy = @"
+    public static readonly string sqlQueryInsertObecnościDoOptimy = @"
 DECLARE @EXISTSDZIEN DATETIME = (SELECT PracPracaDni.PPR_Data FROM cdn.PracPracaDni WHERE PPR_PraId = @PRI_PraId and PPR_Data = @DataInsert)
 IF @EXISTSDZIEN is null
 BEGIN
@@ -110,7 +108,7 @@ INSERT INTO CDN.PracPracaDniGodz
 		1,
 		'',
 		1);";
-    public static string sqlQueryInsertNieObecnoŚciDoOptimy = @$"
+    public static readonly string sqlQueryInsertNieObecnoŚciDoOptimy = @$"
 DECLARE @TNBID INT = (SELECT TNB_TnbId FROM cdn.TypNieobec WHERE TNB_Nazwa = @NazwaNieobecnosci);
     INSERT INTO [CDN].[PracNieobec]
                ([PNB_PraId]
@@ -172,7 +170,7 @@ DECLARE @TNBID INT = (SELECT TNB_TnbId FROM cdn.TypNieobec WHERE TNB_Nazwa = @Na
                ,@ImieMod
                ,@NazwiskoMod
                ,0);";
-    public static string sqlQueryInsertPlanDoOptimy = $@"
+    public static readonly string sqlQueryInsertPlanDoOptimy = $@"
 DECLARE @id int;
 DECLARE @EXISTSDZIEN INT = (SELECT COUNT([CDN].[PracPlanDni].[PPL_Data]) FROM cdn.PracPlanDni WHERE cdn.PracPlanDni.PPL_PraId = @PRI_PraId and [CDN].[PracPlanDni].[PPL_Data] = @DataInsert)
 IF @EXISTSDZIEN = 0
@@ -224,6 +222,58 @@ INSERT INTO CDN.PracPlanDniGodz
 	        1,
 	        1,
 	        '');";
+    public static readonly string sqlQueryInsertOdbNadgodzin = @"
+DECLARE @PRA_PraId INT = (SELECT PracKod.PRA_PraId FROM CDN.PracKod where PRA_Kod = @PRI_PraId);
+DECLARE @EXISTSDZIEN DATETIME = (SELECT PracPracaDni.PPR_Data FROM cdn.PracPracaDni WHERE PPR_PraId = @PRA_PraId and PPR_Data = @DataInsert)
+IF @EXISTSDZIEN is null
+BEGIN
+    BEGIN TRY
+        INSERT INTO [CDN].[PracPracaDni]
+                    ([PPR_PraId]
+                    ,[PPR_Data]
+                    ,[PPR_TS_Zal]
+                    ,[PPR_TS_Mod]
+                    ,[PPR_OpeModKod]
+                    ,[PPR_OpeModNazwisko]
+                    ,[PPR_OpeZalKod]
+                    ,[PPR_OpeZalNazwisko]
+                    ,[PPR_Zrodlo])
+                VALUES
+                    (@PRI_PraId
+                    ,@DataInsert
+                    ,GETDATE()
+                    ,GETDATE()
+                    ,'ADMIN'
+                    ,'Administrator'
+                    ,'ADMIN'
+                    ,'Administrator'
+                    ,0)
+    END TRY
+    BEGIN CATCH
+    END CATCH
+END
+
+INSERT INTO CDN.PracPracaDniGodz
+		(PGR_PprId,
+		PGR_Lp,
+		PGR_OdGodziny,
+		PGR_DoGodziny,
+		PGR_Strefa,
+		PGR_DzlId,
+		PGR_PrjId,
+		PGR_Uwagi,
+		PGR_OdbNadg)
+	VALUES
+		((select PPR_PprId from cdn.PracPracaDni where CAST(PPR_Data as datetime) = @DataInsert and PPR_PraId = @PRI_PraId),
+		1,
+		DATEADD(MINUTE, 0, @GodzOdDate),
+		DATEADD(MINUTE, 0, @GodzDoDate),
+		@TypPracy,
+		1,
+		1,
+		'',
+		@TypNadg);";
+    public static readonly DateTime baseDate = new(1899, 12, 30);
 
     public static void Main()
     {
@@ -233,7 +283,7 @@ INSERT INTO CDN.PracPlanDniGodz
             GetConfigFromFile();
             string[] folders;
             List<string> allfolders = [];
-            foreach (var Big_Folder in Files_Folders)
+            foreach (string Big_Folder in Files_Folders)
             {
                 try
                 {
@@ -261,7 +311,7 @@ INSERT INTO CDN.PracPlanDniGodz
             }
             while (true)
             {
-                foreach (var folder in allfolders)
+                foreach (string folder in allfolders)
                 {
                     error_logger.Set_Error_File_Path(Path.Combine(folder, "Errors"));
                     error_logger.Current_Processed_Files_Folder = Path.Combine(folder, "Processed_Files");
@@ -321,23 +371,23 @@ INSERT INTO CDN.PracPlanDniGodz
             }
 
             error_logger.Nazwa_Pliku = filePath;
-            var (Last_Mod_Osoba, Last_Mod_Time) = Get_File_Meta_Info(filePath);
+            (string Last_Mod_Osoba, DateTime Last_Mod_Time) = Get_File_Meta_Info(filePath);
             if (Last_Mod_Osoba == "Error") {
                 error_logger.New_Custom_Error($"Błąd w czytaniu {filePath}, nie można wczytać metadanych {DateTime.Now}");
             }
             error_logger.Last_Mod_Osoba = Last_Mod_Osoba;
             error_logger.Last_Mod_Time = Last_Mod_Time;
             int ilosc_zakladek = 0;
-            using (var workbook = new XLWorkbook(filePath))
+            using (XLWorkbook workbook = new XLWorkbook(filePath))
             {
                 Usun_Ukryte_Karty(workbook);
                 ilosc_zakladek = workbook.Worksheets.Count;
                 for (int i = 1; i <= ilosc_zakladek; i++)
                 {
                     error_logger.Nr_Zakladki = i;
-                    var zakladka = workbook.Worksheet(i);
+                    IXLWorksheet zakladka = workbook.Worksheet(i);
                     error_logger.Nazwa_Zakladki = zakladka.Name;
-                    var typ_pliku = Get_Typ_Zakladki(zakladka);
+                    int typ_pliku = Get_Typ_Zakladki(zakladka);
                     if (typ_pliku == 0)
                     {
                         Copy_Bad_Sheet_To_Files_Folder(filePath, error_logger.Nr_Zakladki);
@@ -433,12 +483,11 @@ INSERT INTO CDN.PracPlanDniGodz
     }
     private static int Get_Typ_Zakladki(IXLWorksheet workshit)
     {
-        foreach (var cell in workshit.CellsUsed()) // karta v2
+        foreach (IXLCell cell in workshit.CellsUsed()) // karta v2
         {
             try
             {
-                var cellValue = cell.GetString();
-                if (cellValue.Contains("Dzień"))
+                if (cell.GetString().Contains("Dzień"))
                 {
                     return 1;
                 }
@@ -446,7 +495,7 @@ INSERT INTO CDN.PracPlanDniGodz
             catch { }
         }
 
-        var cellValue3_1 = workshit.Cell(3, 1).Value.ToString();
+        string cellValue3_1 = workshit.Cell(3, 1).Value.ToString();
         if (cellValue3_1.Trim().Contains("GRAFIK PRACY")) // grafik v2
         {
             return 2;
@@ -458,7 +507,7 @@ INSERT INTO CDN.PracPlanDniGodz
             return 4;
         }
 
-        var cellValue1_1 = workshit.Cell(1, 1).Value.ToString();
+        string cellValue1_1 = workshit.Cell(1, 1).Value.ToString();
         if (cellValue1_1.Trim().Contains("GRAFIK PRACY")) // grafik v2024
         {
             return 3;
@@ -469,7 +518,7 @@ INSERT INTO CDN.PracPlanDniGodz
     {
         try
         {
-            using (var workbook = new XLWorkbook(File_Path))
+            using (XLWorkbook workbook = new XLWorkbook(File_Path))
             {
                 DateTime lastWriteTime = File.GetLastWriteTime(File_Path);
 
@@ -489,25 +538,25 @@ INSERT INTO CDN.PracPlanDniGodz
     }
     private static void Copy_Bad_Sheet_To_Files_Folder(string filePath, int sheetIndex)
     {
-        var newFilePath = System.IO.Path.Combine(error_logger.Current_Bad_Files_Folder, "DO_POPRAWY_" + System.IO.Path.GetFileName(filePath));
+        string newFilePath = System.IO.Path.Combine(error_logger.Current_Bad_Files_Folder, "DO_POPRAWY_" + System.IO.Path.GetFileName(filePath));
         try
         {
-            using (var originalwb = new XLWorkbook(filePath))
+            using (XLWorkbook originalwb = new(filePath))
             {
-                var sheetToCopy = originalwb.Worksheet(sheetIndex);
+                IXLWorksheet sheetToCopy = originalwb.Worksheet(sheetIndex);
                 string newSheetName = sheetToCopy.Name;
                 if (newSheetName.Length > 31)
                 {
                     newSheetName = newSheetName.Substring(0, 31);
                 }
-                using (var workbook = File.Exists(newFilePath) ? new XLWorkbook(newFilePath) : new XLWorkbook())
+                using (XLWorkbook workbook = File.Exists(newFilePath) ? new XLWorkbook(newFilePath) : new XLWorkbook())
                 {
                     if (workbook.Worksheets.Contains(newSheetName))
                     {
                         return;
                     }
                     sheetToCopy.CopyTo(workbook, newSheetName);
-                    var properties = originalwb.Properties;
+                    XLWorkbookProperties properties = originalwb.Properties;
                     properties.Author = "Copied by program";
                     properties.Modified = DateTime.Now;
                     workbook.SaveAs(newFilePath);
@@ -520,15 +569,15 @@ INSERT INTO CDN.PracPlanDniGodz
     }
     private static void Usun_Ukryte_Karty(XLWorkbook workbook)
     {
-        var hiddenSheets = new List<IXLWorksheet>();
-        foreach (var sheet in workbook.Worksheets)
+        List<IXLWorksheet> hiddenSheets = new List<IXLWorksheet>();
+        foreach (IXLWorksheet sheet in workbook.Worksheets)
         {
             if (sheet.Visibility == XLWorksheetVisibility.Hidden)
             {
                 hiddenSheets.Add(sheet);
             }
         }
-        foreach (var sheet in hiddenSheets)
+        foreach (IXLWorksheet sheet in hiddenSheets)
         {
             workbook.Worksheets.Delete(sheet.Name);
         }
@@ -587,11 +636,11 @@ INSERT INTO CDN.PracPlanDniGodz
         {
             if (Clear_Bad_Files_On_Restart)
             {
-                foreach (var file in Directory.GetFiles(Path.Combine(FolderPath, "Bad_Files")))
+                foreach (string file in Directory.GetFiles(Path.Combine(FolderPath, "Bad_Files")))
                 {
                     File.Delete(file);
                 }
-                foreach (var directory in Directory.GetDirectories(Path.Combine(FolderPath, "Bad_Files")))
+                foreach (string directory in Directory.GetDirectories(Path.Combine(FolderPath, "Bad_Files")))
                 {
                     Directory.Delete(directory, recursive: true);
                 }
@@ -614,11 +663,11 @@ INSERT INTO CDN.PracPlanDniGodz
         {
             if (Clear_Processed_Files_On_Restart)
             {
-                foreach (var file in Directory.GetFiles(Path.Combine(FolderPath, "Processed_Files")))
+                foreach (string file in Directory.GetFiles(Path.Combine(FolderPath, "Processed_Files")))
                 {
                     File.Delete(file);
                 }
-                foreach (var directory in Directory.GetDirectories(Path.Combine(FolderPath, "Processed_Files")))
+                foreach (string directory in Directory.GetDirectories(Path.Combine(FolderPath, "Processed_Files")))
                 {
                     Directory.Delete(directory, recursive: true);
                 }
@@ -629,7 +678,7 @@ INSERT INTO CDN.PracPlanDniGodz
     {
         try
         {
-            var workbook = new XLWorkbook(filePath);
+            XLWorkbook workbook = new(filePath);
         }
         catch
         {
@@ -643,10 +692,10 @@ INSERT INTO CDN.PracPlanDniGodz
         // nwm dlaczego textwrap jest zawsze true. Jebać to jest wystarczająco dobre.
         System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
         DataSet dataSet;
-        using (var stream = File.Open(inputFilePath, FileMode.Open, FileAccess.Read))
-        using (var reader = ExcelReaderFactory.CreateReader(stream))
+        using (FileStream stream = File.Open(inputFilePath, FileMode.Open, FileAccess.Read))
+        using (IExcelDataReader reader = ExcelReaderFactory.CreateReader(stream))
         {
-            var config = new ExcelDataSetConfiguration
+            ExcelDataSetConfiguration config = new()
             {
                 ConfigureDataTable = _ => new ExcelDataTableConfiguration
                 {
@@ -656,10 +705,10 @@ INSERT INTO CDN.PracPlanDniGodz
             dataSet = reader.AsDataSet(config);
         }
 
-        using var workbook = new XLWorkbook();
+        using XLWorkbook workbook = new XLWorkbook();
         foreach (System.Data.DataTable table in dataSet.Tables)
         {
-            var worksheet = workbook.Worksheets.Add(table.TableName);
+            IXLWorksheet worksheet = workbook.Worksheets.Add(table.TableName);
             for (int i = 0; i < table.Columns.Count; i++)
                 worksheet.Cell(1, i + 1).Value = table.Columns[i].ColumnName;
 
@@ -667,7 +716,7 @@ INSERT INTO CDN.PracPlanDniGodz
             {
                 for (int j = 0; j < table.Columns.Count; j++)
                 {
-                    var value = table.Rows[i][j];
+                    object value = table.Rows[i][j];
 
                     if (value == DBNull.Value)
                     {
@@ -681,14 +730,14 @@ INSERT INTO CDN.PracPlanDniGodz
             }
         }
         workbook.SaveAs(outputFilePath);
-        var (o, d) = Get_File_Meta_Info(inputFilePath);
+        (string o, DateTime d) = Get_File_Meta_Info(inputFilePath);
         workbook.Properties.LastModifiedBy = o;
         workbook.Properties.Modified = d;
         workbook.SaveAs(outputFilePath);
     }
     public static void GetConfigFromFile()
     {
-        var filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config.json");
+        string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config.json");
         if (!File.Exists(filePath))
         {
             File.Create(filePath).Dispose();
@@ -702,7 +751,7 @@ INSERT INTO CDN.PracPlanDniGodz
             File.WriteAllText(filePath, JsonSerializer.Serialize(defaultConfig, new JsonSerializerOptions { WriteIndented = true }));
         }
         string json = File.ReadAllText(filePath);
-        var config = JsonSerializer.Deserialize<Config_Data_Json>(json);
+        Config_Data_Json? config = JsonSerializer.Deserialize<Config_Data_Json>(json);
         if (config != null)
         {
             Files_Folders = config.Files_Folders;

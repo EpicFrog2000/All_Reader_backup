@@ -98,7 +98,7 @@ namespace All_Readeer
             List<Current_Position> Lista_Pozycji_startowych_grafików = [];
             int Limiter = 1000;
             int counter = 0;
-            foreach (var cell in worksheet.CellsUsed())
+            foreach (IXLCell? cell in worksheet.CellsUsed())
             {
                 try
                 {
@@ -131,9 +131,9 @@ namespace All_Readeer
         {
             try
             {
-                var Lista_Pozycji_Grafików_Z_Zakladki = Find_Grafiki(worksheet);
+                List<Current_Position> Lista_Pozycji_Grafików_Z_Zakladki = Find_Grafiki(worksheet);
                 List<Grafik> grafiki = new();
-                foreach (var Startpozycja in Lista_Pozycji_Grafików_Z_Zakladki)
+                foreach (Current_Position Startpozycja in Lista_Pozycji_Grafików_Z_Zakladki)
                 {
                     Current_Position pozycja = Startpozycja;
                     int counter = 0;
@@ -198,8 +198,8 @@ namespace All_Readeer
                             break;
                         }
 
-                        var dane2 = Get_Dane_Dni(worksheet, new Current_Position { row = Startpozycja.row + 4, col = Startpozycja.col + ((counter * 3) + 1) });
-                        foreach (var d in dane2)
+                        List<Dane_Dnia> dane2 = Get_Dane_Dni(worksheet, new Current_Position { row = Startpozycja.row + 4, col = Startpozycja.col + ((counter * 3) + 1) });
+                        foreach(Dane_Dnia d in dane2)
                         {
                             grafik.Dane_Dni.Add(d);
                         }
@@ -268,7 +268,7 @@ namespace All_Readeer
                 pracownik.Akronim = pole1;
                 if (!string.IsNullOrEmpty(pole2))
                 {
-                    var parts = pole2.Split(" ");
+                    string[] parts = pole2.Split(" ");
                     if(parts.Length == 2)
                     {
                         pracownik.Nazwisko = parts[0];
@@ -280,7 +280,7 @@ namespace All_Readeer
             {
                 if (!string.IsNullOrEmpty(pole2))
                 {
-                    var parts = pole2.Split(" ");
+                    string[] parts = pole2.Split(" ");
                     if (parts.Length == 2)
                     {
                         pracownik.Nazwisko = parts[0];
@@ -309,7 +309,7 @@ namespace All_Readeer
             List<Dane_Dnia> Dane_Dni = new();
             for (int i = 0; i < 31; i++)
             {
-                var dane = "";
+                string dane = "";
                 try
                 {
                     Dane_Dnia dane_Dnia = new Dane_Dnia();
@@ -364,9 +364,9 @@ namespace All_Readeer
                 connection.Open();
                 using (SqlTransaction tran = connection.BeginTransaction())
                 {
-                    foreach (var grafik in grafiki)
+                    foreach (Grafik grafik in grafiki)
                     {
-                        foreach (var dane_DniA in grafik.Dane_Dni)
+                        foreach (Dane_Dnia dane_DniA in grafik.Dane_Dni)
                         {
                             try
                             {
@@ -402,41 +402,34 @@ namespace All_Readeer
         }
         private static int Get_ID_Pracownika(Pracownik pracownik)
         {
-            using (SqlConnection connection = new SqlConnection(Program.Optima_Conection_String))
+            try
             {
-                try
+                using (SqlConnection connection = new SqlConnection(Program.Optima_Conection_String))
                 {
-                    connection.Open();
                     using (SqlCommand getCmd = new SqlCommand(Program.sqlQueryGetPRI_PraId, connection))
                     {
-                        getCmd.Parameters.AddWithValue("@Akronim ", pracownik.Akronim);
+                        connection.Open();
+                        getCmd.Parameters.AddWithValue("@Akronim", pracownik.Akronim);
                         getCmd.Parameters.AddWithValue("@PracownikImieInsert", pracownik.Imie);
                         getCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", pracownik.Nazwisko);
-                        var result = getCmd.ExecuteScalar();
-                        if (result != null)
-                        {
-                            return Convert.ToInt32(result);
-                        }
+                        object result = getCmd.ExecuteScalar();
+                        return result != null ? Convert.ToInt32(result) : 0;
                     }
-                    connection.Close();
                 }
-                catch (Exception ex)
-                {
-                    connection.Close();
-                    Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakladki: " + Program.error_logger.Nr_Zakladki + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
-                    throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}" + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
-                }
+
             }
-            return 0;
+            catch (Exception ex)
+            {
+                Program.error_logger.New_Custom_Error(ex.Message + " z pliku: " + Program.error_logger.Nazwa_Pliku + " z zakładki: " + Program.error_logger.Nr_Zakladki + " nazwa zakładki: " + Program.error_logger.Nazwa_Zakladki);
+                throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakładki {Program.error_logger.Nr_Zakladki}" + " nazwa zakładki: " + Program.error_logger.Nazwa_Zakladki);
+            }
         }
+
         private static int Zrob_Insert_Plan_command(SqlConnection connection, SqlTransaction transaction, Grafik grafik, Pracownik pracownik, DateTime data, TimeSpan startGodz, TimeSpan endGodz)
         {
-            bool duplicate = false;
-            DateTime baseDate = new DateTime(1899, 12, 30);
-            DateTime godzOdDate = baseDate + startGodz;
-            DateTime godzDoDate = baseDate + endGodz;
-
-            using (SqlCommand cmd = new SqlCommand(@"IF EXISTS (
+            int IdPracowkika = Get_ID_Pracownika(pracownik);
+            using (SqlCommand cmd = new(@"
+IF EXISTS (
 SELECT 1 
 FROM cdn.PracPlanDni 
 WHERE PPL_Data = @DataInsert 
@@ -466,50 +459,40 @@ END
 ELSE
 BEGIN
 SELECT 0;
-END
-                    ", connection, transaction))
+END", connection, transaction))
             {
                 cmd.Parameters.AddWithValue("@DataInsert", data);
-                cmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = godzOdDate;
-                cmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
-                cmd.Parameters.AddWithValue("@PRI_PraId", Get_ID_Pracownika(pracownik));
+                cmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = (DateTime)(Program.baseDate + startGodz);
+                cmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = (DateTime)(Program.baseDate + endGodz);
+                cmd.Parameters.AddWithValue("@PRI_PraId", IdPracowkika);
                 if ((int)cmd.ExecuteScalar() == 1)
                 {
-                    duplicate = true;
                     return 0;
                 }
             }
-            
-            if (!duplicate)
+            using (SqlCommand insertCmd = new(Program.sqlQueryInsertPlanDoOptimy, connection, transaction))
             {
-                using (SqlCommand insertCmd = new SqlCommand(Program.sqlQueryInsertPlanDoOptimy, connection, transaction))
-                {
+                insertCmd.Parameters.AddWithValue("@DataInsert", data);
+                insertCmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = (DateTime)(Program.baseDate + startGodz);
+                insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = (DateTime)(Program.baseDate + endGodz);
+                insertCmd.Parameters.AddWithValue("@PRI_PraId", IdPracowkika);
+                insertCmd.Parameters.AddWithValue("@ImieMod", Truncate(Program.error_logger.Last_Mod_Osoba, 20));
+                insertCmd.Parameters.AddWithValue("@NazwiskoMod", Truncate(Program.error_logger.Last_Mod_Osoba, 50));
+                insertCmd.Parameters.AddWithValue("@DataMod", Program.error_logger.Last_Mod_Time);
 
-                    insertCmd.Parameters.AddWithValue("@DataInsert", data);
-                    insertCmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = godzOdDate;
-                    insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
-                    insertCmd.Parameters.AddWithValue("@PRI_PraId", Get_ID_Pracownika(pracownik));
-                    if (Program.error_logger.Last_Mod_Osoba.Length > 20)
-                    {
-                        insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 20));
-                    }
-                    else
-                    {
-                        insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba);
-                    }
-                    if (Program.error_logger.Last_Mod_Osoba.Length > 50)
-                    {
-                        insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 50));
-                    }
-                    else
-                    {
-                        insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba);
-                    }
-                    insertCmd.Parameters.AddWithValue("@DataMod", Program.error_logger.Last_Mod_Time);
-                    insertCmd.ExecuteScalar();
-                }
+                insertCmd.ExecuteScalar();
             }
             return 1;
         }
+
+        private static string Truncate(string value, int maxLength)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return string.Empty;
+            }
+            return value.Length > maxLength ? value.Substring(0, maxLength) : value;
+        }
     }
+
 }

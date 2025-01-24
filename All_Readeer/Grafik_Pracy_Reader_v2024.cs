@@ -5,6 +5,7 @@ using System.Globalization;
 
 namespace All_Readeer
 {
+
     internal static class Grafik_Pracy_Reader_v2024
     {
         private class Pracownik
@@ -379,12 +380,8 @@ namespace All_Readeer
                         getCmd.Parameters.AddWithValue("@PracownikImieInsert", pracownik.Imie);
                         getCmd.Parameters.AddWithValue("@PracownikNazwiskoInsert", pracownik.Nazwisko);
                         var result = getCmd.ExecuteScalar();
-                        if (result != null)
-                        {
-                            return Convert.ToInt32(result);
-                        }
+                        return result != null ? Convert.ToInt32(result) : 0;
                     }
-                    connection.Close();
                 }
                 catch (Exception ex)
                 {
@@ -393,38 +390,28 @@ namespace All_Readeer
                     throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakladki {Program.error_logger.Nr_Zakladki}" + " nazwa zakladki: " + Program.error_logger.Nazwa_Zakladki);
                 }
             }
-            return 0;
         }
         private static void Zrob_Insert_Plan_command(SqlConnection connection, SqlTransaction transaction, Grafik grafik, Pracownik pracownik, DateTime data, TimeSpan startGodz, TimeSpan endGodz)
         {
             using (SqlCommand insertCmd = new SqlCommand(Program.sqlQueryInsertPlanDoOptimy, connection, transaction))
             {
-                DateTime baseDate = new DateTime(1899, 12, 30);
-                DateTime godzOdDate = baseDate + startGodz;
-                DateTime godzDoDate = baseDate + endGodz;
                 insertCmd.Parameters.AddWithValue("@DataInsert", data);
-                insertCmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = godzOdDate;
-                insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = godzDoDate;
+                insertCmd.Parameters.Add("@GodzOdDate", SqlDbType.DateTime).Value = (DateTime)(Program.baseDate + startGodz);
+                insertCmd.Parameters.Add("@GodzDoDate", SqlDbType.DateTime).Value = (DateTime)(Program.baseDate + endGodz);
                 insertCmd.Parameters.AddWithValue("@PRI_PraId", Get_ID_Pracownika(pracownik));
-                if (Program.error_logger.Last_Mod_Osoba.Length > 20)
-                {
-                    insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 20));
-                }
-                else
-                {
-                    insertCmd.Parameters.AddWithValue("@ImieMod", Program.error_logger.Last_Mod_Osoba);
-                }
-                if (Program.error_logger.Last_Mod_Osoba.Length > 50)
-                {
-                    insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba.Substring(0, 50));
-                }
-                else
-                {
-                    insertCmd.Parameters.AddWithValue("@NazwiskoMod", Program.error_logger.Last_Mod_Osoba);
-                }
+                insertCmd.Parameters.AddWithValue("@ImieMod", Truncate(Program.error_logger.Last_Mod_Osoba, 20));
+                insertCmd.Parameters.AddWithValue("@NazwiskoMod", Truncate(Program.error_logger.Last_Mod_Osoba, 50));
                 insertCmd.Parameters.AddWithValue("@DataMod", Program.error_logger.Last_Mod_Time);
                 insertCmd.ExecuteScalar();
             }
+        }
+        private static string Truncate(string value, int maxLength)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return string.Empty;
+            }
+            return value.Length > maxLength ? value.Substring(0, maxLength) : value;
         }
     }
 }

@@ -3,12 +3,16 @@
   "WorkspaceRootPath": "E:\\ITEGER\\Praca\\obecno\u015Bci\\All_Reader\\All_Readeer\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{51188863-BB71-45E5-A6E8-7B2949A2EC43}|All_Readeer.csproj|e:\\iteger\\praca\\obecno\u015Bci\\all_reader\\all_readeer\\karta_pracy_reader_v2.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{51188863-BB71-45E5-A6E8-7B2949A2EC43}|All_Readeer.csproj|solutionrelative:karta_pracy_reader_v2.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{51188863-BB71-45E5-A6E8-7B2949A2EC43}|All_Readeer.csproj|e:\\iteger\\praca\\obecno\u015Bci\\all_reader\\all_readeer\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{51188863-BB71-45E5-A6E8-7B2949A2EC43}|All_Readeer.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{51188863-BB71-45E5-A6E8-7B2949A2EC43}|All_Readeer.csproj|e:\\iteger\\praca\\obecno\u015Bci\\all_reader\\all_readeer\\grafik_pracy_reader_2024_v2.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{51188863-BB71-45E5-A6E8-7B2949A2EC43}|All_Readeer.csproj|solutionrelative:grafik_pracy_reader_2024_v2.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{51188863-BB71-45E5-A6E8-7B2949A2EC43}|All_Readeer.csproj|e:\\iteger\\praca\\obecno\u015Bci\\all_reader\\all_readeer\\karta_pracy_reader_v2.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{51188863-BB71-45E5-A6E8-7B2949A2EC43}|All_Readeer.csproj|solutionrelative:karta_pracy_reader_v2.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -18,30 +22,43 @@
       "DocumentGroups": [
         {
           "DockedWidth": 80,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 2,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
+              "Title": "Grafik_Pracy_Reader_2024_v2.cs",
+              "DocumentMoniker": "E:\\ITEGER\\Praca\\obecno\u015Bci\\All_Reader\\All_Readeer\\Grafik_Pracy_Reader_2024_v2.cs",
+              "RelativeDocumentMoniker": "Grafik_Pracy_Reader_2024_v2.cs",
+              "ToolTip": "E:\\ITEGER\\Praca\\obecno\u015Bci\\All_Reader\\All_Readeer\\Grafik_Pracy_Reader_2024_v2.cs",
+              "RelativeToolTip": "Grafik_Pracy_Reader_2024_v2.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAK4BAAAnAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-24T09:11:10.146Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
               "Title": "Karta_Pracy_Reader_v2.cs",
               "DocumentMoniker": "E:\\ITEGER\\Praca\\obecno\u015Bci\\All_Reader\\All_Readeer\\Karta_Pracy_Reader_v2.cs",
               "RelativeDocumentMoniker": "Karta_Pracy_Reader_v2.cs",
               "ToolTip": "E:\\ITEGER\\Praca\\obecno\u015Bci\\All_Reader\\All_Readeer\\Karta_Pracy_Reader_v2.cs",
               "RelativeToolTip": "Karta_Pracy_Reader_v2.cs",
-              "ViewState": "AgIAAPkCAAAAAAAAAIAwwAsDAAAZAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAWAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-01-22T19:46:19.828Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 0,
               "Title": "Program.cs",
               "DocumentMoniker": "E:\\ITEGER\\Praca\\obecno\u015Bci\\All_Reader\\All_Readeer\\Program.cs",
               "RelativeDocumentMoniker": "Program.cs",
               "ToolTip": "E:\\ITEGER\\Praca\\obecno\u015Bci\\All_Reader\\All_Readeer\\Program.cs",
               "RelativeToolTip": "Program.cs",
-              "ViewState": "AgIAAAgAAAAAAAAAAAAQwD4AAAA7AAAAAAAAAA==",
+              "ViewState": "AgIAAMgBAAAAAAAAAAApwOYBAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-12-06T10:01:14.966Z",
               "EditorCaption": ""
