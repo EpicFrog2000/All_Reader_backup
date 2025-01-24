@@ -783,15 +783,15 @@ namespace All_Readeer
                         double czasPodstawowy = czasPrzepracowany - ((double)(dane_Dni.Godz_nadl_platne_z_dod_50 + dane_Dni.Godz_nadl_platne_z_dod_100));
                         if (czasPodstawowy > 0)
                         {
-                            ilosc_wpisow += Zrob_Insert_Obecnosc_Command(connection, tran, Data_Karty, startPodstawowy, endPodstawowy, karta, 2);
+                            ilosc_wpisow += Zrob_Insert_Obecnosc_Command(connection, tran, Data_Karty, startPodstawowy, endPodstawowy, karta, 2); // 2 = czas PP
                         }
                         if (dane_Dni.Godz_nadl_platne_z_dod_50 > 0)
                         {
-                            ilosc_wpisow += Zrob_Insert_Obecnosc_Command(connection, tran, Data_Karty, startNadl50, endNadl50, karta, 8);
+                            ilosc_wpisow += Zrob_Insert_Obecnosc_Command(connection, tran, Data_Karty, startNadl50, endNadl50, karta, 2);
                         }
                         if (dane_Dni.Godz_nadl_platne_z_dod_100 > 0)
                         {
-                            ilosc_wpisow += Zrob_Insert_Obecnosc_Command(connection, tran, Data_Karty, startNadl100, endNadl100, karta, 6);
+                            ilosc_wpisow += Zrob_Insert_Obecnosc_Command(connection, tran, Data_Karty, startNadl100, endNadl100, karta, 2);
                         }
                     }
                 }
