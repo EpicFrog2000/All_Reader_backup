@@ -2,6 +2,7 @@
 using Microsoft.Data.SqlClient;
 using System.Data;
 using System.Globalization;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 
 namespace All_Readeer
@@ -298,6 +299,157 @@ namespace All_Readeer
             }
             return starty;
         }
+
+        private static Pracownik TryWczytajPracownika(int sposob, Current_Position StartKarty, IXLWorksheet worksheet)
+        {
+            string[] wordsToRemove = ["IMIĘ:", "IMIE:", "NAZWISKO:", "NAZWISKO", " IMIE", "IMIĘ", ":"];
+            string dane = "";
+            Pracownik pracownik = new();
+            switch (sposob)
+            {
+                case 0: // Karta pracy: Nazwisko Imie #lub# Karta pracy: Nazwisko Imie akronim #lub# Karta pracy: akronim Nazwisko Imie
+                    dane = worksheet.Cell(StartKarty.row - 2, StartKarty.col).GetFormattedString().Trim().Replace("  ", " ");
+                    if (!string.IsNullOrEmpty(dane))
+                    {
+                        foreach (string word in wordsToRemove)
+                        {
+                            string pattern = $@"\b{Regex.Escape(word)}\b";
+                            dane = Regex.Replace(dane, pattern, "", RegexOptions.IgnoreCase);
+                        }
+                        dane = Regex.Replace(dane, @"\s+", " ").Trim();
+                        if (dane.Contains("KARTA PRACY:"))
+                        {
+                            dane = dane.Replace("KARTA PRACY:", "").Trim();
+                        }
+                        if (dane.Contains("KARTA PRACY"))
+                        {
+                            dane = dane.Replace("KARTA PRACY", "").Trim();
+                        }
+                        if(!string.IsNullOrEmpty(dane)){
+                            string[] parts = dane.Trim().Split(' ');
+                            if (parts.Length == 2)
+                            {
+                                pracownik.Nazwisko = dane.Trim().Split(' ')[0];
+                                pracownik.Imie = dane.Trim().Split(' ')[1];
+                            }
+                            else if (parts.Length == 3)
+                            {
+                                if (int.TryParse(parts[0], out int parsedValue))
+                                {
+                                    pracownik.Akronim = parsedValue;
+                                    pracownik.Nazwisko = dane.Trim().Split(' ')[1];
+                                    pracownik.Imie = dane.Trim().Split(' ')[2];
+                                }
+                                else if (int.TryParse(parts[2], out int parsedValue2))
+                                {
+                                    pracownik.Akronim = parsedValue2;
+                                    pracownik.Nazwisko = dane.Trim().Split(' ')[0];
+                                    pracownik.Imie = dane.Trim().Split(' ')[1];
+                                    return pracownik;
+                                }
+                            }
+                        }
+                    }
+                    return pracownik;
+                case 1:  // Karta pracy: || Nazwisko Imie
+                    dane = worksheet.Cell(StartKarty.row - 2, StartKarty.col).GetFormattedString().Trim().Replace("  ", " ");
+                    if (!string.IsNullOrEmpty(dane))
+                    {
+                        foreach (string word in wordsToRemove)
+                        {
+                            string pattern = $@"\b{Regex.Escape(word)}\b";
+                            dane = Regex.Replace(dane, pattern, "", RegexOptions.IgnoreCase);
+                        }
+                        dane = Regex.Replace(dane, @"\s+", " ").Trim();
+                        if (dane.Contains("KARTA PRACY:"))
+                        {
+                            dane = dane.Replace("KARTA PRACY:", "").Trim();
+                        }
+                        if (dane.Contains("KARTA PRACY"))
+                        {
+                            dane = dane.Replace("KARTA PRACY", "").Trim();
+                        }
+                        if (string.IsNullOrEmpty(dane))
+                        {
+                            dane = worksheet.Cell(StartKarty.row - 2, StartKarty.col + 2).GetFormattedString().Trim().Replace("  ", " ");
+                            if (!string.IsNullOrEmpty(dane))
+                            {
+                                string[] parts = dane.Trim().Split(' ');
+                                if(parts.Length == 2)
+                                {
+                                    pracownik.Nazwisko = parts[0];
+                                    pracownik.Imie = parts[1];
+                                    return pracownik;
+                                }
+                            }
+                        }
+                    }
+                    break;
+                case 2:  // Karta pracy: || Nazwisko | Imie
+                    dane = worksheet.Cell(StartKarty.row - 2, StartKarty.col).GetFormattedString().Trim().Replace("  ", " ");
+                    if (!string.IsNullOrEmpty(dane))
+                    {
+                        foreach (string word in wordsToRemove)
+                        {
+                            string pattern = $@"\b{Regex.Escape(word)}\b";
+                            dane = Regex.Replace(dane, pattern, "", RegexOptions.IgnoreCase);
+                        }
+                        dane = Regex.Replace(dane, @"\s+", " ").Trim();
+                        if (dane.Contains("KARTA PRACY:"))
+                        {
+                            dane = dane.Replace("KARTA PRACY:", "").Trim();
+                        }
+                        if (dane.Contains("KARTA PRACY"))
+                        {
+                            dane = dane.Replace("KARTA PRACY", "").Trim();
+                        }
+                        if (string.IsNullOrEmpty(dane))
+                        {
+                            dane = worksheet.Cell(StartKarty.row - 2, StartKarty.col + 2).GetFormattedString().Trim().Replace("  ", " ");
+                            if (!string.IsNullOrEmpty(dane))
+                            {
+                                pracownik.Nazwisko = worksheet.Cell(StartKarty.row - 2, StartKarty.col + 2).GetFormattedString().Trim().Replace("  ", " ");
+                                pracownik.Imie = worksheet.Cell(StartKarty.row - 2, StartKarty.col + 3).GetFormattedString().Trim().Replace("  ", " ");
+                                return pracownik;
+                            }
+                        }
+                    }
+                    break;
+                case 3: // Nazwisko Imie
+                    dane = worksheet.Cell(StartKarty.row - 2, StartKarty.col).GetFormattedString().Trim().Replace("  ", " ");
+                    if (!string.IsNullOrEmpty(dane))
+                    {
+                        string[] parts = dane.Trim().Split(' ');
+                        if (parts.Length == 2)
+                        {
+                            pracownik.Nazwisko = parts[0];
+                            pracownik.Imie = parts[1];
+                            return pracownik;
+                        }
+                    }
+                    break;
+                case 4: // Nazwisko | Imie
+                    dane = worksheet.Cell(StartKarty.row - 2, StartKarty.col).GetFormattedString().Trim().Replace("  ", " ");
+                    if (!string.IsNullOrEmpty(dane))
+                    {
+                        string[] parts = dane.Trim().Split(' ');
+                        if (parts.Length == 1)
+                        {
+                            if (!string.IsNullOrEmpty(dane))
+                            {
+                                pracownik.Nazwisko = dane;
+                                pracownik.Imie = worksheet.Cell(StartKarty.row - 2, StartKarty.col + 1).GetFormattedString().Trim().Replace("  ", " ");
+                                return pracownik;
+                            }
+                        }
+                    }
+                    break;
+                default:
+                    return pracownik;
+            }
+            return pracownik;
+        }
+
         private static void Get_Header_Karta_Info(Current_Position StartKarty, IXLWorksheet worksheet, ref Karta_Pracy karta_pracy)
         {
             //wczytaj date
@@ -401,213 +553,78 @@ namespace All_Readeer
                 throw new Exception(Program.error_logger.Get_Error_String());
             }
 
+            dane = "";
             //wczytaj nazwisko i imie
             try{
-                Current_Position pozycja_wczytania_danych = new();
-                int tmpi = 0;
-                string[] wordsToRemove = { "IMIĘ:", "IMIE:", "NAZWISKO:", "NAZWISKO", " IMIE", "IMIĘ", ":" };
-                dane = worksheet.Cell(StartKarty.row - 2, StartKarty.col).GetFormattedString().Trim().Replace("  ", " ");
-                pozycja_wczytania_danych.row = StartKarty.row - 2;
-                pozycja_wczytania_danych.col = StartKarty.col;
-                for (int i = 0; i < 6; i++)
-                {
-                    foreach (string word in wordsToRemove)
-                    {
-                        string pattern = $@"\b{Regex.Escape(word)}\b";
-                        dane = Regex.Replace(dane, pattern, "", RegexOptions.IgnoreCase);
-                    }
-
-                    dane = Regex.Replace(dane, @"\s+", " ").Trim();
-                    if (dane.Contains("KARTA PRACY:"))
-                    {
-                        dane = dane.Replace("KARTA PRACY:", "").Trim();
-                    }
-                    if (dane.Contains("KARTA PRACY"))
-                    {
-                        dane = dane.Replace("KARTA PRACY", "").Trim();
-                    }
-                    if (!string.IsNullOrEmpty(dane))
-                    {
-                        tmpi = i;
-                        break;
-                    }
-                    else
-                    {
-                        dane = worksheet.Cell(StartKarty.row - 2, StartKarty.col + i).GetFormattedString().Trim().Replace("  ", " ");
-                        pozycja_wczytania_danych.row = StartKarty.row - 2;
-                        pozycja_wczytania_danych.col = StartKarty.col + i;
-                    }
-                }
-                if (string.IsNullOrEmpty(dane))
-                {
-                    dane = worksheet.Cell(StartKarty.row - 3, StartKarty.col).GetFormattedString().Trim().Replace("  ", " ");
-                    pozycja_wczytania_danych.row = StartKarty.row - 3;
-                    pozycja_wczytania_danych.col = StartKarty.col;
-                    for (int i = 0; i < 6; i++)
-                    {
-                        foreach (string word in wordsToRemove)
-                        {
-                            dane = dane.Replace(word, "", StringComparison.OrdinalIgnoreCase);
-                        }
-                        dane = Regex.Replace(dane, @"\s+", " ").Trim();
-                        if (dane.Contains("KARTA PRACY:"))
-                        {
-                            dane = dane.Replace("KARTA PRACY:", "").Trim();
-                        }
-                        if (!string.IsNullOrEmpty(dane))
-                        {
-                            tmpi = i;
-                            break;
-                        }
-                        else
-                        {
-                            dane = worksheet.Cell(StartKarty.row - 3, StartKarty.col + i).GetFormattedString().Trim().Replace("  ", " ");
-                            pozycja_wczytania_danych.row = StartKarty.row - 3;
-                            pozycja_wczytania_danych.col = StartKarty.col + i;
-                        }
-                    }
-                }
-                foreach (string word in wordsToRemove)
-                {
-                    dane = dane.Replace(word, "", StringComparison.OrdinalIgnoreCase);
-                }
-                dane = Regex.Replace(dane, @"\s+", " ").Trim();
-                if (dane.Contains("KARTA PRACY:"))
-                {
-                    dane = dane.Replace("KARTA PRACY:", "").Trim();
-                }
-                if (string.IsNullOrEmpty(dane))
-                {
-                    //Program.error_logger.New_Error(dane, "nazwisko i imie", StartKarty.col, StartKarty.row - 2, $"Nie znaleziono pola z nazwiskiem i imieniem między kolumna[{StartKarty.col}] rząd[{StartKarty.row - 2}] a kolumna[{StartKarty.col + 5}] rząd[{StartKarty.row - 2}]");
-                    //throw new Exception(Program.error_logger.Get_Error_String());
-                }
-                else
+                for (int i = 0; i < 5; i++)
                 {
                     try
                     {
-                        string[] parts = dane.Trim().Split(' ');
-                        if (parts.Length == 2)
+                        Pracownik pracownik = TryWczytajPracownika(i, StartKarty, worksheet);
+                        if (pracownik.Nazwisko != "" && pracownik.Imie != "")
                         {
-                            karta_pracy.pracownik.Nazwisko = dane.Trim().Split(' ')[0];
-                            karta_pracy.pracownik.Imie = dane.Trim().Split(' ')[1];
-                        }else if (parts.Length == 3)
-                        {
-                            if (int.TryParse(parts[0], out int parsedValue))
-                            {
-                                karta_pracy.pracownik.Akronim = parsedValue;
-                                karta_pracy.pracownik.Nazwisko = dane.Trim().Split(' ')[1];
-                                karta_pracy.pracownik.Imie = dane.Trim().Split(' ')[2];
-                            }else if (int.TryParse(parts[2], out int parsedValue2))
-                            {
-                                karta_pracy.pracownik.Akronim = parsedValue2;
-                                karta_pracy.pracownik.Nazwisko = dane.Trim().Split(' ')[0];
-                                karta_pracy.pracownik.Imie = dane.Trim().Split(' ')[1];
-                            }
+                            karta_pracy.pracownik.Nazwisko = pracownik.Nazwisko;
+                            karta_pracy.pracownik.Imie = pracownik.Imie;
+                            goto Found;
                         }
                     }
                     catch
                     {
-                        Program.error_logger.New_Error(dane, "nazwisko i imie", StartKarty.col, StartKarty.row - 2, "Zły format pola nazwisko i imie. Powinno być: KARTA PRACY: Nazwisko Imie");
-                        throw new Exception(Program.error_logger.Get_Error_String());
                     }
-
-                    if (string.IsNullOrEmpty(karta_pracy.pracownik.Imie) && !string.IsNullOrEmpty(karta_pracy.pracownik.Nazwisko))
-                    {
-                        dane = worksheet.Cell(StartKarty.row - 3, StartKarty.col + tmpi).GetFormattedString().Trim().Replace("  ", " ");
-                        pozycja_wczytania_danych.row = StartKarty.row - 3;
-                        pozycja_wczytania_danych.col = StartKarty.col + tmpi;
-                        if (!string.IsNullOrEmpty(dane))
-                        {
-                            karta_pracy.pracownik.Imie = dane;
-                        }
-                    }
-                    else if (string.IsNullOrEmpty(karta_pracy.pracownik.Nazwisko) && !string.IsNullOrEmpty(karta_pracy.pracownik.Imie))
-                    {
-                        dane = worksheet.Cell(StartKarty.row - 3, StartKarty.col + tmpi).GetFormattedString().Trim().Replace("  ", " ");
-                        pozycja_wczytania_danych.row = StartKarty.row - 3;
-                        pozycja_wczytania_danych.col = StartKarty.col + tmpi;
-                        if (!string.IsNullOrEmpty(dane))
-                        {
-                            karta_pracy.pracownik.Nazwisko = dane;
-                        }
-                    }
-                    if (string.IsNullOrEmpty(karta_pracy.pracownik.Imie) || string.IsNullOrEmpty(karta_pracy.pracownik.Nazwisko))
-                    {
-                        //Program.error_logger.New_Error(dane, "nazwisko i imie", StartKarty.col, StartKarty.row - 2, $"Nie znaleziono pola z nazwiskiem i imieniem między kolumna[{StartKarty.col}] rząd[{StartKarty.row - 2}] a kolumna[{StartKarty.col + 5}] rząd[{StartKarty.row - 2}]");
-                        //throw new Exception(Program.error_logger.Get_Error_String());
-                    }
-
+                }
+                if (string.IsNullOrEmpty(karta_pracy.pracownik.Imie) && string.IsNullOrEmpty(karta_pracy.pracownik.Nazwisko))
+                {
+                    Program.error_logger.New_Error(dane, "nazwisko i imie", StartKarty.col, StartKarty.row - 2, $"Nie znaleziono pola z nazwiskiem i imieniem między kolumna[{StartKarty.col}] rząd[{StartKarty.row - 2}] a kolumna[{StartKarty.col + 5}] rząd[{StartKarty.row - 2}]");
+                    throw new Exception(Program.error_logger.Get_Error_String());
                 }
 
+                Found:
+                ;
                 // znajdz akronim w prawo
-                if (karta_pracy.pracownik.Akronim == -1)
-                {
-                    string akronim = "";
-                    for (int i = 0; i < 6; i++)
+                for (int i = 4; i < 9; i++) {
+                    dane = worksheet.Cell(StartKarty.row - 2, StartKarty.col + i).GetFormattedString().Trim().ToLower();
+                    if (!string.IsNullOrEmpty(dane))
                     {
-                        akronim = worksheet.Cell(pozycja_wczytania_danych.row, pozycja_wczytania_danych.col + 1 + i).GetFormattedString().Trim().Replace("  ", " ");
-                        if (!string.IsNullOrEmpty(akronim) && Regex.IsMatch(akronim, @"^(akronim|akronim:\s*\d*|\d+)$"))
+                        if (dane.Contains("akronim"))
                         {
-                            break;
-                        }
-                    }
-                    if (!string.IsNullOrEmpty(akronim))
-                    {
-                        if (int.TryParse(akronim, out int parsedValue))
-                        {
-                            karta_pracy.pracownik.Akronim = parsedValue;
+                            dane.Replace("akronim", "").Replace(":", "");
+                            if (!string.IsNullOrEmpty(dane))
+                            {
+                                if (int.TryParse(dane, out int parseAkr))
+                                {
+                                    karta_pracy.pracownik.Akronim = parseAkr;
+                                }
+                            }
+                            else
+                            {
+                                dane = worksheet.Cell(StartKarty.row - 2, StartKarty.col + i + 1).GetFormattedString().Trim().ToLower();
+                                if (!string.IsNullOrEmpty(dane))
+                                {
+                                    if (int.TryParse(dane, out int parseAkr))
+                                    {
+                                        karta_pracy.pracownik.Akronim = parseAkr;
+                                    }
+                                }
+                            }
                         }
                         else
                         {
-                            try
+                            dane = worksheet.Cell(StartKarty.row - 2, StartKarty.col + i + 1).GetFormattedString().Trim().ToLower();
+                            if (!string.IsNullOrEmpty(dane))
                             {
-                                if (int.TryParse(akronim.Split(' ')[1], out int parsedValue2))
+                                if (int.TryParse(dane, out int parseAkr))
                                 {
-                                    karta_pracy.pracownik.Akronim = parsedValue2;
+                                    karta_pracy.pracownik.Akronim = parseAkr;
                                 }
                             }
-                            catch
-                            {
-                                karta_pracy.pracownik.Akronim = -1;
-                            }
-                            karta_pracy.pracownik.Akronim = -1;
-                        }
-                    }
-                    // Jeśli nie znalazlo akronim, to możę jest obok imie nazwisko w tej samej komórce
-                    if(karta_pracy.pracownik.Akronim == -1)
-                    {
-                        if (int.TryParse(dane.Trim().Split(' ')[^1], out int parsedValue3))
-                        {
-                            karta_pracy.pracownik.Akronim = parsedValue3;
                         }
                     }
                 }
-
-                if ((karta_pracy.pracownik.Nazwisko == null || karta_pracy.pracownik.Imie == null) || (string.IsNullOrEmpty(karta_pracy.pracownik.Nazwisko) || string.IsNullOrEmpty(karta_pracy.pracownik.Imie)))
-                {
-                    if (karta_pracy.pracownik.Akronim == 0)
-                    {
-                        Program.error_logger.New_Error(dane, "nazwisko i imie", StartKarty.col, StartKarty.row - 2, "Zły format pola nazwisko i imie. Powinno być: KARTA PRACY: Nazwisko Imie");
-                        Program.error_logger.New_Error(dane, "akronim", pozycja_wczytania_danych.col + 2, pozycja_wczytania_danych.row, "Nie znaleziono wartości akronim. Powinno być: Akronim");
-                        throw new Exception(Program.error_logger.Get_Error_String());
-                    }
-                }
-                if(karta_pracy.pracownik.Nazwisko != null && !string.IsNullOrEmpty(karta_pracy.pracownik.Nazwisko))
-                {
-                    karta_pracy.pracownik.Nazwisko = karta_pracy.pracownik.Nazwisko.ToLower();
-                    karta_pracy.pracownik.Nazwisko = char.ToUpper(karta_pracy.pracownik.Nazwisko[0], CultureInfo.CurrentCulture) + karta_pracy.pracownik.Nazwisko.Substring(1);
-                }
-                if (karta_pracy.pracownik.Imie != null && string.IsNullOrEmpty(karta_pracy.pracownik.Imie))
-                {
-                    karta_pracy.pracownik.Imie = karta_pracy.pracownik.Imie.ToLower();
-                    karta_pracy.pracownik.Imie = char.ToUpper(karta_pracy.pracownik.Imie[0], CultureInfo.CurrentCulture) + karta_pracy.pracownik.Imie.Substring(1);
-                }
-
             }
-            catch
+            catch(Exception ex)
             {
-                Program.error_logger.New_Error(dane, "Imie nazwisko", StartKarty.row - 2, StartKarty.col, "Nieznany format");
-                throw new Exception($"{Program.error_logger.Get_Error_String()}");
+                Program.error_logger.New_Error(dane, "Imie nazwisko akronim", StartKarty.row - 2, StartKarty.col, "Nieznany format");
+                throw new Exception($"{ex}, {Program.error_logger.Get_Error_String()}");
             }
         }
         private static void Get_Dane_Dni(Current_Position StartKarty, IXLWorksheet worksheet, ref Karta_Pracy karta_pracy)
