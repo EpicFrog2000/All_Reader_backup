@@ -507,6 +507,12 @@ INSERT INTO CDN.PracPracaDniGodz
             return 4;
         }
 
+        cellValue3_1 = workshit.Cell(1, 2).Value.ToString();
+        if (cellValue3_1.Trim().StartsWith("GRAFIK PRACY MIESIĄC")) // grafik v2024 v2
+        {
+            return 4;
+        }
+
         string cellValue1_1 = workshit.Cell(1, 1).Value.ToString();
         if (cellValue1_1.Trim().Contains("GRAFIK PRACY")) // grafik v2024
         {

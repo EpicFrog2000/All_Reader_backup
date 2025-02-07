@@ -312,6 +312,11 @@ namespace All_Readeer
                 string dane = "";
                 try
                 {
+                    string danedzien = worksheet.Cell(pozycja.row, 1).GetFormattedString().Trim(); ;
+                    if (string.IsNullOrEmpty(danedzien))
+                    {
+                        break;
+                    }
                     Dane_Dnia dane_Dnia = new Dane_Dnia();
                     dane_Dnia.Nr_Dnia = i + 1;
                     dane = worksheet.Cell(pozycja.row, pozycja.col).GetFormattedString().Trim();
@@ -424,7 +429,6 @@ namespace All_Readeer
                 throw new Exception(ex.Message + $" w pliku {Program.error_logger.Nazwa_Pliku} z zakładki {Program.error_logger.Nr_Zakladki}" + " nazwa zakładki: " + Program.error_logger.Nazwa_Zakladki);
             }
         }
-
         private static int Zrob_Insert_Plan_command(SqlConnection connection, SqlTransaction transaction, Grafik grafik, Pracownik pracownik, DateTime data, TimeSpan startGodz, TimeSpan endGodz)
         {
             int IdPracowkika = Get_ID_Pracownika(pracownik);
@@ -484,7 +488,6 @@ END", connection, transaction))
             }
             return 1;
         }
-
         private static string Truncate(string value, int maxLength)
         {
             if (string.IsNullOrEmpty(value))
